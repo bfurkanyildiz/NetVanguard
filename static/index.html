@@ -1197,7 +1197,7 @@
                     </svg>
                 </div>
                 <div class="timing-wrapper" style="position: relative;">
-                    <select id="timing-select" style="padding: 0.95rem 1rem; background: var(--bg-input); border: 1.5px solid var(--border-subtle); border-radius: 12px; color: var(--cyan-400); font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; font-weight: 600; outline: none; appearance: none; cursor: pointer; transition: all 0.3s var(--ease-out); height: 100%;">
+                    <select id="scan-speed" style="padding: 0.95rem 1rem; background: var(--bg-input); border: 1.5px solid var(--border-subtle); border-radius: 12px; color: var(--cyan-400); font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; font-weight: 600; outline: none; appearance: none; cursor: pointer; transition: all 0.3s var(--ease-out); height: 100%;">
                         <option value="T0">T0: Paranoyak (Çok yavaş)</option>
                         <option value="T1">T1: Sinsi (Yavaş)</option>
                         <option value="T2">T2: Kibar (Hedefi yormaz)</option>
@@ -2074,6 +2074,7 @@
         }
 
         async function startScan() {
+            console.log('Tarama Tetiklendi!');
             let target = ipInput.value.trim();
             const isNetDiscover = document.getElementById('opt-net').checked;
             
@@ -2092,7 +2093,7 @@
             // Checkbox durumlarını oku
             const opts = {
                 target,
-                timing: document.getElementById('timing-select').value,
+                timing: document.getElementById('scan-speed').value,
                 port_scan: document.getElementById('opt-ports').checked,
                 vuln_scan: document.getElementById('opt-vuln').checked,
                 os_detect: document.getElementById('opt-os').checked,
@@ -2199,7 +2200,7 @@
             // ── Ham çıktıyı terminale satır satır yazdır ──
             if (!currentAbortController) return;
             addLog('════════════════════════════════════', '');
-            addLog(`📡 <strong>${getScanLabel(data)} Çıktısı</strong>`, 'highlight');
+            addLog(`📡 <strong>[SCANNING...] ${getScanLabel(data)} Başlatıldı</strong>`, 'highlight');
             addLog('════════════════════════════════════', '');
 
             const lines = data.output.split('\n');
@@ -2388,7 +2389,7 @@
                     updateRisk(safe);
                 }
 
-                addLog(safe, guessLineType(raw));
+                addLog(`[SCANNING...] ${safe}`, guessLineType(raw));
 
                 batchCount++;
                 if (batchCount >= BATCH) {
@@ -2666,7 +2667,7 @@
         // 3. UI Speed Lock (Hız Kısıtlaması)
         function toggleVulnSpeedLock() {
             const checkbox = document.getElementById('opt-vuln');
-            const select = document.getElementById('timing-select');
+            const select = document.getElementById('scan-speed');
             const opts = select.options;
             
             if (checkbox && checkbox.checked) {
