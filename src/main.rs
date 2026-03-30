@@ -58,8 +58,11 @@ fn validate_target(target: &str) -> Result<(), String> {
 // ═══════════════════════════════════════════════════════════
 
 fn run_command(program: &str, args: &[&str]) -> (bool, String) {
+    let mut cmd_args = vec!["/C", program];
+    cmd_args.extend_from_slice(args);
+    
     let mut cmd = Command::new("cmd");
-    cmd.arg("/C").arg(program).args(args);
+    cmd.args(&cmd_args);
 
     match cmd.output() {
         Ok(output) => {
@@ -122,11 +125,11 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         all_output.push_str(&out);
     }
 
-    // ── Ağ Keşfi → nmap -sn -Pn --disable-arp-ping ──
+    // ── Ağ Keşfi → nmap -sn -PR ──
     if body.net_discover {
         scan_types.push("net_discover");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-sn", "-Pn", "--disable-arp-ping", t_arg, "--host-timeout", "60s", &target]);
+        let (ok, out) = run_command("nmap", &["-sn", "-PR", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -149,11 +152,11 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         all_output.push_str(&out);
     }
 
-    // ── İşletim Sistemi Tespiti → nmap -O -Pn --disable-arp-ping ──
+    // ── İşletim Sistemi Tespiti → nmap -O --osscan-guess -Pn ──
     if body.os_detect {
         scan_types.push("os_detect");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-O", "-Pn", "--disable-arp-ping", "-p", "22,80,443", t_arg, "--host-timeout", "60s", &target]);
+        let (ok, out) = run_command("nmap", &["-O", "--osscan-guess", "-Pn", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }

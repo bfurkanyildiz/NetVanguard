@@ -949,6 +949,8 @@
         const terminal  = document.getElementById('terminal-body');
         const resCnt    = document.getElementById('results-count');
 
+        let currentAbortController = null;
+
         ipInput.addEventListener('keydown', e => { if (e.key === 'Enter') startScan(); });
 
         function ts() { return new Date().toTimeString().slice(0, 8); }
@@ -1024,6 +1026,13 @@
         // ═══════════════════════════════════════════════════
 
         async function stopScan() {
+            if (currentAbortController) {
+                currentAbortController.abort();
+                currentAbortController = null;
+            }
+            addLog('<span style="color:var(--rose-500);font-weight:bold;">TARAMA İPTAL EDİLDİ</span>', 'error');
+            setProgress(100, 'Tarama İptal Edildi');
+
             try {
                 addLog('Durdurma sinyali gönderiliyor...', 'warn');
                 const res = await fetch('/api/stop', { method: 'POST' });
@@ -1114,6 +1123,8 @@
             addLog('İstek gönderildi, yanıt bekleniyor...', '');
             setProgress(15, 'Yanıt bekleniyor (bu biraz sürebilir)...');
 
+            currentAbortController = new AbortController();
+
             // ── API Çağrısı ──
             let data;
             try {
@@ -1121,10 +1132,12 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(opts),
+                    signal: currentAbortController.signal
                 });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 data = await res.json();
             } catch (err) {
+                if (err.name === 'AbortError') return;
                 setProgress(100, 'Hata!');
                 addLog('════════════════════════════════════', '');
                 addLog(`Hata: <strong>${err.message}</strong>`, 'error');
@@ -1139,6 +1152,7 @@
             await sleep(200);
 
             // ── Ham çıktıyı terminale satır satır yazdır ──
+            if (!currentAbortController) return;
             addLog('════════════════════════════════════', '');
             addLog(`📡 <strong>${getScanLabel(data)} Çıktısı</strong>`, 'highlight');
             addLog('════════════════════════════════════', '');
@@ -1147,6 +1161,7 @@
             const total = lines.length;
 
             for (let i = 0; i < total; i++) {
+                if (!currentAbortController) return;
                 const raw = lines[i].trimEnd();
                 if (raw === '') continue;
 
@@ -1175,6 +1190,7 @@
             resCnt.textContent = `${getScanLabel(data)} · ${openPorts} açık port · ${extractLatency(data.output)}`;
 
             resetBtn();
+            currentAbortController = null;
         }
 
         function resetBtn() {
