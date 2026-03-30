@@ -22,6 +22,10 @@ struct ScanRequest {
     #[serde(default)]
     dns_query: bool,
     #[serde(default)]
+    version_detect: bool,
+    #[serde(default)]
+    aggressive_scan: bool,
+    #[serde(default)]
     net_discover: bool,
 }
 
@@ -97,10 +101,10 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     let mut all_output = String::new();
     let mut scan_types: Vec<&str> = Vec::new();
     let mut overall_success = true;
-    let any_option = body.port_scan || body.vuln_scan || body.os_detect || body.dns_query || body.net_discover;
+    let any_option = body.port_scan || body.vuln_scan || body.os_detect || body.dns_query || body.version_detect || body.aggressive_scan || body.net_discover;
 
     let timing_arg = match body.timing.as_str() {
-        "T3" | "T4" | "T5" => format!("-{}", body.timing),
+        "T0" | "T1" | "T2" | "T3" | "T4" | "T5" => format!("-{}", body.timing),
         _ => "-T3".to_string(),
     };
     let t_arg = timing_arg.as_str();
@@ -122,7 +126,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     if body.net_discover {
         scan_types.push("net_discover");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-sT", "-sn", t_arg, "--host-timeout", "60s", &target]);
+        let (ok, out) = run_command("nmap", &["-sn", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -145,11 +149,29 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         all_output.push_str(&out);
     }
 
-    // ── İşletim Sistemi Tespiti → nmap -O -Pn ──
+    // ── İşletim Sistemi Tespiti → nmap -O -p 22,80,443 -Pn ──
     if body.os_detect {
         scan_types.push("os_detect");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-sT", "-O", "-Pn", t_arg, "--host-timeout", "60s", &target]);
+        let (ok, out) = run_command("nmap", &["-O", "-p", "22,80,443", t_arg, "--host-timeout", "60s", &target]);
+        overall_success = overall_success && ok;
+        all_output.push_str(&out);
+    }
+
+    // ── Servis Versiyon Tespiti → nmap -sV -Pn ──
+    if body.version_detect {
+        scan_types.push("version_detect");
+        if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
+        let (ok, out) = run_command("nmap", &["-sV", "-Pn", t_arg, "--host-timeout", "60s", &target]);
+        overall_success = overall_success && ok;
+        all_output.push_str(&out);
+    }
+
+    // ── Kapsamlı Agresif Tarama → nmap -A -Pn ──
+    if body.aggressive_scan {
+        scan_types.push("aggressive_scan");
+        if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
+        let (ok, out) = run_command("nmap", &["-A", "-Pn", t_arg, "--host-timeout", "120s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }

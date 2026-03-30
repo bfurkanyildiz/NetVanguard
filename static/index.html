@@ -792,7 +792,10 @@
                 </div>
                 <div class="timing-wrapper" style="position: relative;">
                     <select id="timing-select" style="padding: 0.95rem 1rem; background: var(--bg-input); border: 1.5px solid var(--border-subtle); border-radius: 12px; color: var(--cyan-400); font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; font-weight: 600; outline: none; appearance: none; cursor: pointer; transition: all 0.3s var(--ease-out); height: 100%;">
-                        <option value="T3">T3: Normal (Dengeli)</option>
+                        <option value="T0">T0: Paranoyak (Çok yavaş)</option>
+                        <option value="T1">T1: Sinsi (Yavaş)</option>
+                        <option value="T2">T2: Kibar (Hedefi yormaz)</option>
+                        <option value="T3" selected>T3: Normal (Dengeli)</option>
                         <option value="T4">T4: Hızlı (Agresif)</option>
                         <option value="T5">T5: İnsafsız (Cyber)</option>
                     </select>
@@ -834,6 +837,20 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     </span>
                     <span class="option-label">DNS Sorgulama</span>
+                </label>
+                <label class="option-chip">
+                    <input type="checkbox" id="opt-sv">
+                    <span class="checkmark">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                    <span class="option-label">Servis Versiyon Tespiti</span>
+                </label>
+                <label class="option-chip">
+                    <input type="checkbox" id="opt-a">
+                    <span class="checkmark">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                    <span class="option-label">Kapsamlı Agresif Tarama</span>
                 </label>
                 <label class="option-chip">
                     <input type="checkbox" id="opt-net" onchange="toggleNetworkScan(this)">
@@ -990,6 +1007,8 @@
                 'vuln_scan': 'Zafiyet',
                 'os_detect': 'İS Tespit',
                 'dns_query': 'DNS',
+                'version_detect': 'Versiyon Tespit',
+                'aggressive_scan': 'Kapsamlı Agresif',
             };
             return data.scan_type.split(',').map(t => map[t] || t).join(' + ');
         }
@@ -1038,6 +1057,8 @@
                 vuln_scan: document.getElementById('opt-vuln').checked,
                 os_detect: document.getElementById('opt-os').checked,
                 dns_query: document.getElementById('opt-dns').checked,
+                version_detect: document.getElementById('opt-sv').checked,
+                aggressive_scan: document.getElementById('opt-a').checked,
                 net_discover: isNetDiscover,
             };
 
@@ -1058,11 +1079,13 @@
             addLog(`Hedef: <strong>${target}</strong>`, 'info');
 
             const activeScans = [];
-            if (opts.net_discover) activeScans.push('Ağ Keşfi (nmap -sT -sn)');
+            if (opts.net_discover) activeScans.push('Ağ Keşfi (nmap -sn)');
             if (opts.port_scan) activeScans.push('Port Tarama (nmap -sT -F -Pn)');
             if (opts.vuln_scan) activeScans.push('Zafiyet Analizi (nmap -sT --script vuln -Pn)');
-            if (opts.os_detect) activeScans.push('İS Tespiti (nmap -sT -O -Pn)');
+            if (opts.os_detect) activeScans.push('İS Tespiti (nmap -O -p 22,80,443)');
             if (opts.dns_query) activeScans.push('DNS Sorgulama (nslookup)');
+            if (opts.version_detect) activeScans.push('Servis Versiyon Tespiti (nmap -sV -Pn)');
+            if (opts.aggressive_scan) activeScans.push('Kapsamlı Agresif Tarama (nmap -A -Pn)');
             if (activeScans.length === 0) activeScans.push('Ping (varsayılan)');
 
             addLog(`Modüller: <strong>${activeScans.join(', ')}</strong>`, 'highlight');
