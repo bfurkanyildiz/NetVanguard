@@ -66,9 +66,15 @@ fn run_command(program: &str, args: &[&str]) -> (bool, String) {
         cmd_args.extend_from_slice(args);
         cmd.args(&cmd_args);
     } else {
-        let actual_program = if program == "nmap" { "/usr/bin/nmap" } else { program };
-        cmd = Command::new(actual_program);
+        if program == "nmap" {
+            cmd = Command::new("sudo");
+            cmd.arg("-n");
+            cmd.arg("/usr/bin/nmap");
+        } else {
+            cmd = Command::new(program);
+        }
         cmd.args(args);
+        cmd.env("PATH", "/usr/bin:/bin:/usr/sbin:/sbin");
     }
 
     match cmd.output() {
@@ -173,7 +179,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     if body.os_detect {
         scan_types.push("os_detect");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-O", "--osscan-guess", "-Pn", "--unprivileged", "--send-eth", t_arg, "--host-timeout", "60s", &target]);
+        let (ok, out) = run_command("nmap", &["-O", "--osscan-guess", "-Pn", "--privileged", "--send-eth", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -182,7 +188,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     if body.version_detect {
         scan_types.push("version_detect");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-sV", "-Pn", "--unprivileged", "--send-eth", t_arg, "--host-timeout", "60s", &target]);
+        let (ok, out) = run_command("nmap", &["-sV", "-Pn", "--privileged", "--send-eth", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -224,8 +230,11 @@ async fn handle_stop() -> Json<ScanResponse> {
         c.args(&["/C", "taskkill /F /IM nmap.exe /T"]);
         c
     } else {
-        let mut c = Command::new("killall");
+        let mut c = Command::new("sudo");
+        c.arg("-n");
+        c.arg("killall");
         c.arg("nmap");
+        c.env("PATH", "/usr/bin:/bin:/usr/sbin:/sbin");
         c
     };
     
