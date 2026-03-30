@@ -1033,6 +1033,11 @@
             el.style.animationDelay = `${Math.min(terminal.children.length, 30) * 0.02}s`;
             el.innerHTML = `<span class="log-time">${ts()}</span><span class="log-prefix">▸</span><span class="log-msg ${type}">${msg}</span>`;
             terminal.appendChild(el);
+            
+            // Performans: Maksimum 500 satır DOM'da tut
+            if (terminal.children.length > 500) {
+                terminal.removeChild(terminal.firstChild);
+            }
             terminal.scrollTop = terminal.scrollHeight;
         }
 
@@ -1287,7 +1292,7 @@
                 if (urlBuffer.length === 0) return;
                 const uid = 'urlblock-' + Math.random().toString(36).slice(2, 8);
                 const count = urlBuffer.length;
-                addLog(`<span class="vuln-url-toggle" onclick="document.getElementById('${uid}').classList.toggle('open'); this.textContent = this.textContent.includes('Gör') ? '[-] Detayları Gizle (${count})' : '[+] Detayları Gör (${count})'">[+] Detayları Gör (${count})</span>`, '');
+                addLog(`<span class="vuln-url-toggle" onclick="document.getElementById('${uid}').classList.toggle('open'); this.textContent = this.textContent.includes('Gör') ? '[-] Taranan URL Listesini Gizle (${count})' : '[+] Taranan URL Listesini Gör (${count})'">[+] Taranan URL Listesini Gör (${count})</span>`, '');
                 const urlHtml = urlBuffer.map(u => u.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')).join('<br>');
                 addLog(`<div id="${uid}" class="vuln-url-block">${urlHtml}</div>`, '');
                 urlBuffer = [];
@@ -1364,7 +1369,8 @@
 
                 // ── URL Gruplama (http-sql-injection vb.) ──
                 const isUrl = raw.match(/^\s+(https?:\/\/)/i);
-                if (opts.vuln_scan && isUrl) {
+                // Eğer URL ama içinde VULNERABLE geçiyorsa gizleme!
+                if (opts.vuln_scan && isUrl && !raw.toUpperCase().includes('VULNERABLE')) {
                     urlBuffer.push(raw.trim());
                     continue;
                 }
@@ -1399,7 +1405,7 @@
 
                 // ── KRİTİK Zafiyet Hiyerarşisi ──
                 if (opts.vuln_scan && raw.match(/\bVULNERABLE\b/i)) {
-                    safe = `<span class="vuln-critical" style="color:#ff1744; font-weight:900; text-shadow: 0 0 10px rgba(255, 23, 68, 0.7); animation: vulnPulse 2s ease-in-out infinite;">🔴 ${safe}</span>`;
+                    safe = `<span class="vuln-critical" style="display:inline-block; width:100%; box-sizing:border-box; background: rgba(255, 23, 68, 0.15); border-left: 4px solid #ff1744; margin-top: 4px; padding: 4px 10px; color:#ff1744; font-weight:900; text-shadow: 0 0 10px rgba(255, 23, 68, 0.7); animation: vulnPulse 2s ease-in-out infinite;">🚨 ${safe}</span>`;
                 } else if (opts.vuln_scan && (raw.match(/\bExploitable\b/i) || raw.match(/State: LIKELY VULNERABLE/i))) {
                     safe = `<span class="vuln-critical">🔴 ${safe}</span>`;
                 } else if (opts.vuln_scan && (safe.match(/CVE-\d+-\d+/i) || safe.match(/\bzafiyet\b/i))) {
