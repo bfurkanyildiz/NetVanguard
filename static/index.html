@@ -835,7 +835,7 @@
                     <span class="option-label">Port Tarama</span>
                 </label>
                 <label class="option-chip">
-                    <input type="checkbox" id="opt-vuln" checked>
+                    <input type="checkbox" id="opt-vuln" checked onchange="toggleVulnSpeedLock()">
                     <span class="checkmark">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     </span>
@@ -1319,12 +1319,55 @@
                 statusBar.style.border = '1px solid rgba(239, 68, 68, 0.3)';
                 statusIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
                 statusIcon.style.animation = 'none';
-                statusText.textContent = `HATA: Sunucu ile iletişim kurulamadı!`;
+                statusText.textContent = `HATA: Sunucuyla bağlantı kesildi!`;
             }
         }
         
+        // 3. UI Speed Lock (Hız Kısıtlaması)
+        function toggleVulnSpeedLock() {
+            const checkbox = document.getElementById('opt-vuln');
+            const select = document.getElementById('timing-select');
+            const opts = select.options;
+            
+            if (checkbox && checkbox.checked) {
+                // T4 ve T5'i devre dışı bırak
+                for(let i=0; i<opts.length; i++) {
+                    if(opts[i].value === 'T4' || opts[i].value === 'T5') {
+                        opts[i].disabled = true;
+                    }
+                }
+                // Kullanıcı T4 veya T5 seçmişse, T3'e (Normal) çek
+                if (select.value === 'T4' || select.value === 'T5') {
+                    select.value = 'T3';
+                }
+            } else if (checkbox) {
+                // Hepsini aktifleştir
+                for(let i=0; i<opts.length; i++) {
+                    opts[i].disabled = false;
+                }
+            }
+        }
+
+        // Ağ Durumu Takibi
+        window.addEventListener('offline', () => {
+            const statusBar = document.getElementById('status-bar');
+            const statusIcon = document.getElementById('status-icon');
+            const statusText = document.getElementById('status-text');
+            statusBar.style.background = 'rgba(239, 68, 68, 0.15)';
+            statusBar.style.color = '#ef4444';
+            statusBar.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+            statusIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
+            statusIcon.style.animation = 'none';
+            statusText.textContent = `HATA: Sunucuyla bağlantı kesildi!`;
+        });
+        window.addEventListener('online', checkEnvironment);
+        
         // Form load olduğunda çalıştır
-        document.addEventListener('DOMContentLoaded', checkEnvironment);
+        document.addEventListener('DOMContentLoaded', () => {
+            toggleVulnSpeedLock(); // İlk açılışta state'i ayarla
+            checkEnvironment();
+            setInterval(checkEnvironment, 5000); // 5 saniyede bir Heartbeat
+        });
     </script>
 </body>
 </html>
