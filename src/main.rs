@@ -1,4 +1,4 @@
-use axum::{routing::post, Json, Router};
+use axum::{routing::{get, post}, Json, Router};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use std::process::Command;
@@ -37,6 +37,13 @@ struct ScanResponse {
     output: String,
 }
 
+#[derive(Serialize)]
+struct EnvCheckResponse {
+    nmap_installed: bool,
+    is_admin: bool,
+    os_type: String,
+}
+
 // ═══════════════════════════════════════════════════════════
 //  GİRDİ DOĞRULAMA
 // ═══════════════════════════════════════════════════════════
@@ -51,6 +58,45 @@ fn validate_target(target: &str) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PRE-CHECK SİSTEMİ
+// ═══════════════════════════════════════════════════════════
+
+async fn handle_check_env() -> Json<EnvCheckResponse> {
+    let os_type = if cfg!(target_os = "windows") {
+        "Windows".to_string()
+    } else {
+        "Linux".to_string()
+    };
+
+    // Check if nmap is installed
+    let nmap_installed = if cfg!(target_os = "windows") {
+        Command::new("cmd").args(&["/C", "nmap", "--version"]).output().is_ok()
+    } else {
+        Command::new("nmap").arg("--version").output().is_ok()
+    };
+
+    // Check if running as admin/root
+    let is_admin = if cfg!(target_os = "windows") {
+        // 'net session' only successful when run as Admin
+        Command::new("cmd").args(&["/C", "net session"]).output()
+            .map(|output| output.status.success()).unwrap_or(false)
+    } else {
+        // checking if uid is 0
+        Command::new("id").arg("-u").output()
+            .map(|output| {
+                let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                stdout == "0"
+            }).unwrap_or(false)
+    };
+
+    Json(EnvCheckResponse {
+        nmap_installed,
+        is_admin,
+        os_type,
+    })
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -263,6 +309,7 @@ async fn main() {
     let app = Router::new()
         .route("/api/scan", post(handle_scan))
         .route("/api/stop", post(handle_stop))
+        .route("/api/check_env", get(handle_check_env))
         .fallback_service(ServeDir::new("static"));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));

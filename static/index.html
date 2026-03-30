@@ -774,6 +774,15 @@
             </div>
         </header>
 
+        <!-- ═══ PRE-CHECK UYARILARI ═══ -->
+        <div id="env-warning" style="display: none; background: rgba(234, 179, 8, 0.1); border: 1px solid #eab308; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; margin-top: -1.5rem; color: #fef08a;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: bold; margin-bottom: 0.5rem;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Sistem Uyarıları
+            </div>
+            <ul id="env-warning-list" style="margin-left: 1.5rem; font-size: 0.85rem; line-height: 1.5;"></ul>
+        </div>
+
         <!-- ═══ SCAN PANEL ═══ -->
         <main class="scan-panel" id="scan-panel">
             <h2 class="panel-title">
@@ -897,7 +906,13 @@
                     </svg>
                     Tarama Sonuçları
                 </h3>
-                <span class="results-count" id="results-count"></span>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span class="results-count" id="results-count"></span>
+                    <button id="download-btn" class="scan-btn" onclick="downloadReport()" style="padding: 0.5rem 1rem; font-size: 0.8rem; height: auto; display: none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:0.3rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Rapor İndir
+                    </button>
+                </div>
             </div>
 
             <!-- Terminal Output -->
@@ -1107,6 +1122,8 @@
             // UI sıfırla
             terminal.innerHTML = '';
             results.classList.remove('active');
+            let dlBtn = document.getElementById('download-btn');
+            if (dlBtn) dlBtn.style.display = 'none';
             ['stat-type','stat-ports','stat-latency','stat-status'].forEach(id => setStat(id, '—'));
 
             scanBtn.classList.add('scanning');
@@ -1201,6 +1218,11 @@
                     safe = `<span class="os-highlight">${safe}</span>`;
                 }
 
+                // ── Zafiyet Vurgulama ──
+                if (opts.vuln_scan && (safe.match(/CVE-\d+-\d+/i) || safe.match(/\bvulnerable\b/i) || safe.match(/\bzafiyet\b/i) || safe.match(/State: LIKELY VULNERABLE/i))) {
+                    safe = `<span style="color:#ef4444; font-weight:bold; background:rgba(239, 68, 68, 0.1); padding:0 4px; border-radius:4px;">${safe}</span>`;
+                }
+
                 addLog(safe, guessLineType(raw));
 
                 const pct = 50 + Math.round(((i + 1) / total) * 45);
@@ -1222,6 +1244,7 @@
             results.classList.add('active');
             const openPorts = countOpenPorts(data.output);
             resCnt.textContent = `${getScanLabel(data)} · ${openPorts} açık port · ${extractLatency(data.output)}`;
+            document.getElementById('download-btn').style.display = 'inline-flex';
 
             resetBtn();
             currentAbortController = null;
@@ -1233,6 +1256,64 @@
             scanIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
             document.getElementById('stop-btn').style.display = 'none';
         }
+
+        // ═══════════════════════════════════════════════════
+        //  YENİ PRO ÖZELLİKLERİ
+        // ═══════════════════════════════════════════════════
+
+        // 1. Rapor İndirme Aracı
+        function downloadReport() {
+            const lines = Array.from(terminal.children).map(el => {
+                const time = el.querySelector('.log-time')?.textContent || '';
+                const msg = el.querySelector('.log-msg')?.textContent || '';
+                return `[${time}] ${msg}`;
+            });
+            
+            if (lines.length === 0) {
+                alert("İndirilecek rapor bulunamadı.");
+                return;
+            }
+            
+            const target = ipInput.value || "NetVanguard";
+            const reportContent = `NetVanguard Güvenlik Tarama Raporu\nHedef: ${target}\nTarih: ${new Date().toLocaleString()}\n\n${lines.join('\\n')}`;
+            
+            const blob = new Blob([reportContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `NetVanguard_Report_${target.replace(/[^a-z0-9]/gi, '_')}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 2. Çevre Ön Kontrol (Sistem Analizi)
+        async function checkEnvironment() {
+            try {
+                const res = await fetch('/api/check_env');
+                if (!res.ok) return;
+                const data = await res.json();
+                const warnings = [];
+                
+                if (!data.nmap_installed) {
+                    warnings.push("Nmap kurulu değil veya PATH'te bulunamadı. Lütfen Nmap yükleyin.");
+                }
+                if (!data.is_admin) {
+                    warnings.push("Uygulama Yönetici (Admin/Root) yetkisiyle çalışmıyor. OS tespiti ve gelişmiş taramalar başarısız olabilir.");
+                }
+                
+                if (warnings.length > 0) {
+                    const warningBox = document.getElementById('env-warning');
+                    const warningList = document.getElementById('env-warning-list');
+                    warningList.innerHTML = warnings.map(w => `<li>${w}</li>`).join('');
+                    warningBox.style.display = 'block';
+                }
+            } catch (e) {
+                console.error("Environment check failed", e);
+            }
+        }
+        
+        // Form load olduğunda çalıştır
+        document.addEventListener('DOMContentLoaded', checkEnvironment);
     </script>
 </body>
 </html>
