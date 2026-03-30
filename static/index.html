@@ -804,7 +804,20 @@
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
-        /* ── THE CYBER GATE ── */
+        /* ── PREMIUM UI: GLASSMORPHISM ── */
+        .stat-card, .scan-panel, .terminal, .nav-button, .top-nav, #status-bar {
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            background-color: rgba(10, 11, 16, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .stat-card:hover {
+            border-color: rgba(0, 255, 65, 0.3);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.1);
+        }
+
+        /* ── THE CYBER GATE: EVOLUTION ── */
         #cyber-gate {
             position: fixed; inset: 0; z-index: 10000;
             display: flex; overflow: hidden; background: #000;
@@ -816,14 +829,56 @@
             justify-content: center; transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
             border: 1px solid rgba(0, 255, 65, 0.05);
             box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
+            overflow: hidden;
         }
-        .gate-panel.left { border-right: 1px solid rgba(0, 255, 65, 0.2); }
-        .gate-panel.right { border-left: 1px solid rgba(0, 255, 65, 0.2); }
+        
+        /* Hexagon Grid Pattern */
+        .gate-panel::before {
+            content: ''; position: absolute; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l17.32 10v20L20 40 2.68 30V10z' fill='none' stroke='%2300ff41' stroke-width='0.5' stroke-opacity='0.1'/%3E%3C/svg%3E");
+            background-size: 60px 60px;
+            pointer-events: none;
+        }
+
+        /* Scanning Neon Laser */
+        .scanning-line {
+            position: absolute; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, #00ff41, transparent);
+            box-shadow: 0 0 15px #00ff41, 0 0 30px #00ff41;
+            z-index: 5; opacity: 0.8;
+            animation: scanMove 4s linear infinite;
+        }
+        @keyframes scanMove {
+            0% { top: -5%; }
+            100% { top: 105%; }
+        }
+
+        .gate-panel.left { border-right: 1px solid rgba(0, 255, 65, 0.3); }
+        .gate-panel.right { border-left: 1px solid rgba(0, 255, 65, 0.3); }
+        
         #cyber-gate.opened .gate-panel.left { transform: translateX(-101%); }
         #cyber-gate.opened .gate-panel.right { transform: translateX(101%); }
         
-        .gate-label {
+        /* Splitting Lock Icon */
+        .lock-container {
             position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            width: 100px; height: 100px; z-index: 10002;
+            display: flex; pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        #cyber-gate.opened .lock-container { opacity: 0; }
+        
+        .lock-half {
+            width: 50px; height: 100px; transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .lock-half svg { width: 50px; height: 100px; fill: #00ff41; filter: drop-shadow(0 0 10px #00ff41); }
+        .lock-half.left { justify-content: flex-end; }
+        .lock-half.right { justify-content: flex-start; }
+
+        /* Gate Labels below/on top of panels */
+        .gate-label {
+            position: absolute; left: 50%; top: 65%; transform: translate(-50%, -50%);
             z-index: 10001; text-align: center; pointer-events: none;
             transition: opacity 0.5s ease;
         }
@@ -846,15 +901,88 @@
             font-size: 10px; color: #00ff41; line-height: 1;
             white-space: nowrap; overflow: hidden;
         }
+
+        /* ── GLITCH ANIMATION ── */
+        .app-container.glitch {
+            animation: glitchEffect 0.25s cubic-bezier(.25,.46,.45,.94) both 2.6s;
+        }
+        @keyframes glitchEffect {
+            0% { transform: translate(0); }
+            20% { transform: translate(-3px, 3px); filter: hue-rotate(90deg); }
+            40% { transform: translate(-3px, -3px); }
+            60% { transform: translate(3px, 3px); filter: brightness(150%); }
+            80% { transform: translate(3px, -3px); }
+            100% { transform: translate(0); }
+        }
+
+        /* ── SONAR PULSE ── */
+        .sonar-pulse {
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            width: 50px; height: 50px; border: 2px solid var(--cyan-400);
+            border-radius: 50%; opacity: 0; pointer-events: none;
+            animation: sonarPulse 5s cubic-bezier(0.2, 0.5, 0.8, 0.2) infinite;
+        }
+        @keyframes sonarPulse {
+            0% { width: 0; height: 0; opacity: 0.6; }
+            50% { opacity: 0.3; }
+            100% { width: 600px; height: 600px; opacity: 0; }
+        }
+
+        /* ── WAR ROOM TICKER ── */
+        #security-ticker {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            height: 30px; background: rgba(0,0,0,0.8);
+            border-top: 1px solid var(--border-subtle);
+            backdrop-filter: blur(5px); display: flex; align-items: center;
+            overflow: hidden; z-index: 999;
+        }
+        .ticker-wrapper { display: flex; white-space: nowrap; animation: tickerScroll 40s linear infinite; }
+        .ticker-item {
+            padding: 0 2rem; font-size: 0.75rem; color: var(--cyan-400);
+            font-weight: bold; letter-spacing: 1px; flex-shrink: 0;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .ticker-item::before { content: '●'; font-size: 10px; color: #fff; }
+        @keyframes tickerScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
     </style>
 </head>
 <body>
-    <!-- The Cyber Gate -->
+    <!-- The Cyber Gate Explorer Interface -->
     <div id="cyber-gate">
         <div class="matrix-rain" id="matrix-rain-left"></div>
         <div class="matrix-rain" id="matrix-rain-right"></div>
-        <div class="gate-panel left"></div>
-        <div class="gate-panel right"></div>
+        
+        <div class="gate-panel left">
+            <div class="scanning-line"></div>
+            <div class="lock-container" style="justify-content: flex-end;">
+                <div class="lock-half left">
+                    <!-- Lock Left Half SVG -->
+                    <svg viewBox="0 0 50 100">
+                        <path d="M50,30 L50,70 L30,70 L30,50 L40,50 L40,40 L30,40 L30,30 Z" opacity="0.8"/>
+                        <rect x="25" y="45" width="25" height="10" />
+                        <circle cx="50" cy="50" r="15" fill="none" stroke="#00ff41" stroke-width="2"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <div class="gate-panel right">
+            <div class="scanning-line" style="animation-delay: 2s;"></div>
+            <div class="lock-container" style="justify-content: flex-start;">
+                <div class="lock-half right">
+                    <!-- Lock Right Half SVG -->
+                    <svg viewBox="0 0 50 100">
+                        <path d="M0,30 L0,70 L20,70 L20,50 L10,50 L10,40 L20,40 L20,30 Z" opacity="0.8"/>
+                        <rect x="0" y="45" width="25" height="10" />
+                        <circle cx="0" cy="50" r="15" fill="none" stroke="#00ff41" stroke-width="2"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
         <div class="gate-label">
             <div class="gate-title">NETVANGUARD</div>
             <div class="gate-subtitle">SECURE ACCESS GRANTED</div>
@@ -864,7 +992,7 @@
     <div class="bg-grid"></div>
     <div class="bg-radial"></div>
 
-    <div class="app-container">
+    <div class="app-container" id="app-container">
         <!-- ═══ HEADER ═══ -->
         <header class="header">
             <div class="logo-container">
@@ -1173,6 +1301,9 @@
                         <div style="position:absolute; width:100%; height:2px; background:rgba(0, 242, 254, 0.1); top:50%; left:0; pointer-events:none;"></div>
                         <div style="position:absolute; width:2px; height:100%; background:rgba(0, 242, 254, 0.1); top:0; left:50%; pointer-events:none;"></div>
                         
+                        <!-- Sonar Pulse -->
+                        <div class="sonar-pulse"></div>
+
                         <div style="position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:rgba(255,255,255,0.05); font-size:2rem; font-weight:bold; pointer-events:none; white-space:nowrap;">NETVANGUARD RADAR</div>
                     </div>
                 </div>
@@ -1184,6 +1315,26 @@
                 <span>NetVanguard v1.0</span> · Rust + Axum ile güçlendirilmiştir · 2026
             </p>
         </footer>
+
+        <!-- War Room Ticker -->
+        <div id="security-ticker">
+            <div class="ticker-wrapper" id="ticker-content">
+                <!-- Content will be duplicated for seamless loop -->
+                <div class="ticker-item">SYSTEM STATUS: ONLINE</div>
+                <div class="ticker-item">NETWORK SCANNED: 10.0.0.1/24</div>
+                <div class="ticker-item">CVE-DATABASE: UPDATED</div>
+                <div class="ticker-item">KALI LINUX NODE: ACTIVE</div>
+                <div class="ticker-item">LIVE LOGS: 0 ERRORS FOUND</div>
+                <div class="ticker-item">NETVANGUARD: PROTECTING NODE</div>
+                <!-- Duplicate -->
+                <div class="ticker-item">SYSTEM STATUS: ONLINE</div>
+                <div class="ticker-item">NETWORK SCANNED: 10.0.0.1/24</div>
+                <div class="ticker-item">CVE-DATABASE: UPDATED</div>
+                <div class="ticker-item">KALI LINUX NODE: ACTIVE</div>
+                <div class="ticker-item">LIVE LOGS: 0 ERRORS FOUND</div>
+                <div class="ticker-item">NETVANGUARD: PROTECTING NODE</div>
+            </div>
+        </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════════
@@ -1224,14 +1375,28 @@
 
             setTimeout(() => {
                 document.getElementById('cyber-gate').classList.add('opened');
+                document.getElementById('app-container').classList.add('glitch');
                 setTimeout(() => {
                     document.getElementById('cyber-gate').style.opacity = '0';
                     setTimeout(() => {
                         document.getElementById('cyber-gate').style.display = 'none';
+                        document.getElementById('app-container').classList.remove('glitch');
                     }, 1000);
                 }, 1500);
             }, 2500);
         });
+
+        // Live Ticker Randomizer
+        setInterval(() => {
+            const items = document.querySelectorAll('.ticker-item');
+            const randomItem = items[Math.floor(Math.random() * (items.length / 2))]; // Only first half
+            const alerts = ["THREAT DETECTED: NONE", "FIREWALL: BREACH ATTEMPT BLOCKED", "ENCRYPTION: AES-256", "VULN: 0 NEW FOUND", "NODE: SECURE"];
+            if (randomItem) {
+                randomItem.textContent = alerts[Math.floor(Math.random() * alerts.length)];
+                // Update its mirror too
+                items[Math.floor(items.length/2) + Array.from(items).indexOf(randomItem)].textContent = randomItem.textContent;
+            }
+        }, 8000);
 
         // Mock System Health Updater
         setInterval(() => {
