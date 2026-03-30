@@ -1331,10 +1331,16 @@
                     // Nmap reverse dns formatı veya nslookup Address formatı
                     const dnsM = raw.match(/Nmap scan report for ([\d.]+)/i) || raw.match(/Address:\s*([\d.]+)/i);
                     if (dnsM) {
-                        liveDnsIp = dnsM[1]; // Döngü bittiğinde en son yakalanan (hedef) kalacak
-                        if (document.getElementById('stat-ports-label').textContent === 'HEDEF IP') {
-                            const portEl = document.getElementById('stat-ports');
-                            portEl.innerHTML = `<span style="text-shadow: 0 0 10px #00f2fe; color:#00f2fe; font-size: 1.3rem; font-weight:bold;">${liveDnsIp}</span>`;
+                        const matchedIp = dnsM[1];
+                        // Filtrele: Lokal DNS (#53) veya Yerel IP'yi (192.168) asıl hedef değilse atla
+                        const isLocalDns = raw.includes('#53') || matchedIp.startsWith('192.168.');
+                        
+                        if (!isLocalDns) {
+                            liveDnsIp = matchedIp; // En son yakalanan gerçek dış IP kalacak
+                            if (document.getElementById('stat-ports-label').textContent === 'HEDEF IP') {
+                                const portEl = document.getElementById('stat-ports');
+                                portEl.innerHTML = `<span style="text-shadow: 0 0 10px #00f2fe; color:#00f2fe; font-size: 1.3rem; font-weight:bold;">${liveDnsIp}</span>`;
+                            }
                         }
                     }
                 }
