@@ -986,8 +986,11 @@
                     </div>
                 </div>
                 
-                <!-- Cytoscape Map -->
-                <div id="cy" style="width: 100%; height: 250px; background: #08080b; border-bottom: 1px solid var(--border); display:none;"></div>
+                <!-- Cytoscape Map Wrapper -->
+                <div id="cy-wrapper" style="position: relative; width: 100%; display:none; border-bottom: 1px solid var(--border);">
+                    <div id="cy" style="width: 100%; height: 250px; background: #08080b;"></div>
+                    <button onclick="if(cyMap){cyMap.fit(); cyMap.center();}" style="position: absolute; bottom: 10px; right: 10px; z-index: 100; background: rgba(10,11,16,0.8); border: 1px solid var(--border); color: #fff; padding: 4px 8px; font-size: 0.75rem; border-radius: 4px; cursor: pointer; backdrop-filter: blur(4px);">🔄 Görünümü Sıfırla</button>
+                </div>
 
                 <div class="terminal-body" id="terminal-body">
                     <!-- Log lines injected here -->
@@ -996,12 +999,21 @@
 
             <!-- Wi-Fi Radar Output -->
             <div class="terminal" id="vue-wifi" style="display:none; padding: 1.5rem; background:#08080b; min-height:350px;">
-                <h4 style="color:#fff; margin-bottom: 1.5rem; display:flex; align-items:center; gap:0.5rem;">
-                    📡 Radar Taraması (Çevredeki Ağlar)
-                    <button onclick="fetchWifi()" style="background:transparent; border:1px solid var(--border); color:#fff; padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem; cursor:pointer;">Yenile</button>
+                <h4 style="color:#fff; margin-bottom: 1.5rem; display:flex; align-items:center; gap:0.5rem; justify-content:space-between;">
+                    <span>📡 Radar Taraması (Çevredeki Ağlar)</span>
+                    <button onclick="fetchWifi()" class="scan-btn" style="padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem; height:auto;">Yenile</button>
                 </h4>
-                <div id="wifi-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
-                    <div style="color:#888;">Veri bekleniyor... Taramayı başlatmak için yenileyin.</div>
+                
+                <div style="display: flex; gap: 1rem; width: 100%; min-height: 400px; flex-wrap: wrap;">
+                    <!-- Liste Görünümü -->
+                    <div id="wifi-list" style="flex: 1; min-width: 250px; max-height:400px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; padding-right: 0.5rem;">
+                        <div style="color:#888;">Veri bekleniyor... Taramayı başlatmak için yenileyin.</div>
+                    </div>
+                    
+                    <!-- Kat Planı / Heatmap Görünümü -->
+                    <div id="wifi-heatmap" style="flex: 2; min-width: 300px; min-height: 400px; position: relative; background: url('https://www.transparenttextures.com/patterns/blueprint.png') rgba(16, 25, 40, 0.9); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                        <div style="position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:rgba(255,255,255,0.05); font-size:2rem; font-weight:bold; pointer-events:none; white-space:nowrap;">NETVANGUARD RADAR</div>
+                    </div>
                 </div>
             </div>
 
@@ -1058,6 +1070,9 @@
         //  EVOLUTION: TABS, GAUGE & CYTOSCAPE MAP
         // ═══════════════════════════════════════════════════
         
+        let wifiInterval = null;
+        let wifiNodes = {};
+
         // Tab UI
         function switchVue(mode) {
             document.getElementById('btn-terminal').classList.remove('active');
@@ -1069,6 +1084,7 @@
             document.getElementById('vue-wifi').style.display = 'none';
             
             if(mode === 'terminal') {
+                if (wifiInterval) { clearInterval(wifiInterval); wifiInterval = null; }
                 document.getElementById('btn-terminal').classList.add('active');
                 document.getElementById('btn-terminal').style.background = '';
                 document.getElementById('vue-terminal').style.display = 'block';
@@ -1076,44 +1092,103 @@
                 document.getElementById('btn-wifi').classList.add('active');
                 document.getElementById('btn-wifi').style.background = '';
                 document.getElementById('vue-wifi').style.display = 'block';
+                if (!wifiInterval) {
+                    fetchWifi();
+                    wifiInterval = setInterval(fetchWifi, 5000);
+                }
             }
         }
 
         async function fetchWifi() {
-            const grid = document.getElementById('wifi-grid');
-            grid.innerHTML = '<div style="color:#888;">📡 Taranıyor... Lütfen bekleyin.</div>';
+            const list = document.getElementById('wifi-list');
+            const map = document.getElementById('wifi-heatmap');
+            
+            // list.innerHTML = '<div style="color:#888;">📡 Taranıyor... Lütfen bekleyin.</div>';
+            
             try {
                 const r = await fetch('/api/wifi_scan');
                 const d = await r.json();
-                if(!d.success) {
-                    grid.innerHTML = `<div style="color:#ef4444;">⚠️ Hata: ${d.error}</div>`;
-                    return;
-                }
-                if(d.data.length === 0) {
-                    grid.innerHTML = '<div style="color:#888;">Etrafta ağ bulunamadı.</div>';
-                    return;
-                }
-                grid.innerHTML = '';
+                if(!d.success) return; // Sessizce atla
+                if(d.data.length === 0) return;
+                
+                list.innerHTML = '';
+                const currentSsids = new Set();
+
                 d.data.forEach(net => {
-                    let color = '#3b82f6'; // Mavi
-                    if(net.signal > 75) color = '#10b981'; // Yeşil
-                    else if(net.signal < 40) color = '#f59e0b'; // Sarı
+                    currentSsids.add(net.ssid);
                     
-                    grid.innerHTML += `
-                        <div style="background:#0a0b10; border:1px solid #1a1c23; padding:1rem; border-radius:8px; display:flex; flex-direction:column; gap:0.5rem;">
-                            <strong style="color:#fff; font-size:1.1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${net.ssid}</strong>
-                            <div style="display:flex; justify-content:space-between; align-items:center; color:#888; font-size:0.85rem;">
+                    let lstColor = '#3b82f6'; // Mavi
+                    let mapColor = 'rgba(59, 130, 246, 0.5)';
+                    
+                    if(net.signal >= 80) { 
+                        lstColor = '#10b981'; 
+                        mapColor = 'rgba(16, 185, 129, 0.6)'; 
+                    } else if(net.signal >= 50) { 
+                        lstColor = '#f59e0b'; 
+                        mapColor = 'rgba(245, 158, 11, 0.6)'; 
+                    } else { 
+                        lstColor = '#ef4444'; 
+                        mapColor = 'rgba(239, 68, 68, 0.6)'; 
+                    }
+                    
+                    // List Item Eklenmesi
+                    list.innerHTML += `
+                        <div style="background:#0a0b10; border:1px solid #1a1c23; padding:0.8rem; border-radius:6px; display:flex; flex-direction:column; gap:0.4rem;">
+                            <strong style="color:#fff; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${net.ssid}">${net.ssid}</strong>
+                            <div style="display:flex; justify-content:space-between; align-items:center; color:#888; font-size:0.8rem;">
                                 <span>Signal</span>
-                                <span style="color:${color}; font-weight:bold;">${net.signal}%</span>
+                                <span style="color:${lstColor}; font-weight:bold;">${net.signal}%</span>
                             </div>
-                            <div style="width:100%; height:4px; background:#1a1c23; border-radius:2px; overflow:hidden;">
-                                <div style="width:${net.signal}%; height:100%; background:${color};"></div>
+                            <div style="width:100%; height:3px; background:#1a1c23; border-radius:2px; overflow:hidden;">
+                                <div style="width:${net.signal}%; height:100%; background:${lstColor};"></div>
                             </div>
                         </div>
                     `;
+
+                    // Heatmap DOM Düğümü Kontrolü
+                    const size = 30 + (net.signal * 1.5);
+                    let node = wifiNodes[net.ssid];
+                    
+                    if (!node) {
+                        const left = Math.floor(Math.random() * 80) + 10;
+                        const top = Math.floor(Math.random() * 80) + 10;
+                        node = { left, top, el: document.createElement('div') };
+                        
+                        node.el.style.position = 'absolute';
+                        node.el.style.left = left + '%';
+                        node.el.style.top = top + '%';
+                        node.el.style.borderRadius = '50%';
+                        node.el.style.transform = 'translate(-50%, -50%)';
+                        node.el.style.display = 'flex';
+                        node.el.style.alignItems = 'center';
+                        node.el.style.justifyContent = 'center';
+                        node.el.style.flexDirection = 'column';
+                        node.el.style.textAlign = 'center';
+                        node.el.style.cursor = 'crosshair';
+                        node.el.style.animation = 'vulnPulse 3s infinite alternate';
+                        node.el.style.transition = 'width 1s ease-in-out, height 1s ease-in-out, background 1s ease-in-out';
+                        
+                        node.el.innerHTML = `<strong style="color:#fff; font-size:10px; text-shadow: 0 0 5px #000; word-break: break-all; padding: 0 4px; pointer-events:none;">${net.ssid}</strong>`;
+                        map.appendChild(node.el);
+                        wifiNodes[net.ssid] = node;
+                    }
+                    
+                    // Dinamik Güncelleme (Geçiş Animasyonlu)
+                    node.el.style.width = size + 'px';
+                    node.el.style.height = size + 'px';
+                    node.el.style.background = `radial-gradient(circle, ${mapColor} 0%, transparent 70%)`;
+                    node.el.title = `Ağ: ${net.ssid}\nSinyal: %${net.signal}`;
                 });
+                
+                // Eski (Kaybolan) Ağları Temizle
+                for (const ssid in wifiNodes) {
+                    if (!currentSsids.has(ssid)) {
+                        map.removeChild(wifiNodes[ssid].el);
+                        delete wifiNodes[ssid];
+                    }
+                }
             } catch(e) {
-                grid.innerHTML = `<div style="color:#ef4444;">Ağ hatası: ${e.message}</div>`;
+                list.innerHTML = `<div style="color:#ef4444;">Ağ hatası: ${e.message}</div>`;
             }
         }
 
@@ -1155,8 +1230,12 @@
             if(foundScore > currentMaxScore) {
                 currentMaxScore = foundScore;
                 if(cvssGauge) cvssGauge.set(currentMaxScore);
-                document.getElementById('cvss-score').textContent = `RISK: ${currentMaxScore.toFixed(1)}`;
-                if(currentMaxScore >= 9.0) document.getElementById('cvss-score').style.color = '#ff1744';
+                const gaugeText = document.getElementById('cvss-score');
+                gaugeText.textContent = `RISK: ${currentMaxScore.toFixed(1)}`;
+                if(currentMaxScore >= 7.0) {
+                    gaugeText.style.color = '#ff1744';
+                    document.getElementById('cvss-gauge').style.animation = 'vulnPulse 1s infinite alternate';
+                }
             }
         }
 
@@ -1164,7 +1243,7 @@
         let cyMap = null;
         let cyRootId = null;
         function initCyMap(rootIp) {
-            document.getElementById('cy').style.display = 'block';
+            document.getElementById('cy-wrapper').style.display = 'block';
             cyRootId = rootIp;
             if(window.cytoscape) {
                 cyMap = cytoscape({
@@ -1177,7 +1256,10 @@
                         { selector: '.vuln', style: { 'background-color': '#ff1744', 'border-color': '#ff1744', 'border-width': 3 } },
                         { selector: 'edge', style: { 'width': 2, 'line-color': '#334155', 'curve-style': 'bezier' } }
                     ],
-                    layout: { name: 'cose', padding: 10, animate: false }
+                    layout: { name: 'cose', padding: 10, animate: false },
+                    minZoom: 0.2,
+                    maxZoom: 3.0,
+                    wheelSensitivity: 0.2
                 });
             }
         }
@@ -1392,9 +1474,10 @@
             initGauge();
             document.getElementById('cvss-score').style.color = '#fff';
             document.getElementById('cvss-score').textContent = 'RISK: 0.0';
+            document.getElementById('cvss-gauge').style.animation = 'none';
             currentMaxScore = 0.0;
             if (cyMap) { cyMap.destroy(); cyMap = null; }
-            document.getElementById('cy').style.display = 'none';
+            document.getElementById('cy-wrapper').style.display = 'none';
             if (target) initCyMap(target);
 
             // ── Başlangıç logları ──
@@ -1513,10 +1596,21 @@
                     }
                 }
 
-                // Cihaz sayımı (Ağ Keşfi)
-                if (opts.net_discover && raw.startsWith('Nmap scan report for')) {
-                    liveDeviceCount++;
-                    setStat('stat-ports', liveDeviceCount);
+                // Cihaz sayımı (Ağ Keşfi) ve Dinamik Node Reset (Nmap scan report for)
+                if (raw.startsWith('Nmap scan report for')) {
+                    if (opts.net_discover) {
+                        liveDeviceCount++;
+                        setStat('stat-ports', liveDeviceCount);
+                    }
+                    const ipMatch = raw.match(/Nmap scan report for\s+(?:.*?\s+\()?([0-9a-zA-Z.-]+)\)?/);
+                    if (ipMatch) {
+                        const parsedIp = ipMatch[1].trim();
+                        cyRootId = parsedIp;
+                        if(cyMap && cyMap.getElementById(parsedIp).length === 0) {
+                            cyMap.add({ data: { id: parsedIp, label: parsedIp }, classes: 'root' });
+                            cyMap.layout({ name: 'cose' }).run();
+                        }
+                    }
                 }
 
                 // DNS IP yakalama (HEDEF IP Kartı İçin)
@@ -1531,6 +1625,13 @@
                                 // Lokal ağı yoksay, sadece asıl dış IP parlasın
                                 if (!matchedIp.startsWith('192.168.')) {
                                     liveDnsIp = matchedIp; // En son yakalanan gerçek dış IP (IPv4) kalacak
+                                    
+                                    // Dinamik DNS Parent Node
+                                    cyRootId = liveDnsIp;
+                                    if(cyMap && cyMap.getElementById(liveDnsIp).length === 0) {
+                                        cyMap.add({ data: { id: liveDnsIp, label: liveDnsIp }, classes: 'root' });
+                                        cyMap.layout({ name: 'cose' }).run();
+                                    }
                                     
                                     if (document.getElementById('stat-ports-label').textContent === 'HEDEF IP') {
                                         const portEl = document.getElementById('stat-ports');
