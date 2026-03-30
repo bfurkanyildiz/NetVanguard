@@ -1,0 +1,112 @@
+# ===================================================================
+# NetVanguard - .gitignore
+# Kapsamlı Rust projesi ignore kuralları + güvenlik kuralları
+# ===================================================================
+
+# -------------------------------------------------------------------
+# Rust / Cargo derleme çıktıları
+# -------------------------------------------------------------------
+/target/
+**/*.rs.bk
+*.pdb
+
+# -------------------------------------------------------------------
+# Cargo.lock - binary projeler için dahil edilebilir,
+# ancak geliştirme sırasında ignore edilmesi tercih ediliyorsa:
+# (Binary projeler için genelde commit edilir, isterseniz bu satırı
+#  kaldırabilirsiniz)
+# -------------------------------------------------------------------
+# Cargo.lock
+
+# -------------------------------------------------------------------
+# IDE ve Editör dosyaları
+# -------------------------------------------------------------------
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# IntelliJ / CLion / RustRover
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Vim / Neovim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Emacs
+\#*\#
+.#*
+*.elc
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# -------------------------------------------------------------------
+# İşletim Sistemi dosyaları
+# -------------------------------------------------------------------
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.Trash-*
+.nfs*
+
+# -------------------------------------------------------------------
+# Güvenlik - Hassas tarama sonuçları ve veri dosyaları
+# Bu dosyalar kesinlikle version control'a dahil edilmemelidir!
+# -------------------------------------------------------------------
+results/
+logs/
+*.txt
+*.json
+*.csv
+
+# -------------------------------------------------------------------
+# Ortam değişkenleri ve gizli yapılandırma
+# -------------------------------------------------------------------
+.env
+.env.*
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+*.secrets
+
+# -------------------------------------------------------------------
+# Profiling ve kapsam (coverage) verileri
+# -------------------------------------------------------------------
+*.profraw
+*.profdata
+lcov.info
+tarpaulin-report.html
+coverage/
+
+# -------------------------------------------------------------------
+# Diğer
+# -------------------------------------------------------------------
+*.log
+*.bak
+*.tmp
+*.temp
+*.orig
+*.patch
+.cargo/
+!.cargo/config.toml
