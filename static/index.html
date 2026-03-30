@@ -11,38 +11,38 @@
            DESIGN SYSTEM - NetVanguard v1.0
            ═══════════════════════════════════════════════════ */
         :root {
-            /* Core Palette */
-            --bg-primary: #0a0e17;
-            --bg-secondary: #111827;
-            --bg-card: #151d2e;
-            --bg-card-hover: #1a2540;
-            --bg-input: #0d1321;
+            /* Core Palette - Cyberpunk */
+            --bg-primary: #030303;
+            --bg-secondary: #0a0a0c;
+            --bg-card: #0a0b10;
+            --bg-card-hover: #0f111a;
+            --bg-input: #050608;
 
-            /* Accent Colors */
-            --cyan-400: #22d3ee;
-            --cyan-500: #06b6d4;
-            --cyan-600: #0891b2;
-            --cyan-glow: rgba(6, 182, 212, 0.15);
-            --emerald-400: #34d399;
-            --emerald-500: #10b981;
-            --violet-400: #a78bfa;
-            --violet-500: #8b5cf6;
-            --rose-400: #fb7185;
-            --rose-500: #f43f5e;
-            --amber-400: #fbbf24;
+            /* Accent Colors - Cyber Neon */
+            --cyan-400: #00ff41; /* Neon green (formerly cyan-400) */
+            --cyan-500: #00e63a; 
+            --cyan-600: #00b32d;
+            --cyan-glow: rgba(0, 255, 65, 0.2);
+            --emerald-400: #0df0e3; /* Neon cyan */
+            --emerald-500: #0bc4ba;
+            --violet-400: #ff0055; /* Hot pink */
+            --violet-500: #e6004c;
+            --rose-400: #ff2a2a; 
+            --rose-500: #e60000;
+            --amber-400: #ffea00;
 
             /* Text */
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
+            --text-primary: #e0ffe6;
+            --text-secondary: #8abf96;
+            --text-muted: #4d7356;
 
             /* Borders */
-            --border-subtle: rgba(148, 163, 184, 0.08);
-            --border-accent: rgba(6, 182, 212, 0.25);
+            --border-subtle: rgba(0, 255, 65, 0.15);
+            --border-accent: rgba(0, 255, 65, 0.5);
 
             /* Shadows */
-            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            --shadow-glow: 0 0 40px rgba(6, 182, 212, 0.1);
+            --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            --shadow-glow: 0 0 40px rgba(0, 255, 65, 0.15);
 
             /* Transitions */
             --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -58,7 +58,7 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'JetBrains Mono', monospace;
             background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
@@ -73,11 +73,11 @@
             position: fixed;
             inset: 0;
             background-image:
-                linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
-            background-size: 60px 60px;
+                linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
             z-index: 0;
-            animation: gridPulse 8s ease-in-out infinite;
+            animation: gridPulse 4s ease-in-out infinite;
         }
 
         @keyframes gridPulse {
@@ -790,6 +790,13 @@
                         <line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
                     </svg>
                 </div>
+                <div class="timing-wrapper" style="position: relative;">
+                    <select id="timing-select" style="padding: 0.95rem 1rem; background: var(--bg-input); border: 1.5px solid var(--border-subtle); border-radius: 12px; color: var(--cyan-400); font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; font-weight: 600; outline: none; appearance: none; cursor: pointer; transition: all 0.3s var(--ease-out); height: 100%;">
+                        <option value="T3">T3: Normal (Dengeli)</option>
+                        <option value="T4">T4: Hızlı (Agresif)</option>
+                        <option value="T5">T5: İnsafsız (Cyber)</option>
+                    </select>
+                </div>
                 <button class="scan-btn" id="scan-btn" onclick="startScan()">
                     <svg id="scan-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polygon points="5 3 19 12 5 21 5 3"/>
@@ -829,7 +836,7 @@
                     <span class="option-label">DNS Sorgulama</span>
                 </label>
                 <label class="option-chip">
-                    <input type="checkbox" id="opt-net">
+                    <input type="checkbox" id="opt-net" onchange="toggleNetworkScan(this)">
                     <span class="checkmark">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     </span>
@@ -991,9 +998,27 @@
         //  ANA TARAMA FONKSİYONU
         // ═══════════════════════════════════════════════════
 
+        function toggleNetworkScan(checkbox) {
+            if (checkbox.checked) {
+                ipInput.disabled = true;
+                ipInput.dataset.oldPlace = ipInput.placeholder;
+                ipInput.dataset.oldVal = ipInput.value;
+                ipInput.value = '';
+                ipInput.placeholder = 'Otomatik Alt Ağ Taraması (192.168.1.0/24)';
+                ipInput.style.opacity = '0.4';
+            } else {
+                ipInput.disabled = false;
+                ipInput.placeholder = ipInput.dataset.oldPlace || 'Örn: 192.168.1.1, example.com veya 192.168.1.0/24';
+                ipInput.value = ipInput.dataset.oldVal || '';
+                ipInput.style.opacity = '1';
+            }
+        }
+
         async function startScan() {
-            const target = ipInput.value.trim();
-            if (!target) {
+            let target = ipInput.value.trim();
+            const isNetDiscover = document.getElementById('opt-net').checked;
+            
+            if (!target && !isNetDiscover) {
                 ipInput.style.borderColor = 'var(--rose-400)';
                 ipInput.style.boxShadow = '0 0 0 3px rgba(244,63,94,0.15)';
                 ipInput.placeholder = 'Lütfen bir hedef IP adresi girin!';
@@ -1008,11 +1033,12 @@
             // Checkbox durumlarını oku
             const opts = {
                 target,
+                timing: document.getElementById('timing-select').value,
                 port_scan: document.getElementById('opt-ports').checked,
                 vuln_scan: document.getElementById('opt-vuln').checked,
                 os_detect: document.getElementById('opt-os').checked,
                 dns_query: document.getElementById('opt-dns').checked,
-                net_discover: document.getElementById('opt-net').checked,
+                net_discover: isNetDiscover,
             };
 
             // UI sıfırla

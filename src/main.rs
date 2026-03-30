@@ -12,6 +12,8 @@ use tower_http::services::ServeDir;
 struct ScanRequest {
     target: String,
     #[serde(default)]
+    timing: String,
+    #[serde(default)]
     port_scan: bool,
     #[serde(default)]
     vuln_scan: bool,
@@ -52,7 +54,10 @@ fn validate_target(target: &str) -> Result<(), String> {
 // ═══════════════════════════════════════════════════════════
 
 fn run_command(program: &str, args: &[&str]) -> (bool, String) {
-    match Command::new(program).args(args).output() {
+    let mut cmd = Command::new("cmd");
+    cmd.arg("/C").arg(program).args(args);
+
+    match cmd.output() {
         Ok(output) => {
             let stdout = String::from_utf8_lossy(&output.stdout).to_string();
             let stderr = String::from_utf8_lossy(&output.stderr).to_string();
@@ -73,7 +78,12 @@ fn run_command(program: &str, args: &[&str]) -> (bool, String) {
 // ═══════════════════════════════════════════════════════════
 
 async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
-    let target = body.target.trim().to_string();
+    let mut target = body.target.trim().to_string();
+
+    // ── Akıllı Ağ Keşfi Override ──
+    if body.net_discover {
+        target = "192.168.1.0/24".to_string();
+    }
 
     if let Err(msg) = validate_target(&target) {
         return Json(ScanResponse {
@@ -88,6 +98,12 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     let mut scan_types: Vec<&str> = Vec::new();
     let mut overall_success = true;
     let any_option = body.port_scan || body.vuln_scan || body.os_detect || body.dns_query || body.net_discover;
+
+    let timing_arg = match body.timing.as_str() {
+        "T3" | "T4" | "T5" => format!("-{}", body.timing),
+        _ => "-T3".to_string(),
+    };
+    let t_arg = timing_arg.as_str();
 
     // ── Hiçbir şey seçilmediyse → Ping ──
     if !any_option {
@@ -106,7 +122,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     if body.net_discover {
         scan_types.push("net_discover");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-sT", "-sn", "--host-timeout", "30s", &target]);
+        let (ok, out) = run_command("nmap", &["-sT", "-sn", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -115,7 +131,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     if body.port_scan {
         scan_types.push("port_scan");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-sT", "-F", "-Pn", "--host-timeout", "30s", &target]);
+        let (ok, out) = run_command("nmap", &["-sT", "-F", "-Pn", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -124,7 +140,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     if body.vuln_scan {
         scan_types.push("vuln_scan");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-sT", "--script", "vuln", "-Pn", "--host-timeout", "30s", &target]);
+        let (ok, out) = run_command("nmap", &["-sT", "--script", "vuln", "-Pn", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -133,7 +149,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     if body.os_detect {
         scan_types.push("os_detect");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-sT", "-O", "-Pn", "--host-timeout", "30s", &target]);
+        let (ok, out) = run_command("nmap", &["-sT", "-O", "-Pn", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
