@@ -889,31 +889,31 @@
         /* Kali Dragon Logo / Splitting Lock */
         .lock-container {
             position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            width: 300px; height: 300px; z-index: 10002;
+            width: 200px; height: 300px; z-index: 9999 !important;
             display: flex; pointer-events: none;
             transition: opacity 0.5s ease;
         }
         #cyber-gate.opened .lock-container { opacity: 0; }
         
         .logo-half {
-            width: 150px; height: 300px; transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
+            width: 100px; height: 300px; transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
             display: flex; align-items: center; justify-content: center;
             overflow: hidden; position: relative;
         }
         .logo-half svg { 
-            width: 300px; height: 300px; fill: #00f0ff; 
-            filter: drop-shadow(0 0 8px #00f0ff) drop-shadow(0 0 20px #00f0ff) drop-shadow(0 0 40px rgba(0, 240, 255, 0.5));
-            animation: logoPulse 2s ease-in-out infinite;
+            width: 200px; height: 300px; fill: #00ff00; 
+            filter: drop-shadow(0 0 10px #00ff00);
+            animation: logoPulse 1.5s ease-in-out infinite;
         }
         .logo-half.left { justify-content: flex-end; }
         .logo-half.right { justify-content: flex-start; }
         
-        .logo-half.left svg { transform: translateX(150px); }
-        .logo-half.right svg { transform: translateX(-150px); }
+        .logo-half.left svg { transform: translateX(100px); }
+        .logo-half.right svg { transform: translateX(-100px); }
 
         @keyframes logoPulse {
-            0%, 100% { opacity: 0.6; transform: scale(0.97) translateX(var(--tx, 0)); filter: drop-shadow(0 0 10px #00f0ff); }
-            50% { opacity: 1; transform: scale(1.03) translateX(var(--tx, 0)); filter: drop-shadow(0 0 25px #00f0ff) drop-shadow(0 0 50px rgba(0, 240, 255, 0.8)); }
+            0%, 100% { opacity: 0.8; filter: drop-shadow(0 0 10px #00ff00); }
+            50% { opacity: 1; filter: drop-shadow(0 0 25px #00ff00); }
         }
         .logo-half.left svg { --tx: 150px; }
         .logo-half.right svg { --tx: -150px; }
@@ -1043,12 +1043,12 @@
             <div class="scanning-line"></div>
             <div class="lock-container" style="justify-content: flex-end;">
                 <div class="logo-half left">
-                    <!-- Kali Dragon High Quality Silhouette (Left) -->
-                    <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M150 20c-10 0-25 10-35 25-15 25-22 55-20 85 2 40 18 70 35 90 8 10 15 20 20 30V20z" />
-                        <path d="M150 50c-15 5-25 20-28 40-2 15 5 35 15 50 10 15 13 25 13 35V50z" fill-opacity="0.3" />
-                        <path d="M110 80c-5-10-15-15-25-15-10 0-20 10-20 25 0 20 15 35 35 35h10c0-20-0-45-0-45z" fill-opacity="0.2" />
-                        <circle cx="125" cy="45" r="4" fill="#000" />
+                    <!-- High-Quality Kali Dragon silhouette - Detailed Left -->
+                    <svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M100 20c-5 0-15 10-25 25C60 65 55 95 55 125s10 60 25 80c10 15 20 25 20 35V20z" />
+                        <path d="M100 60c-15 5-25 25-28 45-2 15 5 35 15 50s13 25 13 35V60z" fill-opacity="0.3" />
+                        <path d="M60 85c-10 0-25 10-35 25-10 15-15 35-15 50 0 20 15 35 35 35h15c0-25 0-85 0-85z" fill-opacity="0.2" />
+                        <circle cx="85" cy="45" r="4" fill="#000" />
                     </svg>
                 </div>
             </div>
@@ -1061,12 +1061,12 @@
             <div class="scanning-line" style="animation-delay: 2s;"></div>
             <div class="lock-container" style="justify-content: flex-start;">
                 <div class="logo-half right">
-                    <!-- Kali Dragon High Quality Silhouette (Right) -->
-                    <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M150 20c10 0 25 10 35 25 15 25 22 55 20 85-2 40-18 70-35 90-8 10-15 20-20 30V20z" />
-                        <path d="M150 50c15 5 25 20 28 40 2 15-5 35-15 50-10 15-13 25-13 35V50z" fill-opacity="0.3" />
-                        <path d="M190 80c5-10 15-15 25-15 10 0 20 10 20 25 0 20-15 35-35 35h-10c0-20 0-45 0-45z" fill-opacity="0.2" />
-                        <circle cx="175" cy="45" r="4" fill="#000" />
+                    <!-- High-Quality Kali Dragon silhouette - Detailed Right -->
+                    <svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M100 20c5 0 15 10 25 25 15 20 20 50 20 80s-10 60-25 80c-10 15-20 25-20 35V20z" />
+                        <path d="M100 60c15 5 25 25 28 45 2 15-5 35-15 50s-13 25-13 35V60z" fill-opacity="0.3" />
+                        <path d="M140 85c10 0 25 10 35 25 10 15 15 35 15 50 0 20-15 35-35 35h-15c0-25 0-85 0-85z" fill-opacity="0.2" />
+                        <circle cx="115" cy="45" r="4" fill="#000" />
                     </svg>
                 </div>
             </div>
@@ -1538,28 +1538,35 @@
             }, 1500);
         });
 
-        // Live Ticker Data Integration
+        // Live Ticker Logic Fix: Functional Ticker
         setInterval(() => {
-            const items = document.querySelectorAll('.ticker-item');
-            const targetIp = document.getElementById('ip-input').value || 'NONE';
+            const tickerItems = document.querySelectorAll('.ticker-item');
+            const scannerActive = scanBtn.classList.contains('scanning');
+            const targetIp = ipInput.value || 'NONE';
+            const portCount = document.getElementById('stat-ports').textContent || '0';
             
-            const alerts = [
-                `TARGET: ${targetIp}`,
-                "PRIVACY: DATA OBFUSCATED",
-                `SCAN STATUS: ${scanBtn.classList.contains('scanning') ? 'ACTIVE' : 'IDLE'}`,
-                "ETHICAL STANDARDS: COMPLIANT",
-                "KALI NODE: OPERATIONAL",
-                "FIREWALL: MONITORING"
-            ];
-            
-            const randomMsg = alerts[Math.floor(Math.random() * alerts.length)];
-            const index = Math.floor(Math.random() * (items.length / 2));
-            
-            if (items[index]) {
-                items[index].textContent = randomMsg;
-                items[index + (items.length / 2)].textContent = randomMsg;
+            let message = "";
+            if (scannerActive) {
+                message = `[TARGET: ${targetIp}] | [PORTS FOUND: ${portCount}] | [STATUS: ANALYZING...]`;
+            } else if (activeTab === 'wifi') {
+                const listItems = document.querySelectorAll('#wifi-list > div');
+                let topSSID = 'SEARCHING...';
+                let topSignal = '0';
+                if (listItems.length > 0) {
+                    const first = listItems[0];
+                    topSSID = first.querySelector('strong')?.textContent || 'UNKNOWN';
+                    topSignal = first.querySelector('span:last-child')?.textContent.replace('%', '') || '0';
+                }
+                message = `[WIFI: ${topSSID}] | [SIGNAL: ${topSignal}%] | [SCANNING FREQUENCY: 2.4/5GHz]`;
+            } else {
+                message = `[NODE: KALI-VM] | [TIME: ${new Date().toLocaleTimeString()}] | [SYSTEM: VANGUARD SECURE]`;
             }
-        }, 5000);
+            
+            // Update all items for seamless loop
+            tickerItems.forEach(item => {
+                item.textContent = message;
+            });
+        }, 3000);
 
         // Mock System Health Updater
         setInterval(() => {
