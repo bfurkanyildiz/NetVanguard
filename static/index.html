@@ -1327,11 +1327,11 @@
                 }
 
                 // DNS IP yakalama (HEDEF IP Kartı İçin)
-                if (opts.dns_query && !liveDnsIp) {
+                if (opts.dns_query) {
                     // Nmap reverse dns formatı veya nslookup Address formatı
                     const dnsM = raw.match(/Nmap scan report for ([\d.]+)/i) || raw.match(/Address:\s*([\d.]+)/i);
                     if (dnsM) {
-                        liveDnsIp = dnsM[1];
+                        liveDnsIp = dnsM[1]; // Döngü bittiğinde en son yakalanan (hedef) kalacak
                         if (document.getElementById('stat-ports-label').textContent === 'HEDEF IP') {
                             const portEl = document.getElementById('stat-ports');
                             portEl.innerHTML = `<span style="text-shadow: 0 0 10px #00f2fe; color:#00f2fe; font-size: 1.3rem; font-weight:bold;">${liveDnsIp}</span>`;
@@ -1400,12 +1400,18 @@
             setStat('stat-type', getScanLabel(data));
             setStat('stat-status', data.success ? 'Başarılı' : 'Hata');
 
-            // Latency fallback: döngüde yakalanamadıysa extractLatency ile dene
+            // Latency fallback: döngüde yakalanamadıysa (DNS vb.) extractLatency ile dene veya süreyi bas
             if (!liveLatency) {
                 const fallback = extractLatency(data.output);
                 if (fallback) {
                     liveLatency = fallback;
+                } else if (opts.dns_query) {
+                    // nslookup için tarama süresini latency olarak kabul et
+                    liveLatency = scanDuration + 's';
+                }
+                if (liveLatency) {
                     setStat('stat-latency', liveLatency);
+                    document.getElementById('stat-latency').style.opacity = '1';
                 }
             }
 
