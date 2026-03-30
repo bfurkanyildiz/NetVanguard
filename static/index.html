@@ -870,20 +870,20 @@
             <!-- Stats Grid -->
             <div class="stats-grid" id="stats-grid">
                 <div class="stat-card cyan">
-                    <div class="stat-label">Açık Portlar</div>
-                    <div class="stat-value cyan" id="stat-ports">—</div>
+                    <div class="stat-label">Tarama Tipi</div>
+                    <div class="stat-value cyan" id="stat-type">—</div>
                 </div>
                 <div class="stat-card emerald">
-                    <div class="stat-label">Servisler</div>
-                    <div class="stat-value emerald" id="stat-services">—</div>
+                    <div class="stat-label">Açık Port</div>
+                    <div class="stat-value emerald" id="stat-ports">—</div>
                 </div>
                 <div class="stat-card violet">
                     <div class="stat-label">Yanıt Süresi</div>
                     <div class="stat-value violet" id="stat-latency">—</div>
                 </div>
                 <div class="stat-card rose">
-                    <div class="stat-label">Risk Skoru</div>
-                    <div class="stat-value rose" id="stat-risk">—</div>
+                    <div class="stat-label">Durum</div>
+                    <div class="stat-value rose" id="stat-status">—</div>
                 </div>
             </div>
         </section>
@@ -900,36 +900,28 @@
          JAVASCRIPT ENGINE
          ═══════════════════════════════════════════════════ -->
     <script>
-        const ipInput    = document.getElementById('ip-input');
-        const scanBtn    = document.getElementById('scan-btn');
-        const scanIcon   = document.getElementById('scan-icon');
-        const scanText   = document.getElementById('scan-btn-text');
-        const progCont   = document.getElementById('progress-container');
-        const progFill   = document.getElementById('progress-fill');
-        const progLabel  = document.getElementById('progress-label');
-        const progPct    = document.getElementById('progress-percent');
-        const results    = document.getElementById('results-section');
-        const terminal   = document.getElementById('terminal-body');
-        const resCnt     = document.getElementById('results-count');
+        const ipInput   = document.getElementById('ip-input');
+        const scanBtn   = document.getElementById('scan-btn');
+        const scanIcon  = document.getElementById('scan-icon');
+        const scanText  = document.getElementById('scan-btn-text');
+        const progCont  = document.getElementById('progress-container');
+        const progFill  = document.getElementById('progress-fill');
+        const progLabel = document.getElementById('progress-label');
+        const progPct   = document.getElementById('progress-percent');
+        const results   = document.getElementById('results-section');
+        const terminal  = document.getElementById('terminal-body');
+        const resCnt    = document.getElementById('results-count');
 
-        // Enter key triggers scan
         ipInput.addEventListener('keydown', e => { if (e.key === 'Enter') startScan(); });
 
-        function getTimestamp() {
-            const d = new Date();
-            return d.toTimeString().slice(0, 8);
-        }
+        function ts() { return new Date().toTimeString().slice(0, 8); }
 
         function addLog(msg, type = '') {
-            const line = document.createElement('div');
-            line.className = 'log-line';
-            line.style.animationDelay = `${terminal.children.length * 0.06}s`;
-            line.innerHTML = `
-                <span class="log-time">${getTimestamp()}</span>
-                <span class="log-prefix">▸</span>
-                <span class="log-msg ${type}">${msg}</span>
-            `;
-            terminal.appendChild(line);
+            const el = document.createElement('div');
+            el.className = 'log-line';
+            el.style.animationDelay = `${Math.min(terminal.children.length, 30) * 0.02}s`;
+            el.innerHTML = `<span class="log-time">${ts()}</span><span class="log-prefix">▸</span><span class="log-msg ${type}">${msg}</span>`;
+            terminal.appendChild(el);
             terminal.scrollTop = terminal.scrollHeight;
         }
 
@@ -939,13 +931,57 @@
             if (label) progLabel.textContent = label;
         }
 
-        function setStat(id, value) {
-            document.getElementById(id).textContent = value;
+        function setStat(id, val) { document.getElementById(id).textContent = val; }
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        /** Ham çıktıdan satır tipini tahmin eder (renklendirme için) */
+        function guessLineType(line) {
+            const l = line.toLowerCase();
+            if (l.includes('open'))                      return 'success';
+            if (l.includes('closed') || l.includes('filtered')) return 'warn';
+            if (l.match(/timed?\s*out|unreachable|down|failed|error|hata/)) return 'error';
+            if (l.match(/^nmap|starting|host is up|dns|server|name:|address:/i)) return 'info';
+            if (l.match(/reply|yanıt|ttl|bytes|bayt/))  return 'success';
+            if (l.match(/loss|kayb|average|ortalama/))   return 'warn';
+            if (l.match(/port|service|version|latency/)) return 'highlight';
+            return '';
         }
 
-        async function sleep(ms) {
-            return new Promise(r => setTimeout(r, ms));
+        /** Çıktıdan açık port sayısını çıkarır */
+        function countOpenPorts(output) {
+            const matches = output.match(/\bopen\b/gi);
+            return matches ? matches.length : 0;
         }
+
+        /** Ping çıktısından yanıt süresini çıkarır */
+        function extractLatency(output) {
+            // Windows: Average = 25ms / Ortalama = 25ms
+            const win = output.match(/(?:Average|Ortalama)\s*=\s*(\d+)\s*ms/i);
+            if (win) return win[1] + 'ms';
+            // Linux: rtt min/avg/max = .../5.678/...
+            const lin = output.match(/(?:rtt|round-trip).*?=\s*[\d.]+\/([\d.]+)\//);
+            if (lin) return Math.round(parseFloat(lin[1])) + 'ms';
+            // Nmap latency
+            const nmap = output.match(/latency[:\s]*([\d.]+)\s*s/i);
+            if (nmap) return Math.round(parseFloat(nmap[1]) * 1000) + 'ms';
+            return '—';
+        }
+
+        /** Seçili opsiyonları Türkçe etiket olarak döndürür */
+        function getScanLabel(data) {
+            const map = {
+                'ping':      'Ping',
+                'port_scan': 'Nmap',
+                'vuln_scan': 'Zafiyet',
+                'os_detect': 'İS Tespit',
+                'dns_query': 'DNS',
+            };
+            return data.scan_type.split(',').map(t => map[t] || t).join(' + ');
+        }
+
+        // ═══════════════════════════════════════════════════
+        //  ANA TARAMA FONKSİYONU
+        // ═══════════════════════════════════════════════════
 
         async function startScan() {
             const target = ipInput.value.trim();
@@ -961,114 +997,109 @@
                 return;
             }
 
-            // Reset UI
+            // Checkbox durumlarını oku
+            const opts = {
+                target,
+                port_scan: document.getElementById('opt-ports').checked,
+                vuln_scan: document.getElementById('opt-vuln').checked,
+                os_detect: document.getElementById('opt-os').checked,
+                dns_query: document.getElementById('opt-dns').checked,
+            };
+
+            // UI sıfırla
             terminal.innerHTML = '';
             results.classList.remove('active');
-            ['stat-ports','stat-services','stat-latency','stat-risk'].forEach(id => setStat(id, '—'));
+            ['stat-type','stat-ports','stat-latency','stat-status'].forEach(id => setStat(id, '—'));
 
-            // Button → scanning
             scanBtn.classList.add('scanning');
             scanText.textContent = 'Taranıyor...';
             scanIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/>';
 
-            // Show progress
             progCont.classList.add('active');
             setProgress(0, 'Bağlantı kuruluyor...');
 
-            // Simulation data
-            const openPorts = [
-                { port: 22,  service: 'SSH',   version: 'OpenSSH 8.9' },
-                { port: 53,  service: 'DNS',   version: 'BIND 9.18' },
-                { port: 80,  service: 'HTTP',  version: 'nginx 1.24' },
-                { port: 443, service: 'HTTPS', version: 'nginx 1.24' },
-                { port: 3306,service: 'MySQL', version: 'MySQL 8.0' },
-                { port: 8080,service: 'HTTP-Alt', version: 'Apache Tomcat 10.1' },
-            ];
+            // ── Başlangıç logları ──
+            await sleep(200);
+            addLog(`Hedef: <strong>${target}</strong>`, 'info');
 
-            const vulns = [
-                { id: 'CVE-2024-3094', severity: 'KRİTİK', desc: 'XZ Utils arka kapı zafiyeti' },
-                { id: 'CVE-2023-44487', severity: 'YÜKSEK', desc: 'HTTP/2 Rapid Reset saldırı vektörü' },
-                { id: 'CVE-2023-38408', severity: 'ORTA', desc: 'OpenSSH PKCS#11 provider arbitrary code execution' },
-            ];
+            const activeScans = [];
+            if (opts.port_scan) activeScans.push('Port Tarama (nmap -F)');
+            if (opts.vuln_scan) activeScans.push('Zafiyet Analizi (nmap --script vuln)');
+            if (opts.os_detect) activeScans.push('İS Tespiti (nmap -O)');
+            if (opts.dns_query) activeScans.push('DNS Sorgulama (nslookup)');
+            if (activeScans.length === 0) activeScans.push('Ping (varsayılan)');
 
-            // ── Phase 1: Connection ──
-            await sleep(400);
-            addLog(`Hedef belirlendi: <strong>${target}</strong>`, 'info');
-            setProgress(5, 'Hedef doğrulanıyor...');
+            addLog(`Modüller: <strong>${activeScans.join(', ')}</strong>`, 'highlight');
+            setProgress(10, 'Rust backend motoruna istek gönderiliyor...');
 
-            await sleep(600);
-            addLog('TCP bağlantısı başlatılıyor...', '');
-            setProgress(10, 'TCP bağlantısı kuruluyor...');
+            await sleep(200);
+            addLog('İstek gönderildi, yanıt bekleniyor...', '');
+            setProgress(15, 'Yanıt bekleniyor (bu biraz sürebilir)...');
 
-            await sleep(500);
-            addLog('Bağlantı başarıyla kuruldu ✓', 'success');
-            setProgress(15, 'Port tarama modülü yükleniyor...');
-
-            // ── Phase 2: Port Scan ──
-            await sleep(400);
-            addLog('Port tarama modülü başlatıldı (SYN Scan)', 'info');
-            setProgress(20, 'Portlar taranıyor...');
-
-            let portsDone = 0;
-            for (const p of openPorts) {
-                await sleep(350 + Math.random() * 300);
-                portsDone++;
-                const pct = 20 + Math.round((portsDone / openPorts.length) * 35);
-                addLog(`Port <strong>${p.port}</strong>/tcp → <strong>${p.service}</strong> (${p.version}) — <span class="log-msg success">AÇIK</span>`, '');
-                setProgress(pct, `Port taranıyor: ${p.port}/tcp`);
+            // ── API Çağrısı ──
+            let data;
+            try {
+                const res = await fetch('/api/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(opts),
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                data = await res.json();
+            } catch (err) {
+                setProgress(100, 'Hata!');
+                addLog('════════════════════════════════════', '');
+                addLog(`Hata: <strong>${err.message}</strong>`, 'error');
+                addLog('Backend çalışıyor mu? → <strong>cargo run</strong>', 'warn');
+                resetBtn();
+                results.classList.add('active');
+                resCnt.textContent = 'Bağlantı hatası';
+                return;
             }
 
-            setStat('stat-ports', openPorts.length);
-            setStat('stat-services', openPorts.length);
-            addLog(`Toplam <strong>${openPorts.length}</strong> açık port bulundu`, 'highlight');
-            setProgress(58, 'Zafiyet analizi başlatılıyor...');
+            setProgress(50, 'Sonuçlar alındı, terminale yazdırılıyor...');
+            await sleep(200);
 
-            // ── Phase 3: Vulnerability Scan ──
-            await sleep(600);
-            addLog('Zafiyet veritabanı yükleniyor (NVD 2024)...', 'info');
-            setProgress(62, 'Zafiyet kontrolleri yapılıyor...');
+            // ── Ham çıktıyı terminale satır satır yazdır ──
+            addLog('════════════════════════════════════', '');
+            addLog(`📡 <strong>${getScanLabel(data)} Çıktısı</strong>`, 'highlight');
+            addLog('════════════════════════════════════', '');
 
-            await sleep(700);
-            addLog('Zafiyet analizi başlatıldı...', '');
+            const lines = data.output.split('\n');
+            const total = lines.length;
 
-            for (let i = 0; i < vulns.length; i++) {
-                await sleep(500 + Math.random() * 400);
-                const v = vulns[i];
-                const sevClass = v.severity === 'KRİTİK' ? 'error' : v.severity === 'YÜKSEK' ? 'warn' : 'info';
-                addLog(`[${v.severity}] <strong>${v.id}</strong> — ${v.desc}`, sevClass);
-                setProgress(65 + Math.round(((i + 1) / vulns.length) * 15), `Zafiyet analizi: ${v.id}`);
+            for (let i = 0; i < total; i++) {
+                const raw = lines[i].trimEnd();
+                if (raw === '') continue;
+
+                // HTML escape
+                const safe = raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                addLog(safe, guessLineType(raw));
+
+                const pct = 50 + Math.round(((i + 1) / total) * 45);
+                setProgress(pct, `Çıktı işleniyor... (${i + 1}/${total})`);
+                await sleep(40);
             }
 
-            // ── Phase 4: OS Detection ──
-            setProgress(82, 'İşletim Sistemi tespiti...');
-            await sleep(600);
-            addLog('İşletim Sistemi: <strong>Linux 5.15+ (Ubuntu 22.04 LTS)</strong>', 'highlight');
-            setProgress(88, 'DNS sorgulaması yapılıyor...');
+            // ── İstatistik kartlarını güncelle ──
+            setStat('stat-type', getScanLabel(data));
+            setStat('stat-ports', countOpenPorts(data.output));
+            setStat('stat-latency', extractLatency(data.output));
+            setStat('stat-status', data.success ? 'Başarılı' : 'Hata');
 
-            // ── Phase 5: DNS ──
-            await sleep(500);
-            addLog('DNS çözümleme tamamlandı', 'success');
-            setProgress(92, 'Sonuçlar derleniyor...');
-
-            // ── Phase 6: Finalize ──
-            await sleep(400);
-            const latency = Math.round(12 + Math.random() * 30);
-            setStat('stat-latency', latency + 'ms');
-
-            const risk = vulns.some(v => v.severity === 'KRİTİK') ? 'Kritik' :
-                         vulns.some(v => v.severity === 'YÜKSEK') ? 'Yüksek' : 'Orta';
-            setStat('stat-risk', risk);
-
+            // ── Son ──
             setProgress(100, 'Tarama tamamlandı!');
             addLog('════════════════════════════════════', '');
-            addLog(`Tarama tamamlandı — ${openPorts.length} açık port, ${vulns.length} zafiyet tespit edildi`, 'success');
-            addLog(`Risk Seviyesi: <strong>${risk}</strong> | Yanıt Süresi: <strong>${latency}ms</strong>`, 'warn');
+            addLog(`Tarama tamamlandı — Durum: <strong>${data.success ? 'Başarılı ✓' : 'Hata ✗'}</strong>`, data.success ? 'success' : 'error');
 
-            // Show results
             results.classList.add('active');
-            resCnt.textContent = `${openPorts.length} port · ${vulns.length} zafiyet · ${latency}ms`;
+            const openPorts = countOpenPorts(data.output);
+            resCnt.textContent = `${getScanLabel(data)} · ${openPorts} açık port · ${extractLatency(data.output)}`;
 
-            // Reset button
+            resetBtn();
+        }
+
+        function resetBtn() {
             scanBtn.classList.remove('scanning');
             scanText.textContent = 'Taramayı Başlat';
             scanIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
