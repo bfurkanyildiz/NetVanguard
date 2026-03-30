@@ -1285,8 +1285,20 @@
             const statusIcon = document.getElementById('status-icon');
             const statusText = document.getElementById('status-text');
             
+            // 1. Önce gerçek internet bağlantısını kontrol et
+            if (!navigator.onLine) {
+                statusBar.style.background = 'rgba(239, 68, 68, 0.15)';
+                statusBar.style.color = '#ef4444';
+                statusBar.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                statusIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
+                statusIcon.style.animation = 'none';
+                statusText.textContent = '⚠️ HATA: İnternet Bağlantısı Kesildi!';
+                return;
+            }
+
             try {
-                const res = await fetch('/api/check_env');
+                // cache: 'no-store' ekleyerek güncel veri alımını zorla
+                const res = await fetch('/api/check_env', { cache: 'no-store' });
                 if (!res.ok) throw new Error('API Yanıt Vermedi');
                 const data = await res.json();
                 
