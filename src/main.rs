@@ -327,6 +327,15 @@ async fn handle_stop() -> Json<ScanResponse> {
 
 #[tokio::main]
 async fn main() {
+    // 🔍 Nmap Versiyonunu Tespit Et
+    let nmap_ver = Command::new("nmap")
+        .arg("-V")
+        .output()
+        .ok()
+        .and_then(|o| String::from_utf8(o.stdout).ok())
+        .and_then(|s| s.split_whitespace().nth(2).map(|v| v.to_string()))
+        .unwrap_or_else(|| "Bilinmiyor".to_string());
+
     // ═══ ASCII ART BANNER ═══
     let banner = r#"
     ███╗   ██╗███████╗████████╗██╗   ██╗ █████╗ ███╗   ██╗ ██████╗ ██╗   ██╗ █████╗ ██████╗ ██████╗ 
@@ -341,7 +350,7 @@ async fn main() {
     println!("    {}", "═══════════════════════════════════════════════════════════════════════════".dimmed());
     println!("    {}  {}", "🛡️  Versiyon :".bright_white().bold(), "v1.0.0".bright_green().bold());
     println!("    {}  {}", "👨‍💻 Geliştirici:".bright_white().bold(), "Baha Furkan Yıldız".bright_magenta());
-    println!("    {}  {}", "⚙️  Motor    :".bright_white().bold(), "Rust+Axum".yellow());
+    println!("    {}  {}", "⚙️  Nmap Vers :".bright_white().bold(), nmap_ver.yellow());
     println!("    {}  {}", "📊 Durum    :".bright_white().bold(), "█ ONLINE".bright_green().bold());
     println!("    {}", "═══════════════════════════════════════════════════════════════════════════".dimmed());
 

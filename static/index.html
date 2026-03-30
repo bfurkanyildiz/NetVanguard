@@ -1191,14 +1191,15 @@
             if (dlBtn) dlBtn.style.display = 'none';
             ['stat-type','stat-ports','stat-latency','stat-status'].forEach(id => setStat(id, '—'));
 
-            // Dinamik kart başlıklarını önceden ayarla
+            // Dinamik kart başlıklarını önceden ayarla (DNS Desteği)
             const portsLabel = document.getElementById('stat-ports-label');
             const latencyLabel = document.getElementById('stat-latency-label');
             latencyLabel.textContent = 'YANIT SÜRESİ';
-            if (opts.net_discover) {
+            
+            if (opts.dns_query && !opts.port_scan && !opts.vuln_scan && !opts.aggressive_scan) {
+                portsLabel.textContent = 'HEDEF IP'; // DNS taranıyorsa port yerine IP göster
+            } else if (opts.net_discover) {
                 portsLabel.textContent = 'CİHAZ SAYISI';
-            } else if (opts.dns_query && !opts.port_scan && !opts.vuln_scan) {
-                portsLabel.textContent = 'HEDEF IP';
             } else {
                 portsLabel.textContent = 'AÇIK PORT';
             }
@@ -1312,6 +1313,10 @@
                     if (latM) {
                         liveLatency = latM[1];
                         setStat('stat-latency', liveLatency);
+                        // Analiz ediliyor yazısını temizle (DNS için agresif)
+                        if (opts.dns_query) {
+                            document.getElementById('stat-latency').style.opacity = '1';
+                        }
                     }
                 }
 
@@ -1321,13 +1326,15 @@
                     setStat('stat-ports', liveDeviceCount);
                 }
 
-                // DNS IP yakalama
+                // DNS IP yakalama (HEDEF IP Kartı İçin)
                 if (opts.dns_query && !liveDnsIp) {
-                    const dnsM = raw.match(/Address:\s*(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
+                    // Nmap reverse dns formatı veya nslookup Address formatı
+                    const dnsM = raw.match(/Nmap scan report for ([\d.]+)/i) || raw.match(/Address:\s*([\d.]+)/i);
                     if (dnsM) {
                         liveDnsIp = dnsM[1];
-                        if (!opts.port_scan && !opts.vuln_scan) {
-                            document.getElementById('stat-ports').innerHTML = `<span style="text-shadow: 0 0 10px #00f2fe; font-size: 1.3rem;">${liveDnsIp}</span>`;
+                        if (document.getElementById('stat-ports-label').textContent === 'HEDEF IP') {
+                            const portEl = document.getElementById('stat-ports');
+                            portEl.innerHTML = `<span style="text-shadow: 0 0 10px #00f2fe; color:#00f2fe; font-size: 1.3rem; font-weight:bold;">${liveDnsIp}</span>`;
                         }
                     }
                 }
