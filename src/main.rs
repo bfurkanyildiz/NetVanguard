@@ -125,11 +125,11 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         all_output.push_str(&out);
     }
 
-    // ── Ağ Keşfi → nmap -sn -PR ──
+    // ── Ağ Keşfi ──
     if body.net_discover {
         scan_types.push("net_discover");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-sn", "-PR", t_arg, "--host-timeout", "60s", &target]);
+        let (ok, out) = run_command("nmap", &["-sn", "-Pn", "--send-ip", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -152,11 +152,11 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         all_output.push_str(&out);
     }
 
-    // ── İşletim Sistemi Tespiti → nmap -O --osscan-guess -Pn ──
+    // ── İşletim Sistemi Tespiti ──
     if body.os_detect {
         scan_types.push("os_detect");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-O", "--osscan-guess", "-Pn", t_arg, "--host-timeout", "60s", &target]);
+        let (ok, out) = run_command("nmap", &["-O", "--osscan-guess", "-Pn", "--send-ip", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -179,13 +179,26 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         all_output.push_str(&out);
     }
 
-    // ── DNS Sorgulama → nslookup ──
+    // ── DNS Sorgulama ──
     if body.dns_query {
         scan_types.push("dns_query");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nslookup", &[&target]);
-        overall_success = overall_success && ok;
-        all_output.push_str(&out);
+        
+        let is_ip = target.parse::<std::net::IpAddr>().is_ok() || target.contains('/');
+        let is_valid_domain = target.contains('.') && !target.contains(' ');
+
+        if !is_ip && !is_valid_domain {
+            all_output.push_str("Hata: Geçerli bir domain veya IP girin\n");
+            overall_success = false;
+        } else {
+            let (ok, out) = if is_ip {
+                run_command("nmap", &["-sL", &target])
+            } else {
+                run_command("nslookup", &[&target])
+            };
+            overall_success = overall_success && ok;
+            all_output.push_str(&out);
+        }
     }
 
     Json(ScanResponse {

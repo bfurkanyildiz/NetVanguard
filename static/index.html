@@ -1032,13 +1032,13 @@
             }
             addLog('<span style="color:var(--rose-500);font-weight:bold;">TARAMA İPTAL EDİLDİ</span>', 'error');
             setProgress(100, 'Tarama İptal Edildi');
+            resetBtn(); // Anında arayüzü resetle
 
             try {
                 addLog('Durdurma sinyali gönderiliyor...', 'warn');
                 const res = await fetch('/api/stop', { method: 'POST' });
                 const data = await res.json();
                 addLog(`Durdurma: <strong>${data.output}</strong>`, data.success ? 'success' : 'error');
-                resetBtn();
             } catch (err) {
                 addLog(`Durdurma hatası: <strong>${err.message}</strong>`, 'error');
             }
