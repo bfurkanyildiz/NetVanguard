@@ -1191,6 +1191,19 @@
             if (dlBtn) dlBtn.style.display = 'none';
             ['stat-type','stat-ports','stat-latency','stat-status'].forEach(id => setStat(id, '—'));
 
+            // Dinamik kart başlıklarını önceden ayarla
+            const portsLabel = document.getElementById('stat-ports-label');
+            const latencyLabel = document.getElementById('stat-latency-label');
+            latencyLabel.textContent = 'YANIT SÜRESİ';
+            if (opts.net_discover) {
+                portsLabel.textContent = 'CİHAZ SAYISI';
+            } else if (opts.dns_query && !opts.port_scan && !opts.vuln_scan) {
+                portsLabel.textContent = 'HEDEF IP';
+            } else {
+                portsLabel.textContent = 'AÇIK PORT';
+            }
+            document.getElementById('stat-latency').innerHTML = '<span style="font-size: 0.85rem; opacity: 0.5;">Analiz Ediliyor...</span>';
+
             scanBtn.classList.add('scanning');
             scanText.textContent = 'Taranıyor...';
             scanIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/>';
@@ -1262,6 +1275,13 @@
             const BATCH = 20;    // DOM güncellemesini batch'le
             let batchCount = 0;
 
+            // Gerçek zamanlı sayaçlar
+            let livePortCount = 0;
+            let liveDeviceCount = 0;
+            let liveLatency = null;
+            let liveDnsIp = null;
+            const scanStartTime = Date.now();
+
             function flushUrlBuffer() {
                 if (urlBuffer.length === 0) return;
                 const uid = 'urlblock-' + Math.random().toString(36).slice(2, 8);
@@ -1277,12 +1297,45 @@
                 const raw = lines[i].trimEnd();
                 if (raw === '') continue;
 
+                // ── GERÇEK ZAMANLI SAYAÇLAR ──
+                // Port sayımı: "22/tcp open ssh" deseni
+                if (raw.match(/\d+\/(tcp|udp)\s+open\b/i)) {
+                    livePortCount++;
+                    if (!opts.net_discover && !(opts.dns_query && !opts.port_scan)) {
+                        setStat('stat-ports', livePortCount);
+                    }
+                }
+
+                // Gecikme tespiti: "Host is up (0.0023s latency)"
+                if (!liveLatency) {
+                    const latM = raw.match(/Host is up\s*\(([\d.]+)s\s*latency\)/i);
+                    if (latM) {
+                        liveLatency = Math.round(parseFloat(latM[1]) * 1000) + 'ms';
+                        setStat('stat-latency', liveLatency);
+                    }
+                }
+
+                // Cihaz sayımı (Ağ Keşfi)
+                if (opts.net_discover && raw.startsWith('Nmap scan report for')) {
+                    liveDeviceCount++;
+                    setStat('stat-ports', liveDeviceCount);
+                }
+
+                // DNS IP yakalama
+                if (opts.dns_query && !liveDnsIp) {
+                    const dnsM = raw.match(/Address:\s*(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
+                    if (dnsM) {
+                        liveDnsIp = dnsM[1];
+                        if (!opts.port_scan && !opts.vuln_scan) {
+                            document.getElementById('stat-ports').innerHTML = `<span style="text-shadow: 0 0 10px #00f2fe; font-size: 1.3rem;">${liveDnsIp}</span>`;
+                        }
+                    }
+                }
+
                 // ── URL Gruplama (http-sql-injection vb.) ──
                 const isUrl = raw.match(/^\s+(https?:\/\/)/i);
                 if (opts.vuln_scan && isUrl) {
                     urlBuffer.push(raw.trim());
-                    const pct = 50 + Math.round(((i + 1) / total) * 45);
-                    setProgress(pct, `Çıktı işleniyor... (${i + 1}/${total})`);
                     continue;
                 }
                 // URL tamponu doluysa ve artık URL satırı değilse → flush
@@ -1331,53 +1384,34 @@
                     await sleep(10);
                 }
             }
-            flushUrlBuffer(); // Son kalan URL'leri flush et
+            flushUrlBuffer();
 
-            // ── Dinamik İstatistik Kartları ──
+            // ── Son Durum Finalizasyonu ──
+            const scanDuration = ((Date.now() - scanStartTime) / 1000).toFixed(1);
             setStat('stat-type', getScanLabel(data));
             setStat('stat-status', data.success ? 'Başarılı' : 'Hata');
 
-            const portsLabel = document.getElementById('stat-ports-label');
-            const latencyLabel = document.getElementById('stat-latency-label');
-            const latencyVal = extractLatency(data.output);
-
-            // Kart 2: Ağ Keşfi → Cihaz Sayısı, DNS → Hedef IP, Diğer → Açık Port
-            if (opts.net_discover) {
-                portsLabel.textContent = 'CİHAZ SAYISI';
-                setStat('stat-ports', countDevices(data.output));
-            } else if (opts.dns_query && !opts.port_scan && !opts.vuln_scan) {
-                portsLabel.textContent = 'HEDEF IP';
-                const dnsIp = extractDnsIp(data.output);
-                const portEl = document.getElementById('stat-ports');
-                if (dnsIp) {
-                    portEl.innerHTML = `<span style="text-shadow: 0 0 10px #00f2fe; font-size: 1.3rem;">${dnsIp}</span>`;
-                } else {
-                    portEl.textContent = 'Bulunamadı';
+            // Latency fallback: döngüde yakalanamadıysa extractLatency ile dene
+            if (!liveLatency) {
+                const fallback = extractLatency(data.output);
+                if (fallback) {
+                    liveLatency = fallback;
+                    setStat('stat-latency', liveLatency);
                 }
-            } else {
-                portsLabel.textContent = 'AÇIK PORT';
-                setStat('stat-ports', countOpenPorts(data.output));
-            }
-
-            // Kart 3: Yanıt Süresi
-            latencyLabel.textContent = 'YANIT SÜRESİ';
-            if (latencyVal) {
-                setStat('stat-latency', latencyVal);
-            } else {
-                document.getElementById('stat-latency').innerHTML = '<span style="font-size: 0.85rem; opacity: 0.5;">Analiz Ediliyor...</span>';
             }
 
             // ── Son ──
             setProgress(100, 'Tarama tamamlandı!');
             addLog('════════════════════════════════════', '');
-            addLog(`Tarama tamamlandı — Durum: <strong>${data.success ? 'Başarılı ✓' : 'Hata ✗'}</strong>`, data.success ? 'success' : 'error');
+            addLog(`Tarama tamamlandı (${scanDuration}s) — Durum: <strong>${data.success ? 'Başarılı ✓' : 'Hata ✗'}</strong>`, data.success ? 'success' : 'error');
 
             results.classList.add('active');
             const summaryParts = [getScanLabel(data)];
-            if (opts.net_discover) summaryParts.push(countDevices(data.output) + ' cihaz');
-            else if (opts.dns_query && !opts.port_scan) summaryParts.push(extractDnsIp(data.output) || 'IP bulunamadı');
-            else summaryParts.push(countOpenPorts(data.output) + ' açık port');
-            if (latencyVal) summaryParts.push(latencyVal);
+            if (opts.net_discover) summaryParts.push(liveDeviceCount + ' cihaz');
+            else if (opts.dns_query && !opts.port_scan) summaryParts.push(liveDnsIp || 'IP bulunamadı');
+            else summaryParts.push(livePortCount + ' açık port');
+            if (liveLatency) summaryParts.push(liveLatency);
+            summaryParts.push(scanDuration + 's');
             resCnt.textContent = summaryParts.join(' · ');
             document.getElementById('download-btn').style.display = 'inline-flex';
 
@@ -1416,11 +1450,17 @@
             // Kritik zafiyet sayısını hesapla
             let criticalCount = 0;
             let cveSet = new Set();
+            let reportPortCount = 0;
             rawLines.forEach(l => {
                 if (l.msg.match(/VULNERABLE|Exploitable/i)) criticalCount++;
                 const cveMatches = l.msg.match(/CVE-\d+-\d+/gi);
                 if (cveMatches) cveMatches.forEach(c => cveSet.add(c.toUpperCase()));
+                if (l.msg.match(/\d+\/(tcp|udp)\s+open\b/i)) reportPortCount++;
             });
+
+            // Stat kartlarından tarama süresi ve latency bilgisini al
+            const reportLatency = document.getElementById('stat-latency').textContent || '—';
+            const reportDuration = resCnt.textContent.match(/([\d.]+s)$/)?.[1] || '—';
 
             // Rapor oluştur
             const sep = '════════════════════════════════════════════════════════';
@@ -1438,6 +1478,9 @@
             report += '  ╔══ ÖZET ══════════════════════════════════════════╗\n';
             report += `  ║  Kritik Zafiyet Sayısı : ${criticalCount}\n`;
             report += `  ║  Tespit Edilen CVE     : ${cveSet.size > 0 ? cveSet.size + ' adet' : 'Yok'}\n`;
+            report += `  ║  Açık Port Sayısı      : ${reportPortCount}\n`;
+            report += `  ║  Yanıt Süresi          : ${reportLatency}\n`;
+            report += `  ║  Tarama Süresi          : ${reportDuration}\n`;
             if (cveSet.size > 0) {
                 report += `  ║  CVE Listesi           : ${[...cveSet].join(', ')}\n`;
             }
