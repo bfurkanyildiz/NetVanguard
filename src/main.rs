@@ -179,7 +179,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     if body.os_detect {
         scan_types.push("os_detect");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-O", "--osscan-guess", "--osscan-limit", "--top-ports", "10", "-Pn", "--privileged", "--send-eth", t_arg, "--host-timeout", "60s", &target]);
+        let (ok, out) = run_command("nmap", &["-O", "-Pn", "--osscan-limit", "--max-retries", "1", "-p", "22,80,443", "--privileged", "--send-eth", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }

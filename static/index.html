@@ -582,6 +582,15 @@
         .log-msg.info { color: var(--cyan-400); }
         .log-msg.highlight { color: var(--violet-400); }
 
+        .os-highlight {
+            font-size: 1.5rem;
+            color: #f1c40f;
+            text-shadow: 0 0 10px #f1c40f, 0 0 20px #f1c40f;
+            display: inline-block;
+            margin: 0.3rem 0;
+            font-weight: 800;
+        }
+
         /* ═══════════════════════════════════════════════════
            STAT CARDS
            ═══════════════════════════════════════════════════ */
@@ -1165,8 +1174,21 @@
                 const raw = lines[i].trimEnd();
                 if (raw === '') continue;
 
+                // ── YENİ: Akıllı Çıktı Filtreleme ──
+                if (raw.match(/\d+\/(tcp|udp)/i)) {
+                    if (!raw.includes('22/') && !raw.includes('80/') && !raw.includes('443/')) {
+                        continue; // Gizle (atla)
+                    }
+                }
+
                 // HTML escape
-                const safe = raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                let safe = raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                
+                // ── YENİ: OS Bilgisini Vurgula ──
+                if (raw.startsWith('Running:') || raw.startsWith('OS details:') || raw.startsWith('OS CPE:')) {
+                    safe = `<span class="os-highlight">${safe}</span>`;
+                }
+
                 addLog(safe, guessLineType(raw));
 
                 const pct = 50 + Math.round(((i + 1) / total) * 45);
