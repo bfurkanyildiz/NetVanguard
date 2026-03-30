@@ -1306,11 +1306,11 @@
                     }
                 }
 
-                // Gecikme tespiti: "Host is up (0.0023s latency)"
+                // Gecikme tespiti (Üst düzey Regex): "Host is up (0.0023s latency)"
                 if (!liveLatency) {
-                    const latM = raw.match(/Host is up\s*\(([\d.]+)s\s*latency\)/i);
+                    const latM = raw.match(/Host is up \((.*?) latency\)/i);
                     if (latM) {
-                        liveLatency = Math.round(parseFloat(latM[1]) * 1000) + 'ms';
+                        liveLatency = latM[1];
                         setStat('stat-latency', liveLatency);
                     }
                 }
@@ -1368,7 +1368,9 @@
                 }
 
                 // ── KRİTİK Zafiyet Hiyerarşisi ──
-                if (opts.vuln_scan && (raw.match(/\bVULNERABLE\b/i) || raw.match(/\bExploitable\b/i) || raw.match(/State: LIKELY VULNERABLE/i))) {
+                if (opts.vuln_scan && raw.match(/\bVULNERABLE\b/i)) {
+                    safe = `<span class="vuln-critical" style="color:#ff1744; font-weight:900; text-shadow: 0 0 10px rgba(255, 23, 68, 0.7); animation: vulnPulse 2s ease-in-out infinite;">🔴 ${safe}</span>`;
+                } else if (opts.vuln_scan && (raw.match(/\bExploitable\b/i) || raw.match(/State: LIKELY VULNERABLE/i))) {
                     safe = `<span class="vuln-critical">🔴 ${safe}</span>`;
                 } else if (opts.vuln_scan && (safe.match(/CVE-\d+-\d+/i) || safe.match(/\bzafiyet\b/i))) {
                     safe = `<span style="color:#ef4444; font-weight:bold; background:rgba(239, 68, 68, 0.1); padding:0 4px; border-radius:4px;">${safe}</span>`;
