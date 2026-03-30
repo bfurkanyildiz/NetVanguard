@@ -821,67 +821,43 @@
             box-shadow: 0 0 15px rgba(0, 255, 65, 0.1);
         }
 
-        /* ── THE CYBER GATE: EVOLUTION ── */
+        /* Minimalist Grid-Only Gate */
+        .lock-container, .gate-hud, .gate-label, .retina-scan { display: none !important; }
+
         #cyber-gate {
             position: fixed; inset: 0; z-index: 10000;
-            display: flex; overflow: hidden; background: #000;
-            transition: opacity 1s ease-in-out;
+            background: #000; display: flex;
+            transition: all 1s ease;
         }
+
         .gate-panel {
-            flex: 1; height: 100%; background: #050505;
-            position: relative; display: flex; align-items: center;
-            justify-content: center; transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
-            border: 1px solid rgba(0, 255, 65, 0.05);
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
-            overflow: hidden;
+            flex: 1; height: 100%; background: #000;
+            position: relative; overflow: hidden;
+            transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
         }
-        
-        /* Hexagon Grid Pattern */
-        .gate-panel::before {
-            content: ''; position: absolute; inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l17.32 10v20L20 40 2.68 30V10z' fill='none' stroke='%2300ff41' stroke-width='0.5' stroke-opacity='0.1'/%3E%3C/svg%3E");
+
+        /* Digital Grid Lines for Gate */
+        .grid-scanner {
+            position: absolute; inset: 0;
+            background-image: 
+                linear-gradient(rgba(0, 255, 65, 0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.15) 1px, transparent 1px);
             background-size: 60px 60px;
             pointer-events: none;
         }
-
-        /* Scanning Neon Laser with HUD Grid */
+        
         .scanning-line {
             position: absolute; left: 0; width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--cyan-400), transparent);
-            box-shadow: 0 0 15px var(--cyan-400), 0 0 30px var(--cyan-400);
-            z-index: 5; opacity: 0.8;
-            animation: scanMove 4s linear infinite;
+            background: linear-gradient(90deg, transparent, #00ff41, transparent);
+            box-shadow: 0 0 15px #00ff41;
+            animation: scanHorizontal 3s linear infinite;
         }
         
-        .hud-grid-overlay {
-            position: absolute; inset: 0;
-            background-image: linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
-            background-size: 30px 30px;
-            pointer-events: none; opacity: 0.3;
-        }
-
-        @keyframes scanMove {
-            0% { top: -5%; }
-            100% { top: 105%; }
-        }
-
-        /* Retina Scan Rings */
-        .retina-scan {
-            position: absolute; width: 180px; height: 180px;
-            border: 2px solid rgba(0, 255, 65, 0.2);
-            border-radius: 50%; z-index: 10001;
-            pointer-events: none;
-        }
-        .retina-scan::before {
-            content: ''; position: absolute; inset: -10px;
-            border: 1px dashed var(--cyan-400); border-radius: 50%;
-            animation: spin 10s linear infinite;
-        }
-        .retina-scan::after {
-            content: ''; position: absolute; inset: 10px;
-            border: 2px solid transparent; border-top-color: var(--cyan-400);
-            border-radius: 50%; animation: spin 2s linear infinite;
+        @keyframes scanHorizontal {
+            0% { top: 0; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
         }
 
         .gate-panel.left { border-right: 1px solid rgba(0, 255, 65, 0.3); }
@@ -889,48 +865,6 @@
         
         #cyber-gate.opened .gate-panel.left { transform: translateX(-101%); }
         #cyber-gate.opened .gate-panel.right { transform: translateX(101%); }
-        
-        /* Modern NetVanguard Typography / Splitting Text */
-        .lock-container {
-            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            width: 100%; height: 300px; z-index: 9999 !important;
-            display: flex; pointer-events: none;
-            transition: opacity 0.5s ease;
-        }
-        #cyber-gate.opened .lock-container { opacity: 0; }
-        
-        .logo-half {
-            width: 50%; height: 300px; transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
-            display: flex; align-items: center; position: relative;
-            font-family: 'JetBrains Mono', monospace; font-weight: 900;
-            font-size: 3.5rem; letter-spacing: 5px; color: #00ff00;
-            text-shadow: 0 0 10px #00ff00, 0 0 20px rgba(0, 255, 0, 0.5);
-            background: transparent;
-        }
-        
-        .logo-half.left { justify-content: flex-end; padding-right: 0px; }
-        .logo-half.right { justify-content: flex-start; padding-left: 0px; }
-
-        /* Modern Typography Split */
-        .gate-text-half {
-            display: inline-block; animation: logoPulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes logoPulse {
-            0%, 100% { opacity: 0.8; text-shadow: 0 0 10px #00ff00; }
-            50% { opacity: 1; text-shadow: 0 0 25px #00ff00, 0 0 45px rgba(0, 255, 0, 0.8); }
-        }
-
-        /* External Hardware Alert Box */
-        .wifi-hardware-alert {
-            display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444;
-            color: #ef4444; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;
-            text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
-            animation: vulnPulse 1.5s infinite alternate;
-        }
-        .wifi-hardware-alert.visible { display: block; }
-        .wifi-hardware-alert strong { display: block; font-size: 1.1rem; margin-bottom: 0.4rem; letter-spacing: 2px; }
-
         /* Digital Scanning Grid Squares */
         .grid-scanner {
             position: absolute; inset: 0;
@@ -1041,21 +975,21 @@
         }
 
         /* ── TURBO MODE & POLISH STYLES ── */
-        body.turbo-on {
-            --accent-main: #ff1717;
-            --accent-glow: rgba(255, 23, 23, 0.2);
-            --accent-border: rgba(255, 23, 23, 0.15);
+        #vue-wifi.turbo-on #radar-container {
+            border-color: #ff1717;
+            box-shadow: 0 0 30px rgba(255, 23, 23, 0.2);
         }
-        body.turbo-on .sonar-pulse { animation-duration: 0.5s; }
+        #vue-wifi.turbo-on .sonar-pulse { 
+            animation-duration: 0.5s; 
+            border-color: #ff1717;
+        }
+        #vue-wifi.turbo-on .turbo-label { color: #ff1744; }
 
-        .turbo-container {
-            display: flex; align-items: center; gap: 0.8rem;
-            background: rgba(255,255,255,0.03); padding: 0.4rem 1rem;
-            border-radius: 30px; border: 1px solid var(--accent-border);
-            margin-left: auto;
+        #vue-wifi .turbo-container {
+            display: flex; align-items: center; gap: 0.5rem;
+            background: rgba(255,255,255,0.03); padding: 0.2rem 0.8rem;
+            border-radius: 20px; border: 1px solid var(--border-subtle);
         }
-        .turbo-label { font-size: 0.7rem; font-weight: 800; letter-spacing: 1px; color: var(--text-muted); }
-        body.turbo-on .turbo-label { color: var(--accent-main); }
         
         .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -1095,32 +1029,13 @@
         <div class="retina-scan" style="left: calc(50% - 90px); top: calc(50% - 90px);"></div>
 
         <div class="gate-panel left">
-            <div class="hud-grid-overlay"></div>
-            <div class="grid-scanner" id="grid-scanner-left"></div>
+            <div class="grid-scanner"></div>
             <div class="scanning-line"></div>
-            <div class="lock-container">
-                <div class="logo-half left">
-                    <span class="gate-text-half">NETVAN</span>
-                </div>
-            </div>
-            <div id="gate-hud-left" class="gate-hud" style="text-align: right; padding-right: 20px;"></div>
         </div>
         
         <div class="gate-panel right">
-            <div class="hud-grid-overlay"></div>
-            <div class="grid-scanner" id="grid-scanner-right"></div>
-            <div class="scanning-line" style="animation-delay: 2s;"></div>
-            <div class="lock-container">
-                <div class="logo-half right">
-                    <span class="gate-text-half">GUARD</span>
-                </div>
-            </div>
-            <div id="gate-hud-right" class="gate-hud" style="text-align: left; padding-left: 20px;"></div>
-        </div>
-
-        <div class="gate-label">
-            <div class="gate-title">NETVANGUARD</div>
-            <div class="gate-subtitle">OPERATOR IDENTIFICATION REQUIRED</div>
+            <div class="grid-scanner"></div>
+            <div class="scanning-line" style="animation-delay: 1.5s;"></div>
         </div>
     </div>
     <!-- Background Effects -->
@@ -1140,14 +1055,6 @@
                     <span class="logo-text">NetVanguard</span>
                     <span class="logo-version">v1.0</span>
                 </h1>
-                
-                <div class="turbo-container">
-                    <span class="turbo-label">TURBO MODE</span>
-                    <label class="switch">
-                        <input type="checkbox" id="turbo-toggle" onchange="toggleTurboMode(this)">
-                        <span class="slider"></span>
-                    </label>
-                </div>
             </div>
             <p class="header-subtitle">Gelişmiş Ağ Güvenliği Tarama &amp; Analiz Paneli</p>
         </header>
@@ -1445,7 +1352,16 @@
             </div>
             <h4 style="color:#fff; margin-bottom: 1.5rem; display:flex; align-items:center; gap:0.5rem; justify-content:space-between;">
                 <span>📡 Radar Taraması (Çevredeki Ağlar)</span>
-                <button onclick="fetchWifi()" class="scan-btn" style="padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem; height:auto;">Yenile</button>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="turbo-container">
+                        <span class="turbo-label">TURBO</span>
+                        <label class="switch">
+                            <input type="checkbox" id="turbo-toggle" onchange="toggleTurboMode(this)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <button onclick="fetchWifi()" class="scan-btn" style="padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem; height:auto;">Yenile</button>
+                </div>
             </h4>
             
             <div style="display: flex; gap: 1rem; width: 100%; min-height: 400px; flex-wrap: wrap;">
@@ -1459,8 +1375,9 @@
                     <!-- Advanced Warning Overlay -->
                     <div id="wlan-warning" class="wlan-warning">
                         <svg class="wlan-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.58 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg>
-                        <h2>WARNING: WLAN INTERFACE NOT DETECTED</h2>
-                        <p>Kablosuz ağ kartı veya monitör modu destekli donanım algılanmadı. Lütfen cihazınızı kontrol edin.</p>
+                        <h2>WARNING: WLAN INTERFACE REQUIRED</h2>
+                        <span style="color: #ff1744; font-weight: bold; font-family: 'JetBrains Mono'; margin-bottom: 0.5rem;">ETH0 DETECTED</span>
+                        <p>Kablolu ağ bağlantısı algılandı. Radar modülü için harici bir Wi-Fi adaptörü gereklidir.</p>
                     </div>
                     
                     <!-- Grid Daireleri (Koordinat Sistemi) -->
@@ -1679,12 +1596,13 @@
         setInterval(updateSystemStatus, 1000);
         updateSystemStatus(); // First run immediate
 
-        // Turbo Mode Toggle Logic
+        // Turbo Mode Toggle Logic (Minimalist: UI local to Radar)
         function toggleTurboMode(el) {
+            const wifiVue = document.getElementById('vue-wifi');
             if (el.checked) {
-                document.body.classList.add('turbo-on');
+                wifiVue.classList.add('turbo-on');
             } else {
-                document.body.classList.remove('turbo-on');
+                wifiVue.classList.remove('turbo-on');
             }
         }
 
@@ -2401,7 +2319,13 @@
                     }
                 }
 
-                // HTML escape
+                // Detect hardware from logs if not wifi
+            if (raw.toLowerCase().includes('eth0') || raw.toLowerCase().includes('ethernet')) {
+                const warningOverlay = document.getElementById('wlan-warning');
+                if (warningOverlay) warningOverlay.classList.add('active');
+            }
+
+            // HTML escape
                 let safe = raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
                 // ── OS Bilgisini Vurgula ──
