@@ -1163,7 +1163,23 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M2 12a10 10 0 1 0 20 0 10 10 0 1 0-20 0"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg>
                         Son Tarama Özeti
                     </h3>
-                    <div id="recent-summary-content" style="color:#888; font-style:italic; line-height: 1.6; font-size: 0.95rem;">Şu an için gösterilecek bir tarama özeti bulunmuyor. Yeni bir hedef keşfetmek için 'Network Scanner' sekmesine geçiş yapın. Taramalarınız sonucunda en son analiz raporu burada yer alacaktır.</div>
+                    <div id="recent-summary-content" style="background:rgba(0,0,0,0.3); padding:1rem; border-radius:8px; border:1px solid var(--border-subtle); box-shadow:inset 0 0 10px rgba(0,0,0,0.2);">
+                        <div style="margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:#ccc;">Durum:</span>
+                            <strong id="scan-status" style="color:var(--cyan-400);">ANALİZ BEKLENİYOR</strong>
+                        </div>
+                        <div style="margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:#ccc;">Varlık Sayısı:</span>
+                            <strong id="scan-count" style="color:var(--emerald-400);">0</strong>
+                        </div>
+                        <div style="margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:#ccc;">Tehdit Seviyesi:</span>
+                            <strong id="risk-level" style="color:var(--rose-400);">TEMİZ</strong>
+                        </div>
+                        <div style="color:#888; font-style:italic; font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem; margin-top: 0.5rem;">
+                            Yeni bir tarama başlatıldığında veriler burada güncellenecektir.
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1567,31 +1583,38 @@
         let lastKnownLocation = 'UNKNOWN';
         let lastKnownTimeStr = '';
         
-        async function updateSystemStatus() {
-            const tickerItems = document.querySelectorAll('.ticker-item');
-            const scannerActive = scanBtn.classList.contains('scanning');
-            
+        let serverTime = null;
+        let useLocalTime = false;
+
+        async function initTimeSync() {
             try {
-                // Fetch from worldtimeapi (Network Time & Location)
                 const res = await fetch('https://worldtimeapi.org/api/ip');
+                if (!res.ok) throw new Error(res.status);
                 const data = await res.json();
-                
-                const timeStr = new Date(data.datetime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                const dateStr = new Date(data.datetime).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                serverTime = new Date(data.datetime);
                 lastKnownLocation = data.timezone.split('/')[1] || data.timezone;
-                lastKnownTimeStr = `${timeStr} ${dateStr}`;
-                
-                updateTickerDisplay(`[NODE: KALI-VM] | [LOCATION: ${lastKnownLocation}] | [STATUS: NODE-ONLINE] | [TIME: ${lastKnownTimeStr}]`);
             } catch (err) {
-                // Fallback to Local Time
-                const now = new Date();
-                const L_timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                const L_dateStr = now.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                lastKnownTimeStr = `${L_timeStr} ${L_dateStr}`;
-                
-                updateTickerDisplay(`[STATUS: NODE-ONLINE] | [TIME: ${lastKnownTimeStr}]`);
+                console.warn("Time API Error, switching to local mode.");
+                useLocalTime = true;
             }
         }
+
+        async function updateSystemStatus() {
+            if (serverTime) {
+                serverTime.setSeconds(serverTime.getSeconds() + 1);
+            }
+
+            const now = useLocalTime || !serverTime ? new Date() : serverTime;
+            const timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dateStr = now.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            
+            lastKnownTimeStr = `${timeStr} ${dateStr}`;
+            const prefix = useLocalTime ? '[LOCAL MODE] ' : '';
+            updateTickerDisplay(`${prefix}[NODE: KALI-VM] | [LOCATION: ${lastKnownLocation}] | [STATUS: NODE-ONLINE] | [TIME: ${lastKnownTimeStr}]`);
+        }
+
+        // Initialize time once
+        initTimeSync();
 
         function updateTickerDisplay(statusMsg) {
             const tickerItems = document.querySelectorAll('.ticker-item');
@@ -1966,7 +1989,10 @@
             if (label) progLabel.textContent = label;
         }
 
-        function setStat(id, val) { document.getElementById(id).textContent = val; }
+        function setStat(id, val) { 
+            const el = document.getElementById(id); 
+            if(el) el.textContent = val; 
+        }
         function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
         /** Ham çıktıdan satır tipini tahmin eder (renklendirme için) */
@@ -2075,6 +2101,7 @@
 
         async function startScan() {
             console.log('Tarama Tetiklendi!');
+            addLog('[ACTION] Tarama başlatılıyor...', 'info');
             let target = ipInput.value.trim();
             const isNetDiscover = document.getElementById('opt-net').checked;
             
