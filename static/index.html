@@ -889,27 +889,34 @@
         /* Kali Dragon Logo / Splitting Lock */
         .lock-container {
             position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            width: 250px; height: 250px; z-index: 10002;
+            width: 300px; height: 300px; z-index: 10002;
             display: flex; pointer-events: none;
             transition: opacity 0.5s ease;
         }
         #cyber-gate.opened .lock-container { opacity: 0; }
         
         .logo-half {
-            width: 125px; height: 250px; transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
+            width: 150px; height: 300px; transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
             display: flex; align-items: center; justify-content: center;
-            overflow: hidden;
+            overflow: hidden; position: relative;
         }
         .logo-half svg { 
-            width: 250px; height: 250px; fill: var(--cyan-400); 
-            filter: drop-shadow(0 0 20px var(--cyan-400)) drop-shadow(0 0 40px var(--cyan-500));
-            animation: neonPulse 2s ease-in-out infinite;
+            width: 300px; height: 300px; fill: #00f0ff; 
+            filter: drop-shadow(0 0 8px #00f0ff) drop-shadow(0 0 20px #00f0ff) drop-shadow(0 0 40px rgba(0, 240, 255, 0.5));
+            animation: logoPulse 2s ease-in-out infinite;
         }
         .logo-half.left { justify-content: flex-end; }
         .logo-half.right { justify-content: flex-start; }
         
-        .logo-half.left svg { transform: translateX(0); }
-        .logo-half.right svg { transform: translateX(-125px); }
+        .logo-half.left svg { transform: translateX(150px); }
+        .logo-half.right svg { transform: translateX(-150px); }
+
+        @keyframes logoPulse {
+            0%, 100% { opacity: 0.6; transform: scale(0.97) translateX(var(--tx, 0)); filter: drop-shadow(0 0 10px #00f0ff); }
+            50% { opacity: 1; transform: scale(1.03) translateX(var(--tx, 0)); filter: drop-shadow(0 0 25px #00f0ff) drop-shadow(0 0 50px rgba(0, 240, 255, 0.8)); }
+        }
+        .logo-half.left svg { --tx: 150px; }
+        .logo-half.right svg { --tx: -150px; }
 
         /* Digital Scanning Grid Squares */
         .grid-scanner {
@@ -1036,11 +1043,12 @@
             <div class="scanning-line"></div>
             <div class="lock-container" style="justify-content: flex-end;">
                 <div class="logo-half left">
-                    <!-- Kali Dragon Left Half -->
-                    <svg viewBox="0 0 250 250">
-                        <path d="M125,5 C125,5 110,20 90,20 C70,20 50,35 45,60 C40,85 55,110 80,115 C105,120 125,110 125,110 L125,245 L110,230 L90,245 L70,230 L50,245 L30,230 L10,245 L10,180 C10,180 20,160 40,160 C60,160 70,140 70,120 C70,100 55,80 35,80 C15,80 5,60 5,40 C5,20 20,5 50,5 C80,5 125,5 125,5 Z" fill="currentColor"/>
-                        <path d="M125,40 C100,40 80,60 80,100 L125,100 Z" fill-opacity="0.3"/>
-                        <circle cx="90" cy="45" r="3" fill="#000"/>
+                    <!-- Kali Dragon High Quality Silhouette (Left) -->
+                    <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M150 20c-10 0-25 10-35 25-15 25-22 55-20 85 2 40 18 70 35 90 8 10 15 20 20 30V20z" />
+                        <path d="M150 50c-15 5-25 20-28 40-2 15 5 35 15 50 10 15 13 25 13 35V50z" fill-opacity="0.3" />
+                        <path d="M110 80c-5-10-15-15-25-15-10 0-20 10-20 25 0 20 15 35 35 35h10c0-20-0-45-0-45z" fill-opacity="0.2" />
+                        <circle cx="125" cy="45" r="4" fill="#000" />
                     </svg>
                 </div>
             </div>
@@ -1053,11 +1061,12 @@
             <div class="scanning-line" style="animation-delay: 2s;"></div>
             <div class="lock-container" style="justify-content: flex-start;">
                 <div class="logo-half right">
-                    <!-- Kali Dragon Right Half -->
-                    <svg viewBox="125 0 250 250">
-                        <path d="M125,5 C125,5 140,20 160,20 C180,20 200,35 205,60 C210,85 195,110 170,115 C145,120 125,110 125,110 L125,245 L140,230 L160,245 L180,230 L200,245 L220,230 L240,245 L240,180 C240,180 230,160 210,160 C190,160 180,140 180,120 C180,100 195,80 215,80 C235,80 245,60 245,40 C245,20 230,5 200,5 C170,5 125,5 125,5 Z" fill="currentColor"/>
-                        <path d="M125,40 C150,40 170,60 170,100 L125,100 Z" fill-opacity="0.3"/>
-                        <circle cx="160" cy="45" r="3" fill="#000"/>
+                    <!-- Kali Dragon High Quality Silhouette (Right) -->
+                    <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M150 20c10 0 25 10 35 25 15 25 22 55 20 85-2 40-18 70-35 90-8 10-15 20-20 30V20z" />
+                        <path d="M150 50c15 5 25 20 28 40 2 15-5 35-15 50-10 15-13 25-13 35V50z" fill-opacity="0.3" />
+                        <path d="M190 80c5-10 15-15 25-15 10 0 20 10 20 25 0 20-15 35-35 35h-10c0-20 0-45 0-45z" fill-opacity="0.2" />
+                        <circle cx="175" cy="45" r="4" fill="#000" />
                     </svg>
                 </div>
             </div>
