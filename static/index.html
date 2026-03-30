@@ -833,7 +833,7 @@
         .gate-panel {
             flex: 1; height: 100%; background: #000;
             position: relative; overflow: hidden;
-            transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
+            transition: transform 0.8s cubic-bezier(0.7, 0, 0.3, 1);
         }
 
         /* Digital Grid Lines for Gate */
@@ -921,10 +921,10 @@
 
         /* ── GLITCH & SHAKE ANIMATION ── */
         .app-container.glitch {
-            animation: glitchEffect 0.25s cubic-bezier(.25,.46,.45,.94) both 2.6s;
+            animation: glitchEffect 0.15s cubic-bezier(.25,.46,.45,.94) both 0.8s;
         }
         .screen-shake {
-            animation: screenShake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            animation: screenShake 0.3s cubic-bezier(.36,.07,.19,.97) both;
         }
         @keyframes screenShake {
             10%, 90% { transform: translate3d(-1px, 0, 0); }
@@ -1010,11 +1010,29 @@
 
         .wlan-warning {
             position: absolute; inset: 0; background: rgba(0,0,0,0.85);
-            display: none; flex-direction: column; align-items: center; justify-content: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 1001; backdrop-filter: blur(8px); border-radius: 8px;
             border: 2px dashed rgba(255, 23, 68, 0.3); padding: 2rem; text-align: center;
         }
         .wlan-warning.active { display: flex; }
+
+        .wifi-hardware-alert {
+            background: rgba(255, 23, 68, 0.1);
+            color: #ff1744;
+            border: 1px solid rgba(255, 23, 68, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            position: relative;
+            display: block;
+        }
+        .close-warn {
+            position: absolute; top: 5px; right: 10px; cursor: pointer;
+            font-weight: bold; font-family: 'JetBrains Mono', monospace;
+            opacity: 0.7; transition: opacity 0.2s;
+        }
+        .close-warn:hover { opacity: 1; }
         .wlan-warning h2 { color: #ff1744; font-size: 1.2rem; margin-bottom: 1rem; letter-spacing: 3px; font-weight: 900; }
         .wlan-icon { width: 64px; height: 64px; color: #ff1744; margin-bottom: 1rem; animation: vulnPulse 1.5s infinite; }
     </style>
@@ -1346,6 +1364,7 @@
         <!-- ═══ VUE: WI-FI RADAR ═══ -->
         <div class="terminal" id="vue-wifi" style="display:none; padding: 1.5rem; background:#08080b; min-height:350px;">
             <div id="wifi-hardware-alert" class="wifi-hardware-alert">
+                <span class="close-warn" onclick="this.parentElement.style.display='none'">[X]</span>
                 <strong>🚨 EXTERNAL HARDWARE REQUIRED</strong>
                 Harici Wi-Fi donanımı tespit edilmedi (Ralink RT5370 vb. gerekli).<br>
                 Sistem varsayılan simülasyon modunda çalışıyor.
@@ -1374,6 +1393,7 @@
                 <div id="radar-container" style="flex: 2; min-width: 300px; min-height: 400px; position: relative; background: url('https://www.transparenttextures.com/patterns/blueprint.png') rgba(16, 25, 40, 0.9); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
                     <!-- Advanced Warning Overlay -->
                     <div id="wlan-warning" class="wlan-warning">
+                        <span class="close-warn" onclick="this.parentElement.style.display='none'">[X]</span>
                         <svg class="wlan-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.58 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg>
                         <h2>WARNING: WLAN INTERFACE REQUIRED</h2>
                         <span style="color: #ff1744; font-weight: bold; font-family: 'JetBrains Mono'; margin-bottom: 0.5rem;">ETH0 DETECTED</span>
@@ -2320,9 +2340,18 @@
                 }
 
                 // Detect hardware from logs if not wifi
-            if (raw.toLowerCase().includes('eth0') || raw.toLowerCase().includes('ethernet')) {
+            const lRaw = raw.toLowerCase();
+            if (lRaw.includes('eth0') || lRaw.includes('ethernet')) {
                 const warningOverlay = document.getElementById('wlan-warning');
                 if (warningOverlay) warningOverlay.classList.add('active');
+            }
+            
+            // Smart Hardware Detection (Logic Fix)
+            if (lRaw.includes('wlan') || lRaw.includes('interface') || lRaw.includes('scanning') || lRaw.includes('ralink')) {
+                const alertBox = document.getElementById('wifi-hardware-alert');
+                const warningOverlay = document.getElementById('wlan-warning');
+                if (alertBox) alertBox.style.display = 'none';
+                if (warningOverlay) warningOverlay.style.display = 'none';
             }
 
             // HTML escape
@@ -2680,14 +2709,14 @@
                 gate.classList.add('opened');
                 app.classList.add('glitch');
                 app.classList.add('screen-shake');
-            }, 2000); // 2s sonra aç
+            }, 800); // 0.8s sonra aç (Hızlı Kapı)
             
             // Kapı açıldıktan sonra butonlara tıklanabilmesi için
             setTimeout(() => {
                 gate.style.zIndex = '-1';
                 gate.style.pointerEvents = 'none';
                 app.classList.remove('screen-shake');
-            }, 3500); 
+            }, 1800); 
         });
     </script>
 </body>
