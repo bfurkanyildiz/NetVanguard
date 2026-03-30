@@ -1330,26 +1330,33 @@
                 if (opts.dns_query) {
                     if (raw.startsWith('Address:')) {
                         // Lokal DNS sunucularını veya port numaralarını atla
-                        if (!raw.includes('#53') && !raw.includes('192.168.')) {
-                            // "Address: 142.250.217.110" satırından IP'yi çek
-                            const parts = raw.split(':');
-                            if (parts.length > 1) {
-                                liveDnsIp = parts[1].trim(); // En son yakalanan gerçek dış IP kalacak
-                                
-                                if (document.getElementById('stat-ports-label').textContent === 'HEDEF IP') {
-                                    const portEl = document.getElementById('stat-ports');
-                                    // Sadece text içeriğini değiştir, sayaç vs ekleme
-                                    portEl.innerHTML = `<span style="text-shadow: 0 0 10px #00f2fe; color:#00f2fe; font-size: 1.3rem; font-weight:bold;">${liveDnsIp}</span>`;
+                        if (!raw.includes('#53')) {
+                            // "Address: ..." satırından salt IPv4'ü çek (IPv6 veya 2a00 atlanır)
+                            const ipv4Match = raw.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/);
+                            if (ipv4Match) {
+                                const matchedIp = ipv4Match[0];
+                                // Lokal ağı yoksay, sadece asıl dış IP parlasın
+                                if (!matchedIp.startsWith('192.168.')) {
+                                    liveDnsIp = matchedIp; // En son yakalanan gerçek dış IP (IPv4) kalacak
+                                    
+                                    if (document.getElementById('stat-ports-label').textContent === 'HEDEF IP') {
+                                        const portEl = document.getElementById('stat-ports');
+                                        // IP'yi doğrudan neon renk ile karta bas
+                                        portEl.innerHTML = `<span style="text-shadow: 0 0 10px #00f2fe; color:#00f2fe; font-size: 1.3rem; font-weight:bold;">${liveDnsIp}</span>`;
+                                    }
                                 }
                             }
                         }
                     } else if (raw.startsWith('Nmap scan report for')) {
-                        const dnsM = raw.match(/Nmap scan report for ([\d.]+)/i);
+                        const dnsM = raw.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/);
                         if (dnsM) {
-                            liveDnsIp = dnsM[1];
-                            if (document.getElementById('stat-ports-label').textContent === 'HEDEF IP') {
-                                const portEl = document.getElementById('stat-ports');
-                                portEl.innerHTML = `<span style="text-shadow: 0 0 10px #00f2fe; color:#00f2fe; font-size: 1.3rem; font-weight:bold;">${liveDnsIp}</span>`;
+                            const matchedIp = dnsM[0];
+                            if (!matchedIp.startsWith('192.168.')) {
+                                liveDnsIp = matchedIp;
+                                if (document.getElementById('stat-ports-label').textContent === 'HEDEF IP') {
+                                    const portEl = document.getElementById('stat-ports');
+                                    portEl.innerHTML = `<span style="text-shadow: 0 0 10px #00f2fe; color:#00f2fe; font-size: 1.3rem; font-weight:bold;">${liveDnsIp}</span>`;
+                                }
                             }
                         }
                     }
