@@ -768,9 +768,9 @@
                 </h1>
             </div>
             <p class="header-subtitle">Gelişmiş Ağ Güvenliği Tarama &amp; Analiz Paneli</p>
-            <div class="status-bar">
-                <span class="status-dot"></span>
-                <span>Motor Aktif — Bağlantı Güvenli</span>
+            <div class="status-bar" id="main-status-bar">
+                <span class="status-dot" id="status-dot"></span>
+                <span id="status-text">Sistem Kontrol Ediliyor...</span>
             </div>
         </header>
 
@@ -1290,7 +1290,7 @@
         async function checkEnvironment() {
             try {
                 const res = await fetch('/api/check_env');
-                if (!res.ok) return;
+                if (!res.ok) throw new Error('API Yanıt Vermedi');
                 const data = await res.json();
                 const warnings = [];
                 
@@ -1306,9 +1306,20 @@
                     const warningList = document.getElementById('env-warning-list');
                     warningList.innerHTML = warnings.map(w => `<li>${w}</li>`).join('');
                     warningBox.style.display = 'block';
+
+                    document.getElementById('status-dot').style.background = 'var(--amber-400)';
+                    document.getElementById('status-dot').style.boxShadow = '0 0 10px rgba(251, 191, 36, 0.4)';
+                    document.getElementById('status-text').textContent = 'Sistem Uyarıları Var (Bkz. Aşağısı)';
+                    document.getElementById('main-status-bar').style.color = 'var(--amber-400)';
+                } else {
+                    document.getElementById('status-text').innerHTML = `Sistem Durumu: Hazır — <span style="opacity:0.8; font-family:'Inter', sans-serif;">${data.nmap_version || 'Nmap Mevcut'} | ${data.os_type === 'Linux' ? 'Root (UID 0)' : 'Admin'}</span>`;
                 }
             } catch (e) {
                 console.error("Environment check failed", e);
+                document.getElementById('status-dot').style.background = 'var(--rose-500)';
+                document.getElementById('status-dot').style.boxShadow = '0 0 10px rgba(225, 29, 72, 0.4)';
+                document.getElementById('status-text').textContent = 'Sistem Hatası (Motor Çevrimdışı)';
+                document.getElementById('main-status-bar').style.color = 'var(--rose-500)';
             }
         }
         

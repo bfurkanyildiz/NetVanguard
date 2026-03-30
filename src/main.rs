@@ -40,6 +40,7 @@ struct ScanResponse {
 #[derive(Serialize)]
 struct EnvCheckResponse {
     nmap_installed: bool,
+    nmap_version: Option<String>,
     is_admin: bool,
     os_type: String,
 }
@@ -71,11 +72,28 @@ async fn handle_check_env() -> Json<EnvCheckResponse> {
         "Linux".to_string()
     };
 
-    // Check if nmap is installed
+    // Check if nmap is installed and get version
+    let mut nmap_version = None;
     let nmap_installed = if cfg!(target_os = "windows") {
-        Command::new("cmd").args(&["/C", "nmap", "--version"]).output().is_ok()
+        if let Ok(output) = Command::new("cmd").args(&["/C", "nmap", "--version"]).output() {
+            if output.status.success() {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                if let Some(line) = stdout.lines().next() {
+                    nmap_version = Some(line.replace("Nmap version ", "").to_string());
+                }
+                true
+            } else { false }
+        } else { false }
     } else {
-        Command::new("nmap").arg("--version").output().is_ok()
+        if let Ok(output) = Command::new("nmap").arg("--version").output() {
+            if output.status.success() {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                if let Some(line) = stdout.lines().next() {
+                    nmap_version = Some(line.replace("Nmap version ", "").to_string());
+                }
+                true
+            } else { false }
+        } else { false }
     };
 
     // Check if running as admin/root
@@ -94,6 +112,7 @@ async fn handle_check_env() -> Json<EnvCheckResponse> {
 
     Json(EnvCheckResponse {
         nmap_installed,
+        nmap_version,
         is_admin,
         os_type,
     })
