@@ -827,11 +827,43 @@
             <p class="header-subtitle">Gelişmiş Ağ Güvenliği Tarama &amp; Analiz Paneli</p>
         </header>
 
-        <!-- ═══ STATUS STRIP ═══ -->
-        <div id="status-bar" style="margin-bottom: 2rem; padding: 0.85rem 1.5rem; border-radius: 12px; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); color: var(--text-secondary); transition: all 0.3s ease;">
-            <svg id="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;animation: spin 2s linear infinite;"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-            <span id="status-text">Sistem kontrol ediliyor...</span>
+        <!-- ═══ NAVIGATION BAR ═══ -->
+        <nav class="top-nav" style="display:flex; justify-content:center; gap:1rem; margin-top:2rem; margin-bottom:2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1.5rem;">
+            <button class="scan-btn tab-btn active" onclick="switchVue('dashboard')" id="nav-dashboard" style="padding: 0.6rem 1.2rem; font-size: 0.9rem;">🏠 Dashboard</button>
+            <button class="scan-btn tab-btn" onclick="switchVue('scanner')" id="nav-scanner" style="padding: 0.6rem 1.2rem; font-size: 0.9rem; background:var(--bg-secondary); border-color:var(--border);">🔍 Network Scanner</button>
+            <button class="scan-btn tab-btn" onclick="switchVue('wifi')" id="nav-wifi" style="padding: 0.6rem 1.2rem; font-size: 0.9rem; background:var(--bg-secondary); border-color:var(--border);">🛰️ Wi-Fi Radar</button>
+        </nav>
+
+        <!-- ═══ VUE: DASHBOARD ═══ -->
+        <div id="vue-dashboard" style="display:block;">
+            <div id="status-bar" style="margin-bottom: 2rem; padding: 0.85rem 1.5rem; border-radius: 12px; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); color: var(--text-secondary); transition: all 0.3s ease;">
+                <svg id="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;animation: spin 2s linear infinite;"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                <span id="status-text">Sistem kontrol ediliyor...</span>
+            </div>
+
+            <h2 style="color:#fff; margin-bottom:1rem; font-size:1.5rem;">Sistem Durumu ve İstatistikler</h2>
+            <div class="stats-grid" id="stats-grid" style="margin-bottom: 2rem;">
+                <div class="stat-card cyan">
+                    <div class="stat-label">Tarama Tipi</div>
+                    <div class="stat-value cyan" id="stat-type">—</div>
+                </div>
+                <div class="stat-card emerald">
+                    <div class="stat-label" id="stat-ports-label">Açık Port</div>
+                    <div class="stat-value emerald" id="stat-ports">—</div>
+                </div>
+                <div class="stat-card violet">
+                    <div class="stat-label" id="stat-latency-label">Yanıt Süresi</div>
+                    <div class="stat-value violet" id="stat-latency">—</div>
+                </div>
+                <div class="stat-card rose">
+                    <div class="stat-label">Durum</div>
+                    <div class="stat-value rose" id="stat-status">—</div>
+                </div>
+            </div>
         </div>
+
+        <!-- ═══ VUE: NETWORK SCANNER ═══ -->
+        <div id="vue-scanner" style="display:none;">
 
         <!-- ═══ SCAN PANEL ═══ -->
         <main class="scan-panel" id="scan-panel">
@@ -965,13 +997,8 @@
                 </div>
             </div>
 
-            <div class="tabs" style="display:flex; gap:10px; margin-bottom: 1rem;">
-                <button class="scan-btn tab-btn active" onclick="switchVue('terminal')" id="btn-terminal" style="flex:1;">🖥️ Terminal & Harita</button>
-                <button class="scan-btn tab-btn" onclick="switchVue('wifi'); fetchWifi()" id="btn-wifi" style="flex:1; background:var(--bg-secondary); border-color:var(--border);">📡 Wi-Fi Radar</button>
-            </div>
-
             <!-- Terminal & Harita Output -->
-            <div class="terminal" id="vue-terminal">
+            <div class="terminal" id="vue-terminal" style="margin-top: 2rem;">
                 <div class="terminal-header" style="position:relative; z-index: 10;">
                     <div>
                         <span class="terminal-dot red"></span>
@@ -1017,26 +1044,11 @@
                 </div>
             </div>
 
-            <!-- Stats Grid -->
-            <div class="stats-grid" id="stats-grid">
-                <div class="stat-card cyan">
-                    <div class="stat-label">Tarama Tipi</div>
-                    <div class="stat-value cyan" id="stat-type">—</div>
                 </div>
-                <div class="stat-card emerald">
-                    <div class="stat-label" id="stat-ports-label">Açık Port</div>
-                    <div class="stat-value emerald" id="stat-ports">—</div>
-                </div>
-                <div class="stat-card violet">
-                    <div class="stat-label" id="stat-latency-label">Yanıt Süresi</div>
-                    <div class="stat-value violet" id="stat-latency">—</div>
-                </div>
-                <div class="stat-card rose">
-                    <div class="stat-label">Durum</div>
-                    <div class="stat-value rose" id="stat-status">—</div>
-                </div>
-            </div>
-        </section>
+            </section>
+        </div>
+
+        <!-- ═══ VUE: WI-FI RADAR ═══ -->
 
         <!-- ═══ FOOTER ═══ -->
         <footer class="footer">
@@ -1075,27 +1087,34 @@
 
         // Tab UI
         function switchVue(mode) {
-            document.getElementById('btn-terminal').classList.remove('active');
-            document.getElementById('btn-wifi').classList.remove('active');
-            document.getElementById('btn-terminal').style.background = 'var(--bg-secondary)';
-            document.getElementById('btn-wifi').style.background = 'var(--bg-secondary)';
+            document.getElementById('nav-dashboard').classList.remove('active');
+            document.getElementById('nav-scanner').classList.remove('active');
+            document.getElementById('nav-wifi').classList.remove('active');
             
-            document.getElementById('vue-terminal').style.display = 'none';
+            document.getElementById('nav-dashboard').style.background = 'var(--bg-secondary)';
+            document.getElementById('nav-scanner').style.background = 'var(--bg-secondary)';
+            document.getElementById('nav-wifi').style.background = 'var(--bg-secondary)';
+            
+            document.getElementById('vue-dashboard').style.display = 'none';
+            document.getElementById('vue-scanner').style.display = 'none';
             document.getElementById('vue-wifi').style.display = 'none';
             
-            if(mode === 'terminal') {
-                if (wifiInterval) { clearInterval(wifiInterval); wifiInterval = null; }
-                document.getElementById('btn-terminal').classList.add('active');
-                document.getElementById('btn-terminal').style.background = '';
-                document.getElementById('vue-terminal').style.display = 'block';
-            } else {
-                document.getElementById('btn-wifi').classList.add('active');
-                document.getElementById('btn-wifi').style.background = '';
+            if (wifiInterval) { clearInterval(wifiInterval); wifiInterval = null; }
+
+            if(mode === 'dashboard') {
+                document.getElementById('nav-dashboard').classList.add('active');
+                document.getElementById('nav-dashboard').style.background = '';
+                document.getElementById('vue-dashboard').style.display = 'block';
+            } else if(mode === 'scanner') {
+                document.getElementById('nav-scanner').classList.add('active');
+                document.getElementById('nav-scanner').style.background = '';
+                document.getElementById('vue-scanner').style.display = 'block';
+            } else if(mode === 'wifi') {
+                document.getElementById('nav-wifi').classList.add('active');
+                document.getElementById('nav-wifi').style.background = '';
                 document.getElementById('vue-wifi').style.display = 'block';
-                if (!wifiInterval) {
-                    fetchWifi();
-                    wifiInterval = setInterval(fetchWifi, 5000);
-                }
+                fetchWifi();
+                wifiInterval = setInterval(fetchWifi, 5000);
             }
         }
 
