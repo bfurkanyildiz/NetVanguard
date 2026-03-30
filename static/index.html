@@ -828,36 +828,71 @@
         </header>
 
         <!-- ═══ NAVIGATION BAR ═══ -->
-        <nav class="top-nav" style="display:flex; justify-content:center; gap:1rem; margin-top:2rem; margin-bottom:2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1.5rem;">
-            <button class="scan-btn tab-btn active" onclick="switchVue('dashboard')" id="nav-dashboard" style="padding: 0.6rem 1.2rem; font-size: 0.9rem;">🏠 Dashboard</button>
-            <button class="scan-btn tab-btn" onclick="switchVue('scanner')" id="nav-scanner" style="padding: 0.6rem 1.2rem; font-size: 0.9rem; background:var(--bg-secondary); border-color:var(--border);">🔍 Network Scanner</button>
-            <button class="scan-btn tab-btn" onclick="switchVue('wifi')" id="nav-wifi" style="padding: 0.6rem 1.2rem; font-size: 0.9rem; background:var(--bg-secondary); border-color:var(--border);">🛰️ Wi-Fi Radar</button>
+        <nav class="top-nav" style="display:flex; justify-content:center; gap:1.5rem; margin-top:2rem; margin-bottom:2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 2rem;">
+            <button class="nav-button active" onclick="switchVue('dashboard')" id="nav-dashboard">🏠 Dashboard</button>
+            <button class="nav-button" onclick="switchVue('scanner')" id="nav-scanner">🔍 Network Scanner</button>
+            <button class="nav-button" onclick="switchVue('wifi')" id="nav-wifi">🛰️ Wi-Fi Radar</button>
         </nav>
+
+        <style>
+            .nav-button {
+                padding: 1.2rem 2.5rem;
+                font-size: 1.15rem;
+                font-weight: 800;
+                color: var(--text-secondary);
+                background: rgba(16, 25, 40, 0.6);
+                border: 2px solid var(--border);
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            }
+            .nav-button:hover {
+                background: rgba(255, 255, 255, 0.05);
+                transform: translateY(-4px);
+                border-color: var(--cyan-500);
+                box-shadow: 0 10px 25px rgba(0, 242, 254, 0.15);
+                color: #fff;
+            }
+            .nav-button.active {
+                background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(79, 70, 229, 0.15));
+                border-color: var(--cyan-400);
+                color: #fff;
+                box-shadow: 0 0 25px rgba(0, 242, 254, 0.25), inset 0 0 15px rgba(79, 70, 229, 0.3);
+                transform: scale(1.02);
+            }
+        </style>
 
         <!-- ═══ VUE: DASHBOARD ═══ -->
         <div id="vue-dashboard" style="display:block;">
-            <div id="status-bar" style="margin-bottom: 2rem; padding: 0.85rem 1.5rem; border-radius: 12px; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); color: var(--text-secondary); transition: all 0.3s ease;">
+            <div id="status-bar" style="margin-bottom: 2.5rem; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); color: var(--text-secondary); transition: all 0.3s ease;">
                 <svg id="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;animation: spin 2s linear infinite;"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
                 <span id="status-text">Sistem kontrol ediliyor...</span>
             </div>
 
-            <h2 style="color:#fff; margin-bottom:1rem; font-size:1.5rem;">Sistem Durumu ve İstatistikler</h2>
-            <div class="stats-grid" id="stats-grid" style="margin-bottom: 2rem;">
-                <div class="stat-card cyan">
-                    <div class="stat-label">Tarama Tipi</div>
-                    <div class="stat-value cyan" id="stat-type">—</div>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:2rem; margin-bottom: 2rem;">
+                <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+                    <h3 style="color:var(--cyan-400); margin-bottom:1.5rem; font-size:1.3rem; display:flex; align-items:center; gap:0.5rem; font-weight:800;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        NetVanguard Sürümleri
+                    </h3>
+                    <ul style="list-style:none; padding:0; margin:0; color:#ccc; line-height:2; font-size:1.05rem;">
+                        <li><strong>Engine:</strong> NetVanguard v1.0.0 Pro</li>
+                        <li><strong>Backend:</strong> Rust (axum + tokio)</li>
+                        <li><strong>Network Scanner:</strong> Nmap Entegreli</li>
+                        <li><strong>Radar API:</strong> nmcli / wpa_cli uyumlu</li>
+                    </ul>
                 </div>
-                <div class="stat-card emerald">
-                    <div class="stat-label" id="stat-ports-label">Açık Port</div>
-                    <div class="stat-value emerald" id="stat-ports">—</div>
-                </div>
-                <div class="stat-card violet">
-                    <div class="stat-label" id="stat-latency-label">Yanıt Süresi</div>
-                    <div class="stat-value violet" id="stat-latency">—</div>
-                </div>
-                <div class="stat-card rose">
-                    <div class="stat-label">Durum</div>
-                    <div class="stat-value rose" id="stat-status">—</div>
+                
+                <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+                    <h3 style="color:var(--emerald-400); margin-bottom:1.5rem; font-size:1.3rem; display:flex; align-items:center; gap:0.5rem; font-weight:800;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M2 12a10 10 0 1 0 20 0 10 10 0 1 0-20 0"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg>
+                        Son Tarama Özeti
+                    </h3>
+                    <div style="color:#888; font-style:italic; line-height: 1.6; font-size: 0.95rem;">Şu an için gösterilecek bir tarama özeti bulunmuyor. Yeni bir hedef keşfetmek için 'Network Scanner' sekmesine geçiş yapın. Taramalarınız sonucunda en son analiz raporu burada yer alacaktır.</div>
                 </div>
             </div>
         </div>
@@ -1024,7 +1059,30 @@
                 </div>
             </div>
 
-            <!-- Wi-Fi Radar Output -->
+            <!-- Stats Grid (Terminal Altı) -->
+            <div class="stats-grid" id="stats-grid" style="margin-top: 2rem; margin-bottom: 2rem;">
+                <div class="stat-card cyan">
+                    <div class="stat-label">Tarama Tipi</div>
+                    <div class="stat-value cyan" id="stat-type">—</div>
+                </div>
+                <div class="stat-card emerald">
+                    <div class="stat-label" id="stat-ports-label">Açık Port</div>
+                    <div class="stat-value emerald" id="stat-ports">—</div>
+                </div>
+                <div class="stat-card violet">
+                    <div class="stat-label" id="stat-latency-label">Yanıt Süresi</div>
+                    <div class="stat-value violet" id="stat-latency">—</div>
+                </div>
+                <div class="stat-card rose">
+                    <div class="stat-label">Durum</div>
+                    <div class="stat-value rose" id="stat-status">—</div>
+                </div>
+            </div>
+            
+            </section>
+        </div>
+
+        <!-- ═══ VUE: WI-FI RADAR ═══ -->
             <div class="terminal" id="vue-wifi" style="display:none; padding: 1.5rem; background:#08080b; min-height:350px;">
                 <h4 style="color:#fff; margin-bottom: 1.5rem; display:flex; align-items:center; gap:0.5rem; justify-content:space-between;">
                     <span>📡 Radar Taraması (Çevredeki Ağlar)</span>
@@ -1038,17 +1096,11 @@
                     </div>
                     
                     <!-- Kat Planı / Heatmap Görünümü -->
-                    <div id="wifi-heatmap" style="flex: 2; min-width: 300px; min-height: 400px; position: relative; background: url('https://www.transparenttextures.com/patterns/blueprint.png') rgba(16, 25, 40, 0.9); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                    <div id="radar-container" style="flex: 2; min-width: 300px; min-height: 400px; position: relative; background: url('https://www.transparenttextures.com/patterns/blueprint.png') rgba(16, 25, 40, 0.9); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
                         <div style="position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:rgba(255,255,255,0.05); font-size:2rem; font-weight:bold; pointer-events:none; white-space:nowrap;">NETVANGUARD RADAR</div>
                     </div>
                 </div>
             </div>
-
-                </div>
-            </section>
-        </div>
-
-        <!-- ═══ VUE: WI-FI RADAR ═══ -->
 
         <!-- ═══ FOOTER ═══ -->
         <footer class="footer">
@@ -1120,7 +1172,7 @@
 
         async function fetchWifi() {
             const list = document.getElementById('wifi-list');
-            const map = document.getElementById('wifi-heatmap');
+            const map = document.getElementById('radar-container');
             
             // list.innerHTML = '<div style="color:#888;">📡 Taranıyor... Lütfen bekleyin.</div>';
             
