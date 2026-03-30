@@ -983,11 +983,11 @@
                     <div class="stat-value cyan" id="stat-type">—</div>
                 </div>
                 <div class="stat-card emerald">
-                    <div class="stat-label">Açık Port</div>
+                    <div class="stat-label" id="stat-ports-label">Açık Port</div>
                     <div class="stat-value emerald" id="stat-ports">—</div>
                 </div>
                 <div class="stat-card violet">
-                    <div class="stat-label">Yanıt Süresi</div>
+                    <div class="stat-label" id="stat-latency-label">Yanıt Süresi</div>
                     <div class="stat-value violet" id="stat-latency">—</div>
                 </div>
                 <div class="stat-card rose">
@@ -1075,7 +1075,24 @@
             // Nmap latency
             const nmap = output.match(/latency[:\s]*([\d.]+)\s*s/i);
             if (nmap) return Math.round(parseFloat(nmap[1]) * 1000) + 'ms';
-            return '—';
+            return null;
+        }
+
+        /** Ağ keşfi çıktısından cihaz sayısı */
+        function countDevices(output) {
+            const m = output.match(/Nmap scan report for/gi);
+            return m ? m.length : 0;
+        }
+
+        /** DNS çıktısından hedef IP adresini çıkarır */
+        function extractDnsIp(output) {
+            const m = output.match(/Address:\s*(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/gi);
+            if (m && m.length > 0) {
+                const last = m[m.length - 1];
+                const ip = last.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/);
+                return ip ? ip[1] : null;
+            }
+            return null;
         }
 
         /** Seçili opsiyonları Türkçe etiket olarak döndürür */
@@ -1292,6 +1309,11 @@
                     safe = `<span class="os-highlight">${safe}</span>`;
                 }
 
+                // ── DNS IP Vurgulama ──
+                if (opts.dns_query && raw.match(/Address:\s*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)) {
+                    safe = `<span style="text-shadow: 0 0 10px #00f2fe; font-size: 1.2rem; font-weight: bold; color: #00f2fe;">${safe}</span>`;
+                }
+
                 // ── KRİTİK Zafiyet Hiyerarşisi ──
                 if (opts.vuln_scan && (raw.match(/\bVULNERABLE\b/i) || raw.match(/\bExploitable\b/i) || raw.match(/State: LIKELY VULNERABLE/i))) {
                     safe = `<span class="vuln-critical">🔴 ${safe}</span>`;
@@ -1311,11 +1333,39 @@
             }
             flushUrlBuffer(); // Son kalan URL'leri flush et
 
-            // ── İstatistik kartlarını güncelle ──
+            // ── Dinamik İstatistik Kartları ──
             setStat('stat-type', getScanLabel(data));
-            setStat('stat-ports', countOpenPorts(data.output));
-            setStat('stat-latency', extractLatency(data.output));
             setStat('stat-status', data.success ? 'Başarılı' : 'Hata');
+
+            const portsLabel = document.getElementById('stat-ports-label');
+            const latencyLabel = document.getElementById('stat-latency-label');
+            const latencyVal = extractLatency(data.output);
+
+            // Kart 2: Ağ Keşfi → Cihaz Sayısı, DNS → Hedef IP, Diğer → Açık Port
+            if (opts.net_discover) {
+                portsLabel.textContent = 'CİHAZ SAYISI';
+                setStat('stat-ports', countDevices(data.output));
+            } else if (opts.dns_query && !opts.port_scan && !opts.vuln_scan) {
+                portsLabel.textContent = 'HEDEF IP';
+                const dnsIp = extractDnsIp(data.output);
+                const portEl = document.getElementById('stat-ports');
+                if (dnsIp) {
+                    portEl.innerHTML = `<span style="text-shadow: 0 0 10px #00f2fe; font-size: 1.3rem;">${dnsIp}</span>`;
+                } else {
+                    portEl.textContent = 'Bulunamadı';
+                }
+            } else {
+                portsLabel.textContent = 'AÇIK PORT';
+                setStat('stat-ports', countOpenPorts(data.output));
+            }
+
+            // Kart 3: Yanıt Süresi
+            latencyLabel.textContent = 'YANIT SÜRESİ';
+            if (latencyVal) {
+                setStat('stat-latency', latencyVal);
+            } else {
+                document.getElementById('stat-latency').innerHTML = '<span style="font-size: 0.85rem; opacity: 0.5;">Analiz Ediliyor...</span>';
+            }
 
             // ── Son ──
             setProgress(100, 'Tarama tamamlandı!');
@@ -1323,8 +1373,12 @@
             addLog(`Tarama tamamlandı — Durum: <strong>${data.success ? 'Başarılı ✓' : 'Hata ✗'}</strong>`, data.success ? 'success' : 'error');
 
             results.classList.add('active');
-            const openPorts = countOpenPorts(data.output);
-            resCnt.textContent = `${getScanLabel(data)} · ${openPorts} açık port · ${extractLatency(data.output)}`;
+            const summaryParts = [getScanLabel(data)];
+            if (opts.net_discover) summaryParts.push(countDevices(data.output) + ' cihaz');
+            else if (opts.dns_query && !opts.port_scan) summaryParts.push(extractDnsIp(data.output) || 'IP bulunamadı');
+            else summaryParts.push(countOpenPorts(data.output) + ' açık port');
+            if (latencyVal) summaryParts.push(latencyVal);
+            resCnt.textContent = summaryParts.join(' · ');
             document.getElementById('download-btn').style.display = 'inline-flex';
 
             resetBtn();
