@@ -1098,6 +1098,12 @@
                 net_discover: isNetDiscover,
             };
 
+            const anyChecked = opts.port_scan || opts.vuln_scan || opts.os_detect || opts.dns_query || opts.version_detect || opts.aggressive_scan || opts.net_discover;
+            if (!anyChecked) {
+                alert('Hata: Lütfen en az bir tarama modülü seçin!');
+                return;
+            }
+
             // UI sıfırla
             terminal.innerHTML = '';
             results.classList.remove('active');
@@ -1174,8 +1180,14 @@
                 const raw = lines[i].trimEnd();
                 if (raw === '') continue;
 
-                // ── YENİ: Akıllı Çıktı Filtreleme ──
-                if (raw.match(/\d+\/(tcp|udp)/i)) {
+                // ── Ağ Keşfi Görsel Ayracı ──
+                if (opts.net_discover && raw.startsWith('Nmap scan report for')) {
+                    addLog('<span style="color:var(--emerald-400); font-weight:bold;">----------------------------------------</span>', '');
+                }
+
+                // ── Akıllı Çıktı Filtreleme (Sadece OS Modülü İçin) ──
+                const shouldFilterPorts = opts.os_detect && !opts.port_scan && !opts.version_detect && !opts.vuln_scan && !opts.aggressive_scan;
+                if (shouldFilterPorts && raw.match(/\d+\/(tcp|udp)/i)) {
                     if (!raw.includes('22/') && !raw.includes('80/') && !raw.includes('443/')) {
                         continue; // Gizle (atla)
                     }
@@ -1184,8 +1196,8 @@
                 // HTML escape
                 let safe = raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
                 
-                // ── YENİ: OS Bilgisini Vurgula ──
-                if (raw.startsWith('Running:') || raw.startsWith('OS details:') || raw.startsWith('OS CPE:')) {
+                // ── OS Bilgisini Vurgula (Sadece OS Tespiti Taranırken) ──
+                if (opts.os_detect && (raw.startsWith('Running:') || raw.startsWith('OS details:') || raw.startsWith('OS CPE:'))) {
                     safe = `<span class="os-highlight">${safe}</span>`;
                 }
 
