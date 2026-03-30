@@ -39,10 +39,10 @@ struct ScanResponse {
 
 #[derive(Serialize)]
 struct EnvCheckResponse {
-    nmap_installed: bool,
-    nmap_version: Option<String>,
-    is_admin: bool,
-    os_type: String,
+    nmap: bool,
+    version: Option<String>,
+    root: bool,
+    os: String,
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -111,10 +111,10 @@ async fn handle_check_env() -> Json<EnvCheckResponse> {
     };
 
     Json(EnvCheckResponse {
-        nmap_installed,
-        nmap_version,
-        is_admin,
-        os_type,
+        nmap: nmap_installed,
+        version: nmap_version,
+        root: is_admin,
+        os: os_type,
     })
 }
 

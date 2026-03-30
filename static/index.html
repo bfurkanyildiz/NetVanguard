@@ -768,19 +768,12 @@
                 </h1>
             </div>
             <p class="header-subtitle">Gelişmiş Ağ Güvenliği Tarama &amp; Analiz Paneli</p>
-            <div class="status-bar" id="main-status-bar">
-                <span class="status-dot" id="status-dot"></span>
-                <span id="status-text">Sistem Kontrol Ediliyor...</span>
-            </div>
         </header>
 
-        <!-- ═══ PRE-CHECK UYARILARI ═══ -->
-        <div id="env-warning" style="display: none; background: rgba(234, 179, 8, 0.1); border: 1px solid #eab308; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; margin-top: -1.5rem; color: #fef08a;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: bold; margin-bottom: 0.5rem;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                Sistem Uyarıları
-            </div>
-            <ul id="env-warning-list" style="margin-left: 1.5rem; font-size: 0.85rem; line-height: 1.5;"></ul>
+        <!-- ═══ STATUS STRIP ═══ -->
+        <div id="status-bar" style="margin-bottom: 2rem; padding: 0.85rem 1.5rem; border-radius: 12px; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); color: var(--text-secondary); transition: all 0.3s ease;">
+            <svg id="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;animation: spin 2s linear infinite;"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            <span id="status-text">Sistem kontrol ediliyor...</span>
         </div>
 
         <!-- ═══ SCAN PANEL ═══ -->
@@ -1288,38 +1281,45 @@
 
         // 2. Çevre Ön Kontrol (Sistem Analizi)
         async function checkEnvironment() {
+            const statusBar = document.getElementById('status-bar');
+            const statusIcon = document.getElementById('status-icon');
+            const statusText = document.getElementById('status-text');
+            
             try {
                 const res = await fetch('/api/check_env');
                 if (!res.ok) throw new Error('API Yanıt Vermedi');
                 const data = await res.json();
-                const warnings = [];
                 
-                if (!data.nmap_installed) {
-                    warnings.push("Nmap kurulu değil veya PATH'te bulunamadı. Lütfen Nmap yükleyin.");
-                }
-                if (!data.is_admin) {
-                    warnings.push("Uygulama Yönetici (Admin/Root) yetkisiyle çalışmıyor. OS tespiti ve gelişmiş taramalar başarısız olabilir.");
-                }
-                
-                if (warnings.length > 0) {
-                    const warningBox = document.getElementById('env-warning');
-                    const warningList = document.getElementById('env-warning-list');
-                    warningList.innerHTML = warnings.map(w => `<li>${w}</li>`).join('');
-                    warningBox.style.display = 'block';
-
-                    document.getElementById('status-dot').style.background = 'var(--amber-400)';
-                    document.getElementById('status-dot').style.boxShadow = '0 0 10px rgba(251, 191, 36, 0.4)';
-                    document.getElementById('status-text').textContent = 'Sistem Uyarıları Var (Bkz. Aşağısı)';
-                    document.getElementById('main-status-bar').style.color = 'var(--amber-400)';
-                } else {
-                    document.getElementById('status-text').innerHTML = `Sistem Durumu: Hazır — <span style="opacity:0.8; font-family:'Inter', sans-serif;">${data.nmap_version || 'Nmap Mevcut'} | ${data.os_type === 'Linux' ? 'Root (UID 0)' : 'Admin'}</span>`;
+                if (data.nmap && data.root) {
+                    statusBar.style.background = 'rgba(16, 185, 129, 0.15)';
+                    statusBar.style.color = '#10b981';
+                    statusBar.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+                    statusIcon.innerHTML = '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>';
+                    statusIcon.style.animation = 'none';
+                    statusText.textContent = `Sistem Hazır: Nmap ${data.version || ''} | Yetki: ROOT`;
+                } else if (data.nmap && !data.root) {
+                    statusBar.style.background = 'rgba(249, 115, 22, 0.15)';
+                    statusBar.style.color = '#f97316';
+                    statusBar.style.border = '1px solid rgba(249, 115, 22, 0.3)';
+                    statusIcon.innerHTML = '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>';
+                    statusIcon.style.animation = 'none';
+                    statusText.textContent = `UYARI: Root yetkisi yok, OS tespiti kısıtlı olabilir!`;
+                } else if (!data.nmap) {
+                    statusBar.style.background = 'rgba(239, 68, 68, 0.15)';
+                    statusBar.style.color = '#ef4444';
+                    statusBar.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                    statusIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
+                    statusIcon.style.animation = 'none';
+                    statusText.textContent = `HATA: Nmap bulunamadı!`;
                 }
             } catch (e) {
                 console.error("Environment check failed", e);
-                document.getElementById('status-dot').style.background = 'var(--rose-500)';
-                document.getElementById('status-dot').style.boxShadow = '0 0 10px rgba(225, 29, 72, 0.4)';
-                document.getElementById('status-text').textContent = 'Sistem Hatası (Motor Çevrimdışı)';
-                document.getElementById('main-status-bar').style.color = 'var(--rose-500)';
+                statusBar.style.background = 'rgba(239, 68, 68, 0.15)';
+                statusBar.style.color = '#ef4444';
+                statusBar.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                statusIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
+                statusIcon.style.animation = 'none';
+                statusText.textContent = `HATA: Sunucu ile iletişim kurulamadı!`;
             }
         }
         
