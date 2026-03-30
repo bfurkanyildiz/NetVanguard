@@ -58,11 +58,18 @@ fn validate_target(target: &str) -> Result<(), String> {
 // ═══════════════════════════════════════════════════════════
 
 fn run_command(program: &str, args: &[&str]) -> (bool, String) {
-    let mut cmd_args = vec!["/C", program];
-    cmd_args.extend_from_slice(args);
+    let mut cmd;
     
-    let mut cmd = Command::new("cmd");
-    cmd.args(&cmd_args);
+    if cfg!(target_os = "windows") {
+        cmd = Command::new("cmd");
+        let mut cmd_args = vec!["/C", program];
+        cmd_args.extend_from_slice(args);
+        cmd.args(&cmd_args);
+    } else {
+        let actual_program = if program == "nmap" { "/usr/bin/nmap" } else { program };
+        cmd = Command::new(actual_program);
+        cmd.args(args);
+    }
 
     match cmd.output() {
         Ok(output) => {
@@ -71,12 +78,22 @@ fn run_command(program: &str, args: &[&str]) -> (bool, String) {
             let combined = if stderr.is_empty() { stdout } else { format!("{}\n{}", stdout, stderr) };
             
             if !output.status.success() {
-                (false, format!("Hata: Sistem komutu yürütülemedi\n{}", combined))
+                if program == "nmap" && combined.to_lowercase().contains("not found") {
+                    (false, "Nmap bulunamadı! Lütfen sisteminize kurun ve PATH'e ekleyin".to_string())
+                } else {
+                    (false, format!("Hata: Sistem komutu yürütülemedi\n{}", combined))
+                }
             } else {
                 (true, combined)
             }
         }
-        Err(e) => (false, format!("Hata: Sistem komutu yürütülemedi\nDetay: {}\n'{}' programı sisteminizde kurulu mu?", e, program)),
+        Err(e) => {
+            if program == "nmap" {
+                (false, "Nmap bulunamadı! Lütfen sisteminize kurun ve PATH'e ekleyin".to_string())
+            } else {
+                (false, format!("Hata: Sistem komutu yürütülemedi\nDetay: {}\n'{}' programı sisteminizde kurulu mu?", e, program))
+            }
+        }
     }
 }
 
@@ -125,11 +142,11 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         all_output.push_str(&out);
     }
 
-    // ── Ağ Keşfi ──
+    // ── Ağ Keşfi (Brute-Force Discovery) ──
     if body.net_discover {
         scan_types.push("net_discover");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-sn", "-Pn", "--send-ip", t_arg, "--host-timeout", "60s", &target]);
+        let (ok, out) = run_command("nmap", &["-sn", "-PS22,80,443", "--send-eth", "-T4", "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -138,7 +155,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     if body.port_scan {
         scan_types.push("port_scan");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-sT", "-F", "-Pn", t_arg, "--host-timeout", "60s", &target]);
+        let (ok, out) = run_command("nmap", &["-sT", "-F", "-Pn", "--send-eth", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -147,7 +164,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     if body.vuln_scan {
         scan_types.push("vuln_scan");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-sT", "--script", "vuln", "-Pn", t_arg, "--host-timeout", "60s", &target]);
+        let (ok, out) = run_command("nmap", &["-sT", "--script", "vuln", "-Pn", "--send-eth", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -156,16 +173,16 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     if body.os_detect {
         scan_types.push("os_detect");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-O", "--osscan-guess", "-Pn", "--send-ip", t_arg, "--host-timeout", "60s", &target]);
+        let (ok, out) = run_command("nmap", &["-O", "--osscan-guess", "-Pn", "--unprivileged", "--send-eth", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
 
-    // ── Servis Versiyon Tespiti → nmap -sV -Pn --disable-arp-ping ──
+    // ── Servis Versiyon Tespiti ──
     if body.version_detect {
         scan_types.push("version_detect");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-sV", "-Pn", "--disable-arp-ping", t_arg, "--host-timeout", "60s", &target]);
+        let (ok, out) = run_command("nmap", &["-sV", "-Pn", "--unprivileged", "--send-eth", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -174,31 +191,19 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     if body.aggressive_scan {
         scan_types.push("aggressive_scan");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-A", "-Pn", t_arg, "--host-timeout", "120s", &target]);
+        let (ok, out) = run_command("nmap", &["-A", "-Pn", "--send-eth", t_arg, "--host-timeout", "120s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
 
-    // ── DNS Sorgulama ──
+    // ── Alan Adı Sorgula ──
     if body.dns_query {
         scan_types.push("dns_query");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
         
-        let is_ip = target.parse::<std::net::IpAddr>().is_ok() || target.contains('/');
-        let is_valid_domain = target.contains('.') && !target.contains(' ');
-
-        if !is_ip && !is_valid_domain {
-            all_output.push_str("Hata: Geçerli bir domain veya IP girin\n");
-            overall_success = false;
-        } else {
-            let (ok, out) = if is_ip {
-                run_command("nmap", &["-sL", &target])
-            } else {
-                run_command("nslookup", &[&target])
-            };
-            overall_success = overall_success && ok;
-            all_output.push_str(&out);
-        }
+        let (ok, out) = run_command("nslookup", &[&target]);
+        overall_success = overall_success && ok;
+        all_output.push_str(&out);
     }
 
     Json(ScanResponse {
@@ -214,8 +219,15 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
 // ═══════════════════════════════════════════════════════════
 
 async fn handle_stop() -> Json<ScanResponse> {
-    let mut cmd = Command::new("cmd");
-    cmd.args(&["/C", "taskkill /F /IM nmap.exe /T"]);
+    let mut cmd = if cfg!(target_os = "windows") {
+        let mut c = Command::new("cmd");
+        c.args(&["/C", "taskkill /F /IM nmap.exe /T"]);
+        c
+    } else {
+        let mut c = Command::new("killall");
+        c.arg("nmap");
+        c
+    };
     
     match cmd.output() {
         Ok(_) => Json(ScanResponse {
