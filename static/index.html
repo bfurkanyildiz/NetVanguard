@@ -840,17 +840,44 @@
             pointer-events: none;
         }
 
-        /* Scanning Neon Laser */
+        /* Scanning Neon Laser with HUD Grid */
         .scanning-line {
             position: absolute; left: 0; width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, #00ff41, transparent);
-            box-shadow: 0 0 15px #00ff41, 0 0 30px #00ff41;
+            background: linear-gradient(90deg, transparent, var(--cyan-400), transparent);
+            box-shadow: 0 0 15px var(--cyan-400), 0 0 30px var(--cyan-400);
             z-index: 5; opacity: 0.8;
             animation: scanMove 4s linear infinite;
         }
+        
+        .hud-grid-overlay {
+            position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none; opacity: 0.3;
+        }
+
         @keyframes scanMove {
             0% { top: -5%; }
             100% { top: 105%; }
+        }
+
+        /* Retina Scan Rings */
+        .retina-scan {
+            position: absolute; width: 180px; height: 180px;
+            border: 2px solid rgba(0, 255, 65, 0.2);
+            border-radius: 50%; z-index: 10001;
+            pointer-events: none;
+        }
+        .retina-scan::before {
+            content: ''; position: absolute; inset: -10px;
+            border: 1px dashed var(--cyan-400); border-radius: 50%;
+            animation: spin 10s linear infinite;
+        }
+        .retina-scan::after {
+            content: ''; position: absolute; inset: 10px;
+            border: 2px solid transparent; border-top-color: var(--cyan-400);
+            border-radius: 50%; animation: spin 2s linear infinite;
         }
 
         .gate-panel.left { border-right: 1px solid rgba(0, 255, 65, 0.3); }
@@ -859,22 +886,35 @@
         #cyber-gate.opened .gate-panel.left { transform: translateX(-101%); }
         #cyber-gate.opened .gate-panel.right { transform: translateX(101%); }
         
-        /* Splitting Lock Icon */
+        /* Kali Dragon Logo / Splitting Lock */
         .lock-container {
             position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            width: 100px; height: 100px; z-index: 10002;
+            width: 250px; height: 250px; z-index: 10002;
             display: flex; pointer-events: none;
             transition: opacity 0.5s ease;
         }
         #cyber-gate.opened .lock-container { opacity: 0; }
         
-        .lock-half {
-            width: 50px; height: 100px; transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
+        .logo-half {
+            width: 125px; height: 250px; transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
             display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
         }
-        .lock-half svg { width: 50px; height: 100px; fill: #00ff41; filter: drop-shadow(0 0 10px #00ff41); }
-        .lock-half.left { justify-content: flex-end; }
-        .lock-half.right { justify-content: flex-start; }
+        .logo-half svg { 
+            width: 250px; height: 250px; fill: var(--cyan-400); 
+            filter: drop-shadow(0 0 20px var(--cyan-400));
+            animation: neonPulse 2s ease-in-out infinite;
+        }
+        .logo-half.left { justify-content: flex-end; }
+        .logo-half.right { justify-content: flex-start; }
+        
+        .logo-half.left svg { transform: translateX(0); }
+        .logo-half.right svg { transform: translateX(-125px); }
+
+        @keyframes neonPulse {
+            0%, 100% { filter: drop-shadow(0 0 15px var(--cyan-400)) brightness(1); }
+            50% { filter: drop-shadow(0 0 35px var(--cyan-500)) brightness(1.4); }
+        }
 
         /* Gate Labels below/on top of panels */
         .gate-label {
@@ -902,9 +942,29 @@
             white-space: nowrap; overflow: hidden;
         }
 
-        /* ── GLITCH ANIMATION ── */
+        /* ── OPERATOR HUD TERMINAL ── */
+        .gate-hud {
+            position: absolute; bottom: 15%; left: 0; width: 100%;
+            text-align: center; font-family: 'JetBrains Mono', monospace;
+            color: var(--cyan-400); font-size: 0.9rem; z-index: 10005;
+            transition: opacity 0.4s ease; text-transform: uppercase;
+            letter-spacing: 2px; line-height: 1.8;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.4);
+        }
+        #cyber-gate.opened .gate-hud { opacity: 0; }
+
+        /* ── GLITCH & SHAKE ANIMATION ── */
         .app-container.glitch {
             animation: glitchEffect 0.25s cubic-bezier(.25,.46,.45,.94) both 2.6s;
+        }
+        .screen-shake {
+            animation: screenShake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes screenShake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
         }
         @keyframes glitchEffect {
             0% { transform: translate(0); }
@@ -920,7 +980,7 @@
             position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
             width: 50px; height: 50px; border: 2px solid var(--cyan-400);
             border-radius: 50%; opacity: 0; pointer-events: none;
-            animation: sonarPulse 5s cubic-bezier(0.2, 0.5, 0.8, 0.2) infinite;
+            animation: sonarPulse 2.5s cubic-bezier(0.2, 0.5, 0.8, 0.2) infinite;
         }
         @keyframes sonarPulse {
             0% { width: 0; height: 0; opacity: 0.6; }
@@ -955,37 +1015,46 @@
         <div class="matrix-rain" id="matrix-rain-left"></div>
         <div class="matrix-rain" id="matrix-rain-right"></div>
         
+        <!-- Retina Scan Overlay -->
+        <div class="retina-scan" style="left: calc(50% - 90px); top: calc(50% - 90px);"></div>
+
         <div class="gate-panel left">
+            <div class="hud-grid-overlay"></div>
             <div class="scanning-line"></div>
             <div class="lock-container" style="justify-content: flex-end;">
-                <div class="lock-half left">
-                    <!-- Lock Left Half SVG -->
-                    <svg viewBox="0 0 50 100">
-                        <path d="M50,30 L50,70 L30,70 L30,50 L40,50 L40,40 L30,40 L30,30 Z" opacity="0.8"/>
-                        <rect x="25" y="45" width="25" height="10" />
-                        <circle cx="50" cy="50" r="15" fill="none" stroke="#00ff41" stroke-width="2"/>
+                <div class="logo-half left">
+                    <!-- Kali Dragon Left Half -->
+                    <svg viewBox="0 0 250 250">
+                        <path d="M125,40 C80,40 40,80 40,125 C40,170 80,210 125,210 L125,180 C100,180 75,155 75,125 C75,95 100,70 125,70 Z" fill-opacity="0.2" stroke="currentColor" stroke-width="2"/>
+                        <path d="M125,85 L110,100 L125,115 L110,130 L125,145" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <path d="M80,125 L60,125" stroke="currentColor" stroke-width="3"/>
+                        <path d="M125,50 L115,30 L105,50 Z" fill="currentColor"/>
                     </svg>
                 </div>
             </div>
+            <div id="gate-hud-left" class="gate-hud" style="text-align: right; padding-right: 20px;"></div>
         </div>
         
         <div class="gate-panel right">
+            <div class="hud-grid-overlay"></div>
             <div class="scanning-line" style="animation-delay: 2s;"></div>
             <div class="lock-container" style="justify-content: flex-start;">
-                <div class="lock-half right">
-                    <!-- Lock Right Half SVG -->
-                    <svg viewBox="0 0 50 100">
-                        <path d="M0,30 L0,70 L20,70 L20,50 L10,50 L10,40 L20,40 L20,30 Z" opacity="0.8"/>
-                        <rect x="0" y="45" width="25" height="10" />
-                        <circle cx="0" cy="50" r="15" fill="none" stroke="#00ff41" stroke-width="2"/>
+                <div class="logo-half right">
+                    <!-- Kali Dragon Right Half -->
+                    <svg viewBox="0 0 250 250">
+                        <path d="M0,40 C45,40 85,80 85,125 C85,170 45,210 0,210 L0,180 C25,180 50,155 50,125 C50,95 25,70 0,70 Z" fill-opacity="0.2" stroke="currentColor" stroke-width="2"/>
+                        <path d="M0,85 L15,100 L0,115 L15,130 L0,145" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <path d="M45,125 L65,125" stroke="currentColor" stroke-width="3"/>
+                        <path d="M0,50 L10,30 L20,50 Z" fill="currentColor"/>
                     </svg>
                 </div>
             </div>
+            <div id="gate-hud-right" class="gate-hud" style="text-align: left; padding-left: 20px;"></div>
         </div>
 
         <div class="gate-label">
             <div class="gate-title">NETVANGUARD</div>
-            <div class="gate-subtitle">SECURE ACCESS GRANTED</div>
+            <div class="gate-subtitle">OPERATOR IDENTIFICATION REQUIRED</div>
         </div>
     </div>
     <!-- Background Effects -->
@@ -1354,6 +1423,33 @@
         const resCnt    = document.getElementById('results-count');
 
         let currentAbortController = null;
+        let activeTab = 'dashboard';
+
+        // ── OPERATOR DATA FETCHING ──
+        async function fetchOperatorInfo() {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 2000); // 2s Fallback
+                const res = await fetch('https://ipapi.co/json/', { signal: controller.signal });
+                const data = await res.json();
+                clearTimeout(timeoutId);
+                return {
+                    ip: data.ip || 'UNKNOWN',
+                    location: `${(data.city || 'ENCRYPTED').toUpperCase()} / ${(data.country_name || 'UNKNOWN').toUpperCase()}`
+                };
+            } catch (e) {
+                return { ip: 'ENCRYPTED / TRACELESS', location: 'UNKNOWN / ENCRYPTED' };
+            }
+        }
+
+        async function typeHud(id, text, delay = 50) {
+            const el = document.getElementById(id);
+            for (let i = 0; i < text.length; i++) {
+                el.textContent += text[i];
+                await new Promise(r => setTimeout(r, delay));
+            }
+            el.innerHTML += '<br>';
+        }
 
         ipInput.addEventListener('keydown', e => { if (e.key === 'Enter') startScan(); });
 
@@ -1362,7 +1458,7 @@
         // ═══════════════════════════════════════════════════
         
         // The Cyber Gate Lifecycle
-        window.addEventListener('load', () => {
+        window.addEventListener('load', async () => {
             // Matrix Rain Effect
             const rains = [document.getElementById('matrix-rain-left'), document.getElementById('matrix-rain-right')];
             rains.forEach(r => {
@@ -1373,17 +1469,33 @@
                 r.innerHTML = content;
             });
 
+            // Start Data Fetching Immediately
+            const opData = await fetchOperatorInfo();
+            
+            // Start Typing Sequence
+            await typeHud('gate-hud-left', '[INITIALIZING BIOMETRIC SCAN...]');
+            await new Promise(r => setTimeout(r, 400));
+            await typeHud('gate-hud-right', `[OPERATOR IP: ${opData.ip}]`);
+            await new Promise(r => setTimeout(r, 400));
+            await typeHud('gate-hud-left', `[LOCATION: ${opData.location}]`);
+            await new Promise(r => setTimeout(r, 400));
+            await typeHud('gate-hud-right', '[IDENTITY: AUTHORIZED ACCESS]');
+            
+            await new Promise(r => setTimeout(r, 800));
+
+            // Open Gate & Effects
+            document.getElementById('cyber-gate').classList.add('opened');
+            document.getElementById('app-container').classList.add('glitch');
+            document.querySelector('.gate-panel.left').classList.add('screen-shake');
+            document.querySelector('.gate-panel.right').classList.add('screen-shake');
+
             setTimeout(() => {
-                document.getElementById('cyber-gate').classList.add('opened');
-                document.getElementById('app-container').classList.add('glitch');
+                document.getElementById('cyber-gate').style.opacity = '0';
                 setTimeout(() => {
-                    document.getElementById('cyber-gate').style.opacity = '0';
-                    setTimeout(() => {
-                        document.getElementById('cyber-gate').style.display = 'none';
-                        document.getElementById('app-container').classList.remove('glitch');
-                    }, 1000);
-                }, 1500);
-            }, 2500);
+                    document.getElementById('cyber-gate').style.display = 'none';
+                    document.getElementById('app-container').classList.remove('glitch');
+                }, 1000);
+            }, 1500);
         });
 
         // Live Ticker Randomizer
@@ -1417,6 +1529,7 @@
 
         // Tab UI
         function switchVue(mode) {
+            activeTab = mode;
             document.getElementById('nav-dashboard').classList.remove('active');
             document.getElementById('nav-scanner').classList.remove('active');
             document.getElementById('nav-wifi').classList.remove('active');
@@ -1430,6 +1543,9 @@
             document.getElementById('vue-wifi').style.display = 'none';
             
             if (wifiInterval) { clearInterval(wifiInterval); wifiInterval = null; }
+
+            // Update Ticker Context
+            updateTickerContext(mode);
 
             if(mode === 'dashboard') {
                 document.getElementById('nav-dashboard').classList.add('active');
@@ -1446,6 +1562,23 @@
                 fetchWifi();
                 wifiInterval = setInterval(fetchWifi, 5000);
             }
+        }
+
+        function updateTickerContext(mode) {
+            const ticker = document.getElementById('ticker-content');
+            let messages = [];
+            if (mode === 'scanner') {
+                messages = ["SCANNING TARGETS...", "ANALYZING PACKETS", "PORT DISCOVERY ACTIVE", "VULNERABILITY PROBE IN PROGRESS"];
+            } else if (mode === 'wifi') {
+                messages = ["MONITORING RF SPECTRUM", "CAPTURING BEACONS", "SIGNAL STRENGTH ANALYZED", "SSID BROADCASTS DETECTED"];
+            } else {
+                messages = ["SYSTEM SECURE", "THREAT LEVEL: MINIMAL", "KALI LINUX NODE: ONLINE", "OPERATOR: AUTHORIZED"];
+            }
+            
+            ticker.innerHTML = '';
+            messages.concat(messages).forEach(msg => {
+                ticker.innerHTML += `<div class="ticker-item">${msg}</div>`;
+            });
         }
 
         async function fetchWifi() {
