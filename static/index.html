@@ -803,9 +803,63 @@
             .logo-text { font-size: 1.6rem; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
         }
+
+        /* ── THE CYBER GATE ── */
+        #cyber-gate {
+            position: fixed; inset: 0; z-index: 10000;
+            display: flex; overflow: hidden; background: #000;
+            transition: opacity 1s ease-in-out;
+        }
+        .gate-panel {
+            flex: 1; height: 100%; background: #050505;
+            position: relative; display: flex; align-items: center;
+            justify-content: center; transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
+            border: 1px solid rgba(0, 255, 65, 0.05);
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
+        }
+        .gate-panel.left { border-right: 1px solid rgba(0, 255, 65, 0.2); }
+        .gate-panel.right { border-left: 1px solid rgba(0, 255, 65, 0.2); }
+        #cyber-gate.opened .gate-panel.left { transform: translateX(-101%); }
+        #cyber-gate.opened .gate-panel.right { transform: translateX(101%); }
+        
+        .gate-label {
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            z-index: 10001; text-align: center; pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        #cyber-gate.opened .gate-label { opacity: 0; }
+        
+        .gate-title {
+            font-size: 2.5rem; font-weight: 900; color: #00ff41;
+            text-shadow: 0 0 20px rgba(0, 255, 65, 0.6);
+            letter-spacing: 8px; margin-bottom: 0.5rem;
+            font-family: 'Inter', sans-serif;
+        }
+        .gate-subtitle {
+            font-size: 0.9rem; color: rgba(0, 255, 65, 0.5);
+            letter-spacing: 4px; font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .matrix-rain {
+            position: absolute; inset: 0; opacity: 0.15;
+            pointer-events: none; font-family: 'JetBrains Mono', monospace;
+            font-size: 10px; color: #00ff41; line-height: 1;
+            white-space: nowrap; overflow: hidden;
+        }
     </style>
 </head>
 <body>
+    <!-- The Cyber Gate -->
+    <div id="cyber-gate">
+        <div class="matrix-rain" id="matrix-rain-left"></div>
+        <div class="matrix-rain" id="matrix-rain-right"></div>
+        <div class="gate-panel left"></div>
+        <div class="gate-panel right"></div>
+        <div class="gate-label">
+            <div class="gate-title">NETVANGUARD</div>
+            <div class="gate-subtitle">SECURE ACCESS GRANTED</div>
+        </div>
+    </div>
     <!-- Background Effects -->
     <div class="bg-grid"></div>
     <div class="bg-radial"></div>
@@ -1156,6 +1210,29 @@
         //  EVOLUTION: TABS, GAUGE & CYTOSCAPE MAP
         // ═══════════════════════════════════════════════════
         
+        // The Cyber Gate Lifecycle
+        window.addEventListener('load', () => {
+            // Matrix Rain Effect
+            const rains = [document.getElementById('matrix-rain-left'), document.getElementById('matrix-rain-right')];
+            rains.forEach(r => {
+                let content = '';
+                for(let i=0; i<50; i++) {
+                    content += Math.random().toString(36).substring(2, 15) + '<br>';
+                }
+                r.innerHTML = content;
+            });
+
+            setTimeout(() => {
+                document.getElementById('cyber-gate').classList.add('opened');
+                setTimeout(() => {
+                    document.getElementById('cyber-gate').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('cyber-gate').style.display = 'none';
+                    }, 1000);
+                }, 1500);
+            }, 2500);
+        });
+
         // Mock System Health Updater
         setInterval(() => {
             const cpu = Math.floor(Math.random() * 25) + 5; // 5-30%
@@ -1259,7 +1336,15 @@
                     // Mesafe Fizigi Hesaplaması
                     const distanceFactor = 100 - net.signal; // %100 sinyal = 0 distance, %20 sinyal = 80 distance
                     const radius = distanceFactor * 0.45; // Max %45 radius, ekranın dairesi içinde kalsın
-                    const angle = Math.random() * 2 * Math.PI; // Rastgele radyan açı
+                    
+                    // Deterministic Bearing Base on SSID
+                    const hashSSID = (s) => {
+                        let h = 0;
+                        for(let i=0; i<s.length; i++) h = (h << 5) - h + s.charCodeAt(i);
+                        return Math.abs(h);
+                    };
+                    const angle = (hashSSID(net.ssid) % 360) * (Math.PI / 180); 
+                    
                     const left = 50 + radius * Math.cos(angle);
                     const top = 50 + radius * Math.sin(angle);
                     
@@ -1886,15 +1971,25 @@
                         <span style="color:#ccc;">Geçen Süre:</span>
                         <strong style="color:var(--cyan-400); font-family:'JetBrains Mono', monospace;">${scanDuration}s</strong>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #334155; padding-top:0.8rem;">
-                        <span style="color:#888;">Tarama Modu:</span>
-                        <strong style="color:#aaa;">${getScanLabel(data)}</strong>
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #334155; padding-top:1rem; margin-top:0.5rem; gap:1rem;">
+                        <button onclick="downloadReport()" class="scan-btn" style="flex:1; padding:0.6rem; font-size:0.75rem; height:auto; justify-content:center; background:rgba(255,255,255,0.05); border-color:#334155;">
+                            📑 Raporu İndir
+                        </button>
+                        <button onclick="rescan('${target}')" class="scan-btn" style="flex:1; padding:0.6rem; font-size:0.75rem; height:auto; justify-content:center; background:linear-gradient(135deg, var(--emerald-600), var(--cyan-600)); border:none;">
+                            ♻️ Tekrar Tara
+                        </button>
                     </div>
                 </div>`;
             }
 
             resetBtn();
             currentAbortController = null;
+        }
+
+        function rescan(target) {
+            ipInput.value = target;
+            switchVue('scanner');
+            startScan();
         }
 
         function resetBtn() {
