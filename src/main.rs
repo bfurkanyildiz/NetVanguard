@@ -19,6 +19,8 @@ struct ScanRequest {
     os_detect: bool,
     #[serde(default)]
     dns_query: bool,
+    #[serde(default)]
+    net_discover: bool,
 }
 
 #[derive(Serialize)]
@@ -55,9 +57,14 @@ fn run_command(program: &str, args: &[&str]) -> (bool, String) {
             let stdout = String::from_utf8_lossy(&output.stdout).to_string();
             let stderr = String::from_utf8_lossy(&output.stderr).to_string();
             let combined = if stderr.is_empty() { stdout } else { format!("{}\n{}", stdout, stderr) };
-            (output.status.success(), combined)
+            
+            if !output.status.success() {
+                (false, format!("Hata: Sistem komutu yürütülemedi\n{}", combined))
+            } else {
+                (true, combined)
+            }
         }
-        Err(e) => (false, format!("'{}' çalıştırılamadı: {}\nProgram sisteminizde kurulu mu kontrol edin.", program, e)),
+        Err(e) => (false, format!("Hata: Sistem komutu yürütülemedi\nDetay: {}\n'{}' programı sisteminizde kurulu mu?", e, program)),
     }
 }
 
@@ -80,7 +87,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     let mut all_output = String::new();
     let mut scan_types: Vec<&str> = Vec::new();
     let mut overall_success = true;
-    let any_option = body.port_scan || body.vuln_scan || body.os_detect || body.dns_query;
+    let any_option = body.port_scan || body.vuln_scan || body.os_detect || body.dns_query || body.net_discover;
 
     // ── Hiçbir şey seçilmediyse → Ping ──
     if !any_option {
@@ -95,29 +102,38 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         all_output.push_str(&out);
     }
 
-    // ── Port Tarama → nmap -F ──
+    // ── Ağ Keşfi → nmap -sn ──
+    if body.net_discover {
+        scan_types.push("net_discover");
+        if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
+        let (ok, out) = run_command("nmap", &["-sT", "-sn", "--host-timeout", "30s", &target]);
+        overall_success = overall_success && ok;
+        all_output.push_str(&out);
+    }
+
+    // ── Port Tarama → nmap -F -Pn ──
     if body.port_scan {
         scan_types.push("port_scan");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-F", &target]);
+        let (ok, out) = run_command("nmap", &["-sT", "-F", "-Pn", "--host-timeout", "30s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
 
-    // ── Zafiyet Analizi → nmap --script vuln ──
+    // ── Zafiyet Analizi → nmap --script vuln -Pn ──
     if body.vuln_scan {
         scan_types.push("vuln_scan");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["--script", "vuln", &target]);
+        let (ok, out) = run_command("nmap", &["-sT", "--script", "vuln", "-Pn", "--host-timeout", "30s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
 
-    // ── İşletim Sistemi Tespiti → nmap -O ──
+    // ── İşletim Sistemi Tespiti → nmap -O -Pn ──
     if body.os_detect {
         scan_types.push("os_detect");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-O", &target]);
+        let (ok, out) = run_command("nmap", &["-sT", "-O", "-Pn", "--host-timeout", "30s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
