@@ -902,7 +902,7 @@
         }
         .logo-half svg { 
             width: 250px; height: 250px; fill: var(--cyan-400); 
-            filter: drop-shadow(0 0 20px var(--cyan-400));
+            filter: drop-shadow(0 0 20px var(--cyan-400)) drop-shadow(0 0 40px var(--cyan-500));
             animation: neonPulse 2s ease-in-out infinite;
         }
         .logo-half.left { justify-content: flex-end; }
@@ -910,6 +910,18 @@
         
         .logo-half.left svg { transform: translateX(0); }
         .logo-half.right svg { transform: translateX(-125px); }
+
+        /* Digital Scanning Grid Squares */
+        .grid-scanner {
+            position: absolute; inset: 0;
+            background-image: 
+                linear-gradient(rgba(0, 255, 65, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: radial-gradient(circle at var(--x, 50%) var(--y, 50%), black 100px, transparent 150px);
+            -webkit-mask-image: radial-gradient(circle at var(--x, 50%) var(--y, 50%), black 100px, transparent 150px);
+            pointer-events: none;
+        }
 
         @keyframes neonPulse {
             0%, 100% { filter: drop-shadow(0 0 15px var(--cyan-400)) brightness(1); }
@@ -1020,15 +1032,15 @@
 
         <div class="gate-panel left">
             <div class="hud-grid-overlay"></div>
+            <div class="grid-scanner" id="grid-scanner-left"></div>
             <div class="scanning-line"></div>
             <div class="lock-container" style="justify-content: flex-end;">
                 <div class="logo-half left">
                     <!-- Kali Dragon Left Half -->
                     <svg viewBox="0 0 250 250">
-                        <path d="M125,40 C80,40 40,80 40,125 C40,170 80,210 125,210 L125,180 C100,180 75,155 75,125 C75,95 100,70 125,70 Z" fill-opacity="0.2" stroke="currentColor" stroke-width="2"/>
-                        <path d="M125,85 L110,100 L125,115 L110,130 L125,145" fill="none" stroke="currentColor" stroke-width="2"/>
-                        <path d="M80,125 L60,125" stroke="currentColor" stroke-width="3"/>
-                        <path d="M125,50 L115,30 L105,50 Z" fill="currentColor"/>
+                        <path d="M125,5 C125,5 110,20 90,20 C70,20 50,35 45,60 C40,85 55,110 80,115 C105,120 125,110 125,110 L125,245 L110,230 L90,245 L70,230 L50,245 L30,230 L10,245 L10,180 C10,180 20,160 40,160 C60,160 70,140 70,120 C70,100 55,80 35,80 C15,80 5,60 5,40 C5,20 20,5 50,5 C80,5 125,5 125,5 Z" fill="currentColor"/>
+                        <path d="M125,40 C100,40 80,60 80,100 L125,100 Z" fill-opacity="0.3"/>
+                        <circle cx="90" cy="45" r="3" fill="#000"/>
                     </svg>
                 </div>
             </div>
@@ -1037,15 +1049,15 @@
         
         <div class="gate-panel right">
             <div class="hud-grid-overlay"></div>
+            <div class="grid-scanner" id="grid-scanner-right"></div>
             <div class="scanning-line" style="animation-delay: 2s;"></div>
             <div class="lock-container" style="justify-content: flex-start;">
                 <div class="logo-half right">
                     <!-- Kali Dragon Right Half -->
-                    <svg viewBox="0 0 250 250">
-                        <path d="M0,40 C45,40 85,80 85,125 C85,170 45,210 0,210 L0,180 C25,180 50,155 50,125 C50,95 25,70 0,70 Z" fill-opacity="0.2" stroke="currentColor" stroke-width="2"/>
-                        <path d="M0,85 L15,100 L0,115 L15,130 L0,145" fill="none" stroke="currentColor" stroke-width="2"/>
-                        <path d="M45,125 L65,125" stroke="currentColor" stroke-width="3"/>
-                        <path d="M0,50 L10,30 L20,50 Z" fill="currentColor"/>
+                    <svg viewBox="125 0 250 250">
+                        <path d="M125,5 C125,5 140,20 160,20 C180,20 200,35 205,60 C210,85 195,110 170,115 C145,120 125,110 125,110 L125,245 L140,230 L160,245 L180,230 L200,245 L220,230 L240,245 L240,180 C240,180 230,160 210,160 C190,160 180,140 180,120 C180,100 195,80 215,80 C235,80 245,60 245,40 C245,20 230,5 200,5 C170,5 125,5 125,5 Z" fill="currentColor"/>
+                        <path d="M125,40 C150,40 170,60 170,100 L125,100 Z" fill-opacity="0.3"/>
+                        <circle cx="160" cy="45" r="3" fill="#000"/>
                     </svg>
                 </div>
             </div>
@@ -1433,12 +1445,18 @@
                 const res = await fetch('https://ipapi.co/json/', { signal: controller.signal });
                 const data = await res.json();
                 clearTimeout(timeoutId);
+                
+                // Ethical Data Masking
+                const ipParts = (data.ip || '0.0.0.0').split('.');
+                const maskedIp = ipParts.length === 4 ? `${ipParts[0]}.${ipParts[1]}.*.*` : 'ENCRYPTED';
+                const country = (data.country_name || 'UNKNOWN').toUpperCase();
+
                 return {
-                    ip: data.ip || 'UNKNOWN',
-                    location: `${(data.city || 'ENCRYPTED').toUpperCase()} / ${(data.country_name || 'UNKNOWN').toUpperCase()}`
+                    ip: maskedIp,
+                    location: `[MASKED] / ${country}`
                 };
             } catch (e) {
-                return { ip: 'ENCRYPTED / TRACELESS', location: 'UNKNOWN / ENCRYPTED' };
+                return { ip: 'ENCRYPTED / TRACELESS', location: '[MASKED] / UNKNOWN' };
             }
         }
 
@@ -1472,6 +1490,17 @@
             // Start Data Fetching Immediately
             const opData = await fetchOperatorInfo();
             
+            // Grid Scanner Movement logic
+            const moveGrid = (e) => {
+                document.querySelectorAll('.grid-scanner').forEach(gs => {
+                    const rect = gs.getBoundingClientRect();
+                    gs.style.setProperty('--x', (50 + Math.sin(Date.now() / 1000) * 30) + '%');
+                    gs.style.setProperty('--y', (50 + Math.cos(Date.now() / 1500) * 30) + '%');
+                });
+                requestAnimationFrame(moveGrid);
+            };
+            moveGrid();
+
             // Start Typing Sequence
             await typeHud('gate-hud-left', '[INITIALIZING BIOMETRIC SCAN...]');
             await new Promise(r => setTimeout(r, 400));
@@ -1479,7 +1508,9 @@
             await new Promise(r => setTimeout(r, 400));
             await typeHud('gate-hud-left', `[LOCATION: ${opData.location}]`);
             await new Promise(r => setTimeout(r, 400));
-            await typeHud('gate-hud-right', '[IDENTITY: AUTHORIZED ACCESS]');
+            await typeHud('gate-hud-right', '[PRIVACY MODE: ENABLED | DATA OBFUSCATED]');
+            await new Promise(r => setTimeout(r, 400));
+            await typeHud('gate-hud-left', '[IDENTITY: AUTHORIZED ACCESS]');
             
             await new Promise(r => setTimeout(r, 800));
 
@@ -1498,17 +1529,28 @@
             }, 1500);
         });
 
-        // Live Ticker Randomizer
+        // Live Ticker Data Integration
         setInterval(() => {
             const items = document.querySelectorAll('.ticker-item');
-            const randomItem = items[Math.floor(Math.random() * (items.length / 2))]; // Only first half
-            const alerts = ["THREAT DETECTED: NONE", "FIREWALL: BREACH ATTEMPT BLOCKED", "ENCRYPTION: AES-256", "VULN: 0 NEW FOUND", "NODE: SECURE"];
-            if (randomItem) {
-                randomItem.textContent = alerts[Math.floor(Math.random() * alerts.length)];
-                // Update its mirror too
-                items[Math.floor(items.length/2) + Array.from(items).indexOf(randomItem)].textContent = randomItem.textContent;
+            const targetIp = document.getElementById('ip-input').value || 'NONE';
+            
+            const alerts = [
+                `TARGET: ${targetIp}`,
+                "PRIVACY: DATA OBFUSCATED",
+                `SCAN STATUS: ${scanBtn.classList.contains('scanning') ? 'ACTIVE' : 'IDLE'}`,
+                "ETHICAL STANDARDS: COMPLIANT",
+                "KALI NODE: OPERATIONAL",
+                "FIREWALL: MONITORING"
+            ];
+            
+            const randomMsg = alerts[Math.floor(Math.random() * alerts.length)];
+            const index = Math.floor(Math.random() * (items.length / 2));
+            
+            if (items[index]) {
+                items[index].textContent = randomMsg;
+                items[index + (items.length / 2)].textContent = randomMsg;
             }
-        }, 8000);
+        }, 5000);
 
         // Mock System Health Updater
         setInterval(() => {
