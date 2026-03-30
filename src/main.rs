@@ -235,7 +235,14 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     if body.vuln_scan {
         scan_types.push("vuln_scan");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-sT", "--script", "vuln", "-Pn", "--send-eth", t_arg, "--host-timeout", "60s", &target]);
+        
+        // Zafiyet taraması ağır olduğu için hızı en fazla T3 yap
+        let vuln_t_arg = match t_arg {
+            "-T4" | "-T5" => "-T3",
+            _ => t_arg,
+        };
+        
+        let (ok, out) = run_command("nmap", &["-sT", "--script", "vuln", "-Pn", "--send-eth", vuln_t_arg, "--host-timeout", "15m", "--top-ports", "50", "--scan-delay", "1s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }

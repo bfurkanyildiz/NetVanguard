@@ -1141,7 +1141,7 @@
             const activeScans = [];
             if (opts.net_discover) activeScans.push('Ağ Keşfi (nmap -sn -Pn --disable-arp-ping)');
             if (opts.port_scan) activeScans.push('Port Tarama (nmap -sT -F -Pn)');
-            if (opts.vuln_scan) activeScans.push('Zafiyet Analizi (nmap -sT --script vuln -Pn)');
+            if (opts.vuln_scan) activeScans.push('Zafiyet Analizi (nmap -sT --script vuln -Pn --top-ports 50)');
             if (opts.os_detect) activeScans.push('İS Tespiti (nmap -O -Pn --disable-arp-ping -p 22,80,443)');
             if (opts.dns_query) activeScans.push('DNS Sorgulama (nslookup)');
             if (opts.version_detect) activeScans.push('Servis Versiyon Tespiti (nmap -sV -Pn --disable-arp-ping)');
