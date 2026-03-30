@@ -806,6 +806,12 @@
                     </svg>
                     <span id="scan-btn-text">Taramayı Başlat</span>
                 </button>
+                <button class="scan-btn" id="stop-btn" onclick="stopScan()" style="background: linear-gradient(135deg, var(--rose-500), var(--rose-400)); display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="6" y="6" width="12" height="12" rx="2" ry="2"/>
+                    </svg>
+                    <span>Durdur</span>
+                </button>
             </div>
 
             <!-- Scan Options -->
@@ -1017,6 +1023,18 @@
         //  ANA TARAMA FONKSİYONU
         // ═══════════════════════════════════════════════════
 
+        async function stopScan() {
+            try {
+                addLog('Durdurma sinyali gönderiliyor...', 'warn');
+                const res = await fetch('/api/stop', { method: 'POST' });
+                const data = await res.json();
+                addLog(`Durdurma: <strong>${data.output}</strong>`, data.success ? 'success' : 'error');
+                resetBtn();
+            } catch (err) {
+                addLog(`Durdurma hatası: <strong>${err.message}</strong>`, 'error');
+            }
+        }
+
         function toggleNetworkScan(checkbox) {
             if (checkbox.checked) {
                 ipInput.disabled = true;
@@ -1070,6 +1088,7 @@
             scanBtn.classList.add('scanning');
             scanText.textContent = 'Taranıyor...';
             scanIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/>';
+            document.getElementById('stop-btn').style.display = 'inline-flex';
 
             progCont.classList.add('active');
             setProgress(0, 'Bağlantı kuruluyor...');
@@ -1079,12 +1098,12 @@
             addLog(`Hedef: <strong>${target}</strong>`, 'info');
 
             const activeScans = [];
-            if (opts.net_discover) activeScans.push('Ağ Keşfi (nmap -sn)');
+            if (opts.net_discover) activeScans.push('Ağ Keşfi (nmap -sn -Pn --disable-arp-ping)');
             if (opts.port_scan) activeScans.push('Port Tarama (nmap -sT -F -Pn)');
             if (opts.vuln_scan) activeScans.push('Zafiyet Analizi (nmap -sT --script vuln -Pn)');
-            if (opts.os_detect) activeScans.push('İS Tespiti (nmap -O -p 22,80,443)');
+            if (opts.os_detect) activeScans.push('İS Tespiti (nmap -O -Pn --disable-arp-ping -p 22,80,443)');
             if (opts.dns_query) activeScans.push('DNS Sorgulama (nslookup)');
-            if (opts.version_detect) activeScans.push('Servis Versiyon Tespiti (nmap -sV -Pn)');
+            if (opts.version_detect) activeScans.push('Servis Versiyon Tespiti (nmap -sV -Pn --disable-arp-ping)');
             if (opts.aggressive_scan) activeScans.push('Kapsamlı Agresif Tarama (nmap -A -Pn)');
             if (activeScans.length === 0) activeScans.push('Ping (varsayılan)');
 
@@ -1162,6 +1181,7 @@
             scanBtn.classList.remove('scanning');
             scanText.textContent = 'Taramayı Başlat';
             scanIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+            document.getElementById('stop-btn').style.display = 'none';
         }
     </script>
 </body>

@@ -122,11 +122,11 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         all_output.push_str(&out);
     }
 
-    // ── Ağ Keşfi → nmap -sn ──
+    // ── Ağ Keşfi → nmap -sn -Pn --disable-arp-ping ──
     if body.net_discover {
         scan_types.push("net_discover");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-sn", t_arg, "--host-timeout", "60s", &target]);
+        let (ok, out) = run_command("nmap", &["-sn", "-Pn", "--disable-arp-ping", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -149,20 +149,20 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         all_output.push_str(&out);
     }
 
-    // ── İşletim Sistemi Tespiti → nmap -O -p 22,80,443 -Pn ──
+    // ── İşletim Sistemi Tespiti → nmap -O -Pn --disable-arp-ping ──
     if body.os_detect {
         scan_types.push("os_detect");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-O", "-p", "22,80,443", t_arg, "--host-timeout", "60s", &target]);
+        let (ok, out) = run_command("nmap", &["-O", "-Pn", "--disable-arp-ping", "-p", "22,80,443", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
 
-    // ── Servis Versiyon Tespiti → nmap -sV -Pn ──
+    // ── Servis Versiyon Tespiti → nmap -sV -Pn --disable-arp-ping ──
     if body.version_detect {
         scan_types.push("version_detect");
         if !all_output.is_empty() { all_output.push_str("\n══════════════════════════════════════\n\n"); }
-        let (ok, out) = run_command("nmap", &["-sV", "-Pn", t_arg, "--host-timeout", "60s", &target]);
+        let (ok, out) = run_command("nmap", &["-sV", "-Pn", "--disable-arp-ping", t_arg, "--host-timeout", "60s", &target]);
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -194,6 +194,30 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
 }
 
 // ═══════════════════════════════════════════════════════════
+//  DURDURMA İŞLEMİ (CANCEL)
+// ═══════════════════════════════════════════════════════════
+
+async fn handle_stop() -> Json<ScanResponse> {
+    let mut cmd = Command::new("cmd");
+    cmd.args(&["/C", "taskkill /F /IM nmap.exe /T"]);
+    
+    match cmd.output() {
+        Ok(_) => Json(ScanResponse {
+            success: true,
+            target: "".into(),
+            scan_type: "stop".into(),
+            output: "Nmap işlemleri zorla durduruldu.".into(),
+        }),
+        Err(e) => Json(ScanResponse {
+            success: false,
+            target: "".into(),
+            scan_type: "stop".into(),
+            output: format!("Durdurma hatası: {}", e),
+        })
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
 //  SUNUCU
 // ═══════════════════════════════════════════════════════════
 
@@ -201,6 +225,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
 async fn main() {
     let app = Router::new()
         .route("/api/scan", post(handle_scan))
+        .route("/api/stop", post(handle_stop))
         .fallback_service(ServeDir::new("static"));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
