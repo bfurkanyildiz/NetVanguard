@@ -46,6 +46,19 @@ struct EnvCheckResponse {
     os: String,
 }
 
+#[derive(Serialize)]
+struct WifiInfo {
+    ssid: String,
+    signal: u8,
+}
+
+#[derive(Serialize)]
+struct WifiResponse {
+    success: bool,
+    data: Vec<WifiInfo>,
+    error: Option<String>,
+}
+
 // ═══════════════════════════════════════════════════════════
 //  GİRDİ DOĞRULAMA
 // ═══════════════════════════════════════════════════════════
@@ -322,6 +335,58 @@ async fn handle_stop() -> Json<ScanResponse> {
 }
 
 // ═══════════════════════════════════════════════════════════
+//  WI-FI RADAR SİSTEMİ
+// ═══════════════════════════════════════════════════════════
+
+async fn handle_wifi_scan() -> Json<WifiResponse> {
+    if cfg!(target_os = "windows") {
+        return Json(WifiResponse {
+            success: false,
+            data: vec![],
+            error: Some("Wi-Fi Radar özelliği sadece Linux/Kali sistemlerde `nmcli` aracı ile çalışır.".to_string()),
+        });
+    }
+
+    let output = match Command::new("nmcli")
+        .args(&["-t", "-f", "SSID,SIGNAL", "dev", "wifi"])
+        .output() {
+            Ok(o) => o,
+            Err(e) => return Json(WifiResponse {
+                success: false,
+                data: vec![],
+                error: Some(format!("nmcli hatası: {}", e)),
+            })
+        };
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let mut networks = Vec::new();
+
+    for line in stdout.lines() {
+        if line.trim().is_empty() { continue; }
+        let parts: Vec<&str> = line.split(':').collect();
+        if parts.len() >= 2 {
+            let ssid = parts[0].to_string();
+            let signal = parts[1].parse::<u8>().unwrap_or(0);
+            if !ssid.is_empty() {
+                networks.push(WifiInfo { ssid, signal });
+            }
+        }
+    }
+
+    // Descending order by signal strength
+    networks.sort_by(|a, b| b.signal.cmp(&a.signal));
+    
+    // Remove duplicates
+    networks.dedup_by(|a, b| a.ssid == b.ssid);
+
+    Json(WifiResponse {
+        success: true,
+        data: networks,
+        error: None,
+    })
+}
+
+// ═══════════════════════════════════════════════════════════
 //  SUNUCU
 // ═══════════════════════════════════════════════════════════
 
@@ -358,6 +423,7 @@ async fn main() {
         .route("/api/scan", post(handle_scan))
         .route("/api/stop", post(handle_stop))
         .route("/api/check_env", get(handle_check_env))
+        .route("/api/wifi_scan", get(handle_wifi_scan))
         .fallback_service(ServeDir::new("static"));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));

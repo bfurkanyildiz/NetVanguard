@@ -6,6 +6,8 @@
     <meta name="description" content="NetVanguard - Gelişmiş Ağ Güvenliği Tarama Paneli">
     <title>NetVanguard v1.0 - Ağ Güvenliği Tarama Paneli</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
+    <script src="https://bernii.github.io/gauge.js/dist/gauge.min.js"></script>
     <style>
         /* ═══════════════════════════════════════════════════
            DESIGN SYSTEM - NetVanguard v1.0
@@ -963,16 +965,43 @@
                 </div>
             </div>
 
-            <!-- Terminal Output -->
-            <div class="terminal">
-                <div class="terminal-header">
-                    <span class="terminal-dot red"></span>
-                    <span class="terminal-dot yellow"></span>
-                    <span class="terminal-dot green"></span>
-                    <span class="terminal-title">netvanguard — scan output</span>
+            <div class="tabs" style="display:flex; gap:10px; margin-bottom: 1rem;">
+                <button class="scan-btn tab-btn active" onclick="switchVue('terminal')" id="btn-terminal" style="flex:1;">🖥️ Terminal & Harita</button>
+                <button class="scan-btn tab-btn" onclick="switchVue('wifi'); fetchWifi()" id="btn-wifi" style="flex:1; background:var(--bg-secondary); border-color:var(--border);">📡 Wi-Fi Radar</button>
+            </div>
+
+            <!-- Terminal & Harita Output -->
+            <div class="terminal" id="vue-terminal">
+                <div class="terminal-header" style="position:relative; z-index: 10;">
+                    <div>
+                        <span class="terminal-dot red"></span>
+                        <span class="terminal-dot yellow"></span>
+                        <span class="terminal-dot green"></span>
+                        <span class="terminal-title">netvanguard — scan output</span>
+                    </div>
+                    <!-- CVSS Gauge Container -->
+                    <div style="position:absolute; right:16px; top: 4px; text-align:center;">
+                        <canvas id="cvss-gauge" width="80" height="40"></canvas>
+                        <div id="cvss-score" style="font-size:0.75rem; color:#fff; font-weight:bold; margin-top:-5px; letter-spacing:1px;">RISK: 0.0</div>
+                    </div>
                 </div>
+                
+                <!-- Cytoscape Map -->
+                <div id="cy" style="width: 100%; height: 250px; background: #08080b; border-bottom: 1px solid var(--border); display:none;"></div>
+
                 <div class="terminal-body" id="terminal-body">
                     <!-- Log lines injected here -->
+                </div>
+            </div>
+
+            <!-- Wi-Fi Radar Output -->
+            <div class="terminal" id="vue-wifi" style="display:none; padding: 1.5rem; background:#08080b; min-height:350px;">
+                <h4 style="color:#fff; margin-bottom: 1.5rem; display:flex; align-items:center; gap:0.5rem;">
+                    📡 Radar Taraması (Çevredeki Ağlar)
+                    <button onclick="fetchWifi()" style="background:transparent; border:1px solid var(--border); color:#fff; padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem; cursor:pointer;">Yenile</button>
+                </h4>
+                <div id="wifi-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;">
+                    <div style="color:#888;">Veri bekleniyor... Taramayı başlatmak için yenileyin.</div>
                 </div>
             </div>
 
@@ -1024,6 +1053,147 @@
         let currentAbortController = null;
 
         ipInput.addEventListener('keydown', e => { if (e.key === 'Enter') startScan(); });
+
+        // ═══════════════════════════════════════════════════
+        //  EVOLUTION: TABS, GAUGE & CYTOSCAPE MAP
+        // ═══════════════════════════════════════════════════
+        
+        // Tab UI
+        function switchVue(mode) {
+            document.getElementById('btn-terminal').classList.remove('active');
+            document.getElementById('btn-wifi').classList.remove('active');
+            document.getElementById('btn-terminal').style.background = 'var(--bg-secondary)';
+            document.getElementById('btn-wifi').style.background = 'var(--bg-secondary)';
+            
+            document.getElementById('vue-terminal').style.display = 'none';
+            document.getElementById('vue-wifi').style.display = 'none';
+            
+            if(mode === 'terminal') {
+                document.getElementById('btn-terminal').classList.add('active');
+                document.getElementById('btn-terminal').style.background = '';
+                document.getElementById('vue-terminal').style.display = 'block';
+            } else {
+                document.getElementById('btn-wifi').classList.add('active');
+                document.getElementById('btn-wifi').style.background = '';
+                document.getElementById('vue-wifi').style.display = 'block';
+            }
+        }
+
+        async function fetchWifi() {
+            const grid = document.getElementById('wifi-grid');
+            grid.innerHTML = '<div style="color:#888;">📡 Taranıyor... Lütfen bekleyin.</div>';
+            try {
+                const r = await fetch('/api/wifi_scan');
+                const d = await r.json();
+                if(!d.success) {
+                    grid.innerHTML = `<div style="color:#ef4444;">⚠️ Hata: ${d.error}</div>`;
+                    return;
+                }
+                if(d.data.length === 0) {
+                    grid.innerHTML = '<div style="color:#888;">Etrafta ağ bulunamadı.</div>';
+                    return;
+                }
+                grid.innerHTML = '';
+                d.data.forEach(net => {
+                    let color = '#3b82f6'; // Mavi
+                    if(net.signal > 75) color = '#10b981'; // Yeşil
+                    else if(net.signal < 40) color = '#f59e0b'; // Sarı
+                    
+                    grid.innerHTML += `
+                        <div style="background:#0a0b10; border:1px solid #1a1c23; padding:1rem; border-radius:8px; display:flex; flex-direction:column; gap:0.5rem;">
+                            <strong style="color:#fff; font-size:1.1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${net.ssid}</strong>
+                            <div style="display:flex; justify-content:space-between; align-items:center; color:#888; font-size:0.85rem;">
+                                <span>Signal</span>
+                                <span style="color:${color}; font-weight:bold;">${net.signal}%</span>
+                            </div>
+                            <div style="width:100%; height:4px; background:#1a1c23; border-radius:2px; overflow:hidden;">
+                                <div style="width:${net.signal}%; height:100%; background:${color};"></div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch(e) {
+                grid.innerHTML = `<div style="color:#ef4444;">Ağ hatası: ${e.message}</div>`;
+            }
+        }
+
+        // Risk CVSS Gauge
+        const cveDictionary = {
+            'heartbleed': 9.8, 'shellshock': 10.0, 'anonymous-ftp': 5.0,
+            'ms17-010': 9.3, 'eternalblue': 9.3, 'sql-injection': 8.5,
+            'xss': 6.1, 'csrf': 6.5, 'smb-vuln': 8.0, 'cve-': 7.5
+        };
+        let cvssGauge = null;
+        let currentMaxScore = 0.0;
+        
+        function initGauge() {
+            if(!cvssGauge && typeof Gauge !== 'undefined') {
+                const target = document.getElementById('cvss-gauge');
+                cvssGauge = new Gauge(target).setOptions({
+                    angle: 0.15, lineWidth: 0.3, radiusScale: 1, pointer: { length: 0.5, strokeWidth: 0.035, color: '#fff' },
+                    staticZones: [
+                        {strokeStyle: "#10b981", min: 0, max: 3.9},
+                        {strokeStyle: "#f59e0b", min: 4.0, max: 6.9},
+                        {strokeStyle: "#ef4444", min: 7.0, max: 8.9},
+                        {strokeStyle: "#991b1b", min: 9.0, max: 10.0}
+                    ]
+                });
+                cvssGauge.maxValue = 10;
+                cvssGauge.setMinValue(0);
+                cvssGauge.set(0);
+            }
+        }
+        
+        function updateRisk(text) {
+            let foundScore = 0.0;
+            const lower = text.toLowerCase();
+            for (const [key, score] of Object.entries(cveDictionary)) {
+                if(lower.includes(key) && score > foundScore) foundScore = score;
+            }
+            if(lower.includes('vulnerable') && foundScore === 0) foundScore = 5.0; // fallback
+            
+            if(foundScore > currentMaxScore) {
+                currentMaxScore = foundScore;
+                if(cvssGauge) cvssGauge.set(currentMaxScore);
+                document.getElementById('cvss-score').textContent = `RISK: ${currentMaxScore.toFixed(1)}`;
+                if(currentMaxScore >= 9.0) document.getElementById('cvss-score').style.color = '#ff1744';
+            }
+        }
+
+        // Cytoscape
+        let cyMap = null;
+        let cyRootId = null;
+        function initCyMap(rootIp) {
+            document.getElementById('cy').style.display = 'block';
+            cyRootId = rootIp;
+            if(window.cytoscape) {
+                cyMap = cytoscape({
+                    container: document.getElementById('cy'),
+                    elements: [ { data: { id: rootIp, label: rootIp }, classes: 'root' } ],
+                    style: [
+                        { selector: 'node', style: { 'label': 'data(label)', 'color': '#fff', 'background-color': '#00f2fe', 'text-outline-color': '#08080b', 'text-outline-width': 2, 'font-size': '10px' } },
+                        { selector: '.root', style: { 'width': '40px', 'height': '40px', 'background-color': '#4f46e5' } },
+                        { selector: '.port', style: { 'width': '25px', 'height': '25px', 'background-color': '#f59e0b' } },
+                        { selector: '.vuln', style: { 'background-color': '#ff1744', 'border-color': '#ff1744', 'border-width': 3 } },
+                        { selector: 'edge', style: { 'width': 2, 'line-color': '#334155', 'curve-style': 'bezier' } }
+                    ],
+                    layout: { name: 'cose', padding: 10, animate: false }
+                });
+            }
+        }
+
+        function addCyNode(id, label, type) {
+            if (!cyMap || !cyRootId) return;
+            if (cyMap.getElementById(id).length === 0) {
+                cyMap.add([
+                    { data: { id: id, label: label }, classes: type },
+                    { data: { source: cyRootId, target: id } }
+                ]);
+                cyMap.layout({ name: 'cose', animate: true, stop: () => { cyMap.fit(); } }).run();
+            } else if (type === 'vuln') {
+                cyMap.getElementById(id).addClass('vuln');
+            }
+        }
 
         function ts() { return new Date().toTimeString().slice(0, 8); }
 
@@ -1218,6 +1388,15 @@
             progCont.classList.add('active');
             setProgress(0, 'Bağlantı kuruluyor...');
 
+            // Module: Görsel Harita ve CVSS Başlat
+            initGauge();
+            document.getElementById('cvss-score').style.color = '#fff';
+            document.getElementById('cvss-score').textContent = 'RISK: 0.0';
+            currentMaxScore = 0.0;
+            if (cyMap) { cyMap.destroy(); cyMap = null; }
+            document.getElementById('cy').style.display = 'none';
+            if (target) initCyMap(target);
+
             // ── Başlangıç logları ──
             await sleep(200);
             addLog(`Hedef: <strong>${target}</strong>`, 'info');
@@ -1305,11 +1484,20 @@
 
                 // ── GERÇEK ZAMANLI SAYAÇLAR ──
                 // Port sayımı: "22/tcp open ssh" deseni
-                if (raw.match(/\d+\/(tcp|udp)\s+open\b/i)) {
+                const portMatch = raw.match(/(\d+)\/(tcp|udp)\s+open\s+([^\s]+)/i);
+                if (portMatch) {
                     livePortCount++;
                     if (!opts.net_discover && !(opts.dns_query && !opts.port_scan)) {
                         setStat('stat-ports', livePortCount);
                     }
+                    addCyNode(`port-${portMatch[1]}`, `${portMatch[1]} (${portMatch[3]})`, 'port');
+                } else if (raw.match(/\d+\/(tcp|udp)\s+open\b/i)) {
+                    // Fallback
+                    livePortCount++;
+                    if (!opts.net_discover && !(opts.dns_query && !opts.port_scan)) {
+                        setStat('stat-ports', livePortCount);
+                    }
+                    addCyNode(`port-unk-${livePortCount}`, `Port Açık`, 'port');
                 }
 
                 // Gecikme tespiti (Üst düzey Regex): "Host is up (0.0023s latency)"
@@ -1406,10 +1594,15 @@
                 // ── KRİTİK Zafiyet Hiyerarşisi ──
                 if (opts.vuln_scan && raw.match(/\bVULNERABLE\b/i)) {
                     safe = `<span class="vuln-critical" style="display:inline-block; width:100%; box-sizing:border-box; background: rgba(255, 23, 68, 0.15); border-left: 4px solid #ff1744; margin-top: 4px; padding: 4px 10px; color:#ff1744; font-weight:900; text-shadow: 0 0 10px rgba(255, 23, 68, 0.7); animation: vulnPulse 2s ease-in-out infinite;">🚨 ${safe}</span>`;
+                    updateRisk(raw);
+                    addCyNode(`vuln-${i}`, 'Zafiyet!', 'vuln');
+                    if(cyRootId && cyMap) cyMap.getElementById(cyRootId).addClass('vuln');
                 } else if (opts.vuln_scan && (raw.match(/\bExploitable\b/i) || raw.match(/State: LIKELY VULNERABLE/i))) {
                     safe = `<span class="vuln-critical">🔴 ${safe}</span>`;
+                    updateRisk(raw);
                 } else if (opts.vuln_scan && (safe.match(/CVE-\d+-\d+/i) || safe.match(/\bzafiyet\b/i))) {
                     safe = `<span style="color:#ef4444; font-weight:bold; background:rgba(239, 68, 68, 0.1); padding:0 4px; border-radius:4px;">${safe}</span>`;
+                    updateRisk(safe);
                 }
 
                 addLog(safe, guessLineType(raw));
