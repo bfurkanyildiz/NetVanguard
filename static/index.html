@@ -874,25 +874,39 @@
             </div>
 
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:2rem; margin-bottom: 2rem;">
+                <!-- System Health Card -->
                 <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
                     <h3 style="color:var(--cyan-400); margin-bottom:1.5rem; font-size:1.3rem; display:flex; align-items:center; gap:0.5rem; font-weight:800;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-                        NetVanguard Sürümleri
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        System Health (Kali Node)
                     </h3>
-                    <ul style="list-style:none; padding:0; margin:0; color:#ccc; line-height:2; font-size:1.05rem;">
-                        <li><strong>Engine:</strong> NetVanguard v1.0.0 Pro</li>
-                        <li><strong>Backend:</strong> Rust (axum + tokio)</li>
-                        <li><strong>Network Scanner:</strong> Nmap Entegreli</li>
-                        <li><strong>Radar API:</strong> nmcli / wpa_cli uyumlu</li>
-                    </ul>
+                    <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; color:#ccc; margin-bottom:0.5rem; font-size:0.95rem;">
+                                <span>CPU Usage</span><span id="sys-cpu" style="color:var(--cyan-400); font-weight:bold;">12%</span>
+                            </div>
+                            <div style="width:100%; height:8px; background:rgba(0,0,0,0.5); border-radius:4px; overflow:hidden;">
+                                <div id="sys-cpu-bar" style="width:12%; height:100%; background:linear-gradient(90deg, var(--cyan-500), var(--violet-500)); transition:width 1s ease;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="display:flex; justify-content:space-between; color:#ccc; margin-bottom:0.5rem; font-size:0.95rem;">
+                                <span>RAM Usage</span><span id="sys-ram" style="color:var(--emerald-400); font-weight:bold;">45%</span>
+                            </div>
+                            <div style="width:100%; height:8px; background:rgba(0,0,0,0.5); border-radius:4px; overflow:hidden;">
+                                <div id="sys-ram-bar" style="width:45%; height:100%; background:linear-gradient(90deg, var(--emerald-500), var(--cyan-400)); transition:width 1s ease;"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
+                <!-- Recent Summary Card -->
                 <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
                     <h3 style="color:var(--emerald-400); margin-bottom:1.5rem; font-size:1.3rem; display:flex; align-items:center; gap:0.5rem; font-weight:800;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M2 12a10 10 0 1 0 20 0 10 10 0 1 0-20 0"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg>
                         Son Tarama Özeti
                     </h3>
-                    <div style="color:#888; font-style:italic; line-height: 1.6; font-size: 0.95rem;">Şu an için gösterilecek bir tarama özeti bulunmuyor. Yeni bir hedef keşfetmek için 'Network Scanner' sekmesine geçiş yapın. Taramalarınız sonucunda en son analiz raporu burada yer alacaktır.</div>
+                    <div id="recent-summary-content" style="color:#888; font-style:italic; line-height: 1.6; font-size: 0.95rem;">Şu an için gösterilecek bir tarama özeti bulunmuyor. Yeni bir hedef keşfetmek için 'Network Scanner' sekmesine geçiş yapın. Taramalarınız sonucunda en son analiz raporu burada yer alacaktır.</div>
                 </div>
             </div>
         </div>
@@ -1097,6 +1111,14 @@
                     
                     <!-- Kat Planı / Heatmap Görünümü -->
                     <div id="radar-container" style="flex: 2; min-width: 300px; min-height: 400px; position: relative; background: url('https://www.transparenttextures.com/patterns/blueprint.png') rgba(16, 25, 40, 0.9); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                        <!-- Grid Daireleri (Koordinat Sistemi) -->
+                        <div style="position:absolute; width:90%; height:90%; border-radius:50%; border:1px solid rgba(0, 242, 254, 0.1); top:5%; left:5%; pointer-events:none;"></div>
+                        <div style="position:absolute; width:60%; height:60%; border-radius:50%; border:1px solid rgba(0, 242, 254, 0.15); top:20%; left:20%; pointer-events:none;"></div>
+                        <div style="position:absolute; width:30%; height:30%; border-radius:50%; border:1px dashed rgba(0, 242, 254, 0.3); top:35%; left:35%; pointer-events:none;"></div>
+                        <!-- Eksenler -->
+                        <div style="position:absolute; width:100%; height:2px; background:rgba(0, 242, 254, 0.1); top:50%; left:0; pointer-events:none;"></div>
+                        <div style="position:absolute; width:2px; height:100%; background:rgba(0, 242, 254, 0.1); top:0; left:50%; pointer-events:none;"></div>
+                        
                         <div style="position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:rgba(255,255,255,0.05); font-size:2rem; font-weight:bold; pointer-events:none; white-space:nowrap;">NETVANGUARD RADAR</div>
                     </div>
                 </div>
@@ -1134,6 +1156,20 @@
         //  EVOLUTION: TABS, GAUGE & CYTOSCAPE MAP
         // ═══════════════════════════════════════════════════
         
+        // Mock System Health Updater
+        setInterval(() => {
+            const cpu = Math.floor(Math.random() * 25) + 5; // 5-30%
+            const ram = Math.floor(Math.random() * 30) + 40; // 40-70%
+            
+            const cpuEl = document.getElementById('sys-cpu');
+            const cpuBar = document.getElementById('sys-cpu-bar');
+            if (cpuEl) { cpuEl.textContent = cpu + '%'; cpuBar.style.width = cpu + '%'; }
+            
+            const ramEl = document.getElementById('sys-ram');
+            const ramBar = document.getElementById('sys-ram-bar');
+            if (ramEl) { ramEl.textContent = ram + '%'; ramBar.style.width = ram + '%'; }
+        }, 3000);
+
         let wifiInterval = null;
         let wifiNodes = {};
 
@@ -1220,10 +1256,15 @@
                     const size = 30 + (net.signal * 1.5);
                     let node = wifiNodes[net.ssid];
                     
+                    // Mesafe Fizigi Hesaplaması
+                    const distanceFactor = 100 - net.signal; // %100 sinyal = 0 distance, %20 sinyal = 80 distance
+                    const radius = distanceFactor * 0.45; // Max %45 radius, ekranın dairesi içinde kalsın
+                    const angle = Math.random() * 2 * Math.PI; // Rastgele radyan açı
+                    const left = 50 + radius * Math.cos(angle);
+                    const top = 50 + radius * Math.sin(angle);
+                    
                     if (!node) {
-                        const left = Math.floor(Math.random() * 80) + 10;
-                        const top = Math.floor(Math.random() * 80) + 10;
-                        node = { left, top, el: document.createElement('div') };
+                        node = { el: document.createElement('div') };
                         
                         node.el.style.position = 'absolute';
                         node.el.style.left = left + '%';
@@ -1247,6 +1288,9 @@
                     // Dinamik Güncelleme (Geçiş Animasyonlu)
                     node.el.style.width = size + 'px';
                     node.el.style.height = size + 'px';
+                    // Sinyal değiştiğinde pozisyonu akıcı merkeze çekmek / uzaklaştırmak için:
+                    node.el.style.left = left + '%';
+                    node.el.style.top = top + '%';
                     node.el.style.background = `radial-gradient(circle, ${mapColor} 0%, transparent 70%)`;
                     node.el.title = `Ağ: ${net.ssid}\nSinyal: %${net.signal}`;
                 });
@@ -1824,6 +1868,30 @@
             summaryParts.push(scanDuration + 's');
             resCnt.textContent = summaryParts.join(' · ');
             document.getElementById('download-btn').style.display = 'inline-flex';
+
+            // ── Dashboard Özet Kartı Güncellemesi ──
+            const summaryDiv = document.getElementById('recent-summary-content');
+            if (summaryDiv) {
+                summaryDiv.innerHTML = `
+                <div style="background:rgba(0,0,0,0.3); padding:1rem; border-radius:8px; border:1px solid var(--border-subtle); box-shadow:inset 0 0 10px rgba(0,0,0,0.2);">
+                    <div style="margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:#ccc;">Taranan Hedef:</span>
+                        <strong style="color:#fff; background:var(--bg-secondary); padding:0.2rem 0.6rem; border-radius:4px; border:1px solid #334155;">${target}</strong>
+                    </div>
+                    <div style="margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:#ccc;">Keşfedilen Aktif Varlık:</span>
+                        <strong style="color:var(--emerald-400); font-size:1.1rem; text-shadow:0 0 5px rgba(16,185,129,0.3);">${opts.net_discover ? liveDeviceCount + ' Cihaz' : livePortCount + ' Port'}</strong>
+                    </div>
+                    <div style="margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:#ccc;">Geçen Süre:</span>
+                        <strong style="color:var(--cyan-400); font-family:'JetBrains Mono', monospace;">${scanDuration}s</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #334155; padding-top:0.8rem;">
+                        <span style="color:#888;">Tarama Modu:</span>
+                        <strong style="color:#aaa;">${getScanLabel(data)}</strong>
+                    </div>
+                </div>`;
+            }
 
             resetBtn();
             currentAbortController = null;
