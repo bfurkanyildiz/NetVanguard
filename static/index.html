@@ -1328,15 +1328,25 @@
 
                 // DNS IP yakalama (HEDEF IP Kartı İçin)
                 if (opts.dns_query) {
-                    // Nmap reverse dns formatı veya nslookup Address formatı
-                    const dnsM = raw.match(/Nmap scan report for ([\d.]+)/i) || raw.match(/Address:\s*([\d.]+)/i);
-                    if (dnsM) {
-                        const matchedIp = dnsM[1];
-                        // Filtrele: Lokal DNS (#53) veya Yerel IP'yi (192.168) asıl hedef değilse atla
-                        const isLocalDns = raw.includes('#53') || matchedIp.startsWith('192.168.');
-                        
-                        if (!isLocalDns) {
-                            liveDnsIp = matchedIp; // En son yakalanan gerçek dış IP kalacak
+                    if (raw.startsWith('Address:')) {
+                        // Lokal DNS sunucularını veya port numaralarını atla
+                        if (!raw.includes('#53') && !raw.includes('192.168.')) {
+                            // "Address: 142.250.217.110" satırından IP'yi çek
+                            const parts = raw.split(':');
+                            if (parts.length > 1) {
+                                liveDnsIp = parts[1].trim(); // En son yakalanan gerçek dış IP kalacak
+                                
+                                if (document.getElementById('stat-ports-label').textContent === 'HEDEF IP') {
+                                    const portEl = document.getElementById('stat-ports');
+                                    // Sadece text içeriğini değiştir, sayaç vs ekleme
+                                    portEl.innerHTML = `<span style="text-shadow: 0 0 10px #00f2fe; color:#00f2fe; font-size: 1.3rem; font-weight:bold;">${liveDnsIp}</span>`;
+                                }
+                            }
+                        }
+                    } else if (raw.startsWith('Nmap scan report for')) {
+                        const dnsM = raw.match(/Nmap scan report for ([\d.]+)/i);
+                        if (dnsM) {
+                            liveDnsIp = dnsM[1];
                             if (document.getElementById('stat-ports-label').textContent === 'HEDEF IP') {
                                 const portEl = document.getElementById('stat-ports');
                                 portEl.innerHTML = `<span style="text-shadow: 0 0 10px #00f2fe; color:#00f2fe; font-size: 1.3rem; font-weight:bold;">${liveDnsIp}</span>`;
@@ -1406,15 +1416,16 @@
             setStat('stat-type', getScanLabel(data));
             setStat('stat-status', data.success ? 'Başarılı' : 'Hata');
 
-            // Latency fallback: döngüde yakalanamadıysa (DNS vb.) extractLatency ile dene veya süreyi bas
+            // Latency fallback: DNS taramaları için "Tarama tamamlandı (X.Xs)" değerinden süreyi çek
             if (!liveLatency) {
                 const fallback = extractLatency(data.output);
                 if (fallback) {
                     liveLatency = fallback;
                 } else if (opts.dns_query) {
-                    // nslookup için tarama süresini latency olarak kabul et
+                    // nslookup çıktısında latency olmaz, bu yüzden genel tarama süresini latency kabul ediyoruz.
                     liveLatency = scanDuration + 's';
                 }
+                
                 if (liveLatency) {
                     setStat('stat-latency', liveLatency);
                     document.getElementById('stat-latency').style.opacity = '1';
