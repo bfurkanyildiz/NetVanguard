@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use std::process::Command;
 use tower_http::services::ServeDir;
+use colored::Colorize;
 
 // ═══════════════════════════════════════════════════════════
 //  VERİ YAPILARI
@@ -326,6 +327,24 @@ async fn handle_stop() -> Json<ScanResponse> {
 
 #[tokio::main]
 async fn main() {
+    // ═══ ASCII ART BANNER ═══
+    let banner = r#"
+    █████╗ ███████╗████████╗██╗   ██╗ █████╗ ███╗   ██╗ ██████╗ ██╗   ██╗ █████╗ ██████╗ ██████╗ 
+    ██╔══██╗██╔════╝╚══██╔══╝██║   ██║██╔══██╗████╗  ██║██╔════╝ ██║   ██║██╔══██╗██╔══██╗██╔══██╗
+    ██████╔╝█████╗     ██║   ██║   ██║███████║██╔██╗ ██║██║  ███╗██║   ██║███████║██████╔╝██║  ██║
+    ██╔═══╝ ██╔══╝     ██║   ╚██╗ ██╔╝██╔══██║██║╚██╗██║██║   ██║██║   ██║██╔══██║██╔══██╗██║  ██║
+    ██║     ███████╗   ██║    ╚████╔╝ ██║  ██║██║ ╚████║╚██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝
+    ╚═╝     ╚══════╝   ╚═╝     ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ 
+    "#;
+
+    println!("{}", banner.bright_cyan());
+    println!("    {}", "═══════════════════════════════════════════════════════════════════════════".dimmed());
+    println!("    {}  {}", "🛡️  Versiyon :".bright_white().bold(), "v1.0.0 Pro".bright_green().bold());
+    println!("    {}  {}", "👨‍💻 Geliştirici:".bright_white().bold(), "Furkan Yıldız".bright_magenta());
+    println!("    {}  {}", "⚙️  Motor    :".bright_white().bold(), "Rust + Axum (Async)".yellow());
+    println!("    {}  {}", "📊 Durum    :".bright_white().bold(), "█ ONLINE".bright_green().bold());
+    println!("    {}", "═══════════════════════════════════════════════════════════════════════════".dimmed());
+
     let app = Router::new()
         .route("/api/scan", post(handle_scan))
         .route("/api/stop", post(handle_stop))
@@ -333,15 +352,29 @@ async fn main() {
         .fallback_service(ServeDir::new("static"));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    println!("══════════════════════════════════════════");
-    println!("  🛡️  NetVanguard v1.0 — Web Paneli");
-    println!("  🌐  http://{}", addr);
-    println!("  📡  API: http://{}/api/scan", addr);
-    println!("══════════════════════════════════════════");
 
     let listener = tokio::net::TcpListener::bind(addr)
         .await
         .expect("Port 3000 bağlanamadı!");
+
+    // Sunucu BIND edildikten sonra bilgileri ve browser'ı aç
+    println!();
+    println!("    {}  {}", "🌐 Web Panel :".bright_white().bold(), format!("http://{}", addr).bright_cyan().bold().underline());
+    println!("    {}  {}", "📡 API       :".bright_white().bold(), format!("http://{}/api/scan", addr).bright_blue());
+    println!("    {}  {}", "🔒 Check Env :".bright_white().bold(), format!("http://{}/api/check_env", addr).bright_blue());
+    println!();
+    println!("    {}", "🚀 Dashboard hazırlanıyor ve tarayıcıda açılıyor...".bright_yellow().bold());
+    println!();
+
+    // Varsayılan tarayıcıyı aç
+    let url = format!("http://{}", addr);
+    tokio::spawn(async move {
+        // Kısa bir gecikme: sunucu tam hazır olsun
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+        if let Err(e) = open::that(&url) {
+            eprintln!("    {} Tarayıcı açılamadı: {}", "⚠️".to_string().yellow(), e);
+        }
+    });
 
     axum::serve(listener, app)
         .await
