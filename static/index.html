@@ -889,34 +889,35 @@
         /* Kali Dragon Logo / Splitting Lock */
         .lock-container {
             position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            width: 200px; height: 300px; z-index: 9999 !important;
+            width: 220px; height: 300px; z-index: 9999 !important;
             display: flex; pointer-events: none;
             transition: opacity 0.5s ease;
         }
         #cyber-gate.opened .lock-container { opacity: 0; }
         
         .logo-half {
-            width: 100px; height: 300px; transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
+            width: 110px; height: 300px; transition: transform 1.5s cubic-bezier(0.7, 0, 0.3, 1);
             display: flex; align-items: center; justify-content: center;
             overflow: hidden; position: relative;
         }
-        .logo-half svg { 
-            width: 200px; height: 300px; fill: #00ff00; 
-            filter: drop-shadow(0 0 10px #00ff00);
+        
+        /* The Final Fix: User Requested CSS Class */
+        .dragon-svg { 
+            position: absolute; top: 50%; 
+            display: block !important; opacity: 1 !important; visibility: visible !important;
+            width: 220px; height: auto; fill: #00ff00; 
+            filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.7));
+            pointer-events: none;
             animation: logoPulse 1.5s ease-in-out infinite;
         }
-        .logo-half.left { justify-content: flex-end; }
-        .logo-half.right { justify-content: flex-start; }
         
-        .logo-half.left svg { transform: translateX(100px); }
-        .logo-half.right svg { transform: translateX(-100px); }
+        .logo-half.left .dragon-svg { left: 110px; transform: translate(-50%, -50%); }
+        .logo-half.right .dragon-svg { left: -110px; transform: translate(-50%, -50%); }
 
         @keyframes logoPulse {
             0%, 100% { opacity: 0.8; filter: drop-shadow(0 0 10px #00ff00); }
-            50% { opacity: 1; filter: drop-shadow(0 0 25px #00ff00); }
+            50% { opacity: 1; filter: drop-shadow(0 0 30px #00ff00); }
         }
-        .logo-half.left svg { --tx: 150px; }
-        .logo-half.right svg { --tx: -150px; }
 
         /* Digital Scanning Grid Squares */
         .grid-scanner {
@@ -1043,12 +1044,12 @@
             <div class="scanning-line"></div>
             <div class="lock-container" style="justify-content: flex-end;">
                 <div class="logo-half left">
-                    <!-- High-Quality Kali Dragon silhouette - Detailed Left -->
-                    <svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M100 20c-5 0-15 10-25 25C60 65 55 95 55 125s10 60 25 80c10 15 20 25 20 35V20z" />
-                        <path d="M100 60c-15 5-25 25-28 45-2 15 5 35 15 50s13 25 13 35V60z" fill-opacity="0.3" />
-                        <path d="M60 85c-10 0-25 10-35 25-10 15-15 35-15 50 0 20 15 35 35 35h15c0-25 0-85 0-85z" fill-opacity="0.2" />
-                        <circle cx="85" cy="45" r="4" fill="#000" />
+                    <!-- Final Fix: Kali Dragon SVG Embed -->
+                    <svg class="dragon-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M150 20c-15 0-35 15-45 35C90 80 85 115 85 145c0 40 15 75 40 95 10 8 18 15 25 25V20z" />
+                        <path d="M150 60c-25 5-45 25-50 55-2 25 10 50 25 65s25 35 25 35V60z" fill-opacity="0.3" />
+                        <path d="M90 100c-15 0-40 15-55 35-15 20-20 45-20 65 0 30 25 45 45 45h30v-145z" fill-opacity="0.2" />
+                        <circle cx="120" cy="55" r="5" fill="#000" />
                     </svg>
                 </div>
             </div>
@@ -1061,12 +1062,12 @@
             <div class="scanning-line" style="animation-delay: 2s;"></div>
             <div class="lock-container" style="justify-content: flex-start;">
                 <div class="logo-half right">
-                    <!-- High-Quality Kali Dragon silhouette - Detailed Right -->
-                    <svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M100 20c5 0 15 10 25 25 15 20 20 50 20 80s-10 60-25 80c-10 15-20 25-20 35V20z" />
-                        <path d="M100 60c15 5 25 25 28 45 2 15-5 35-15 50s-13 25-13 35V60z" fill-opacity="0.3" />
-                        <path d="M140 85c10 0 25 10 35 25 10 15 15 35 15 50 0 20-15 35-35 35h-15c0-25 0-85 0-85z" fill-opacity="0.2" />
-                        <circle cx="115" cy="45" r="4" fill="#000" />
+                    <!-- Final Fix: Kali Dragon SVG Embed -->
+                    <svg class="dragon-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M150 20c15 0 35 15 45 35 15 25 20 60 20 90 0 40-15 75-40 95-10 8-18 15-25 25V20z" />
+                        <path d="M150 60c25 5 45 25 50 55 2 25-10 50-25 65s-25 35-25 35V60z" fill-opacity="0.3" />
+                        <path d="M210 100c15 0 40 15 55 35 15 20 20 45 20 65 0 30-25 45-45 45h-30v-145z" fill-opacity="0.2" />
+                        <circle cx="180" cy="55" r="5" fill="#000" />
                     </svg>
                 </div>
             </div>
@@ -1538,8 +1539,37 @@
             }, 1500);
         });
 
-        // Live Ticker Logic Fix: Functional Ticker
-        setInterval(() => {
+        // Smart System Status & Time Logic
+        let lastKnownLocation = 'UNKNOWN';
+        let lastKnownTimeStr = '';
+        
+        async function updateSystemStatus() {
+            const tickerItems = document.querySelectorAll('.ticker-item');
+            const scannerActive = scanBtn.classList.contains('scanning');
+            
+            try {
+                // Fetch from worldtimeapi (Network Time & Location)
+                const res = await fetch('https://worldtimeapi.org/api/ip');
+                const data = await res.json();
+                
+                const timeStr = new Date(data.datetime).toLocaleTimeString('tr-TR');
+                const dateStr = new Date(data.datetime).toLocaleDateString('tr-TR');
+                lastKnownLocation = data.timezone.split('/')[1] || data.timezone;
+                lastKnownTimeStr = `${timeStr} ${dateStr}`;
+                
+                updateTickerDisplay(`[NODE: KALI-VM] | [LOCATION: ${lastKnownLocation}] | [NETWORK TIME: ${lastKnownTimeStr}]`);
+            } catch (err) {
+                // Fallback to Local Time
+                const now = new Date();
+                const L_timeStr = now.toLocaleTimeString('tr-TR');
+                const L_dateStr = now.toLocaleDateString('tr-TR');
+                lastKnownTimeStr = `${L_timeStr} ${L_dateStr}`;
+                
+                updateTickerDisplay(`[OFFLINE MODE] | [LOCAL TIME: ${lastKnownTimeStr}]`);
+            }
+        }
+
+        function updateTickerDisplay(statusMsg) {
             const tickerItems = document.querySelectorAll('.ticker-item');
             const scannerActive = scanBtn.classList.contains('scanning');
             const targetIp = ipInput.value || 'NONE';
@@ -1559,14 +1589,15 @@
                 }
                 message = `[WIFI: ${topSSID}] | [SIGNAL: ${topSignal}%] | [SCANNING FREQUENCY: 2.4/5GHz]`;
             } else {
-                message = `[NODE: KALI-VM] | [TIME: ${new Date().toLocaleTimeString()}] | [SYSTEM: VANGUARD SECURE]`;
+                message = statusMsg;
             }
             
-            // Update all items for seamless loop
-            tickerItems.forEach(item => {
-                item.textContent = message;
-            });
-        }, 3000);
+            tickerItems.forEach(item => { item.textContent = message; });
+        }
+
+        // Initialize status update
+        setInterval(updateSystemStatus, 1000);
+        updateSystemStatus(); // First run immediate
 
         // Mock System Health Updater
         setInterval(() => {
