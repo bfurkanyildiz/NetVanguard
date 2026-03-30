@@ -2671,6 +2671,23 @@
             toggleVulnSpeedLock(); // İlk açılışta state'i ayarla
             checkEnvironment();
             setInterval(checkEnvironment, 5000); // 5 saniyede bir Heartbeat
+
+            // ── GATE EMERGENCY OPENING ──
+            const gate = document.getElementById('cyber-gate');
+            const app = document.getElementById('app-container');
+            
+            setTimeout(() => {
+                gate.classList.add('opened');
+                app.classList.add('glitch');
+                app.classList.add('screen-shake');
+            }, 2000); // 2s sonra aç
+            
+            // Kapı açıldıktan sonra butonlara tıklanabilmesi için
+            setTimeout(() => {
+                gate.style.zIndex = '-1';
+                gate.style.pointerEvents = 'none';
+                app.classList.remove('screen-shake');
+            }, 3500); 
         });
     </script>
 </body>
