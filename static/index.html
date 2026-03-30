@@ -980,7 +980,7 @@
             box-shadow: 0 0 30px rgba(255, 23, 23, 0.2);
         }
         #vue-wifi.turbo-on .sonar-pulse { 
-            animation-duration: 0.5s; 
+            animation-duration: 0.4s; 
             border-color: #ff1717;
         }
         #vue-wifi.turbo-on .turbo-label { color: #ff1744; }
@@ -1706,17 +1706,7 @@
                 document.getElementById('nav-scanner').style.background = '';
                 document.getElementById('vue-scanner').style.display = 'block';
             } else if(mode === 'wifi') {
-                const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-                const alertEl = document.getElementById('wifi-hardware-alert');
-                const warningOverlay = document.getElementById('wlan-warning');
-                
-                if (conn && conn.type && conn.type !== 'wifi') {
-                    alertEl.classList.add('visible');
-                    warningOverlay.classList.add('active');
-                } else {
-                    alertEl.classList.remove('visible');
-                    warningOverlay.classList.remove('active');
-                }
+                // Hardware warnings are handled by fetchWifi based on SSID discovery
                 
                 document.getElementById('nav-wifi').classList.add('active');
                 document.getElementById('nav-wifi').style.background = '';
@@ -1753,7 +1743,16 @@
                 const r = await fetch('/api/wifi_scan');
                 const d = await r.json();
                 if(!d.success) return; // Sessizce atla
-                if(d.data.length === 0) return;
+                
+                // Smart Hardware Detection (Dynamic Fix)
+                if(d.data.length > 0) {
+                    const alertBox = document.getElementById('wifi-hardware-alert');
+                    const warningOverlay = document.getElementById('wlan-warning');
+                    if (alertBox) alertBox.style.display = 'none';
+                    if (warningOverlay) warningOverlay.style.display = 'none';
+                } else {
+                    return; // No data to show
+                }
                 
                 list.innerHTML = '';
                 const currentSsids = new Set();
