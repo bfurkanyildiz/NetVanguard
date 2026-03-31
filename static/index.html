@@ -3244,21 +3244,35 @@
         // ═══════════════════════════════════════════════════
 
         async function stopScan() {
+            // 1. Immediately abort frontend fetch
             if (currentAbortController) {
                 currentAbortController.abort();
                 currentAbortController = null;
             }
-            addLog('<span style="color:var(--rose-500);font-weight:bold;">TARAMA İPTAL EDİLDİ</span>', 'error');
-            setProgress(100, 'Tarama İptal Edildi');
-            resetBtn(); // Anında arayüzü resetle
 
+            // 2. Clear UI status
+            addLog('<span style="color:var(--rose-500);font-weight:bold;">[!] DURDURMA TALEBİ GÖNDERİLDİ</span>', 'error');
+            setProgress(100, 'İşlemler Sonlandırılıyor...');
+            
+            // 3. Notify backend to kill processes
             try {
-                addLog('Durdurma sinyali gönderiliyor...', 'warn');
-                const res = await fetch('/api/stop', { method: 'POST' });
+                const res = await fetch('/api/stop', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
                 const data = await res.json();
-                addLog(`Durdurma: <strong>${data.output}</strong>`, data.success ? 'success' : 'error');
+                
+                addLog('════════════════════════════════════', '');
+                addLog(`🛡️ <strong>SİSTEM DURUMU:</strong> ${data.output}`, data.success ? 'success' : 'error');
+                addLog('════════════════════════════════════', '');
+                
+                setProgress(100, 'Sistem Hazır');
             } catch (err) {
-                addLog(`Durdurma hatası: <strong>${err.message}</strong>`, 'error');
+                addLog(`[!] Arka plan durdurma hatası: ${err.message}`, 'error');
+            } finally {
+                // 4. Force reset buttons and loading states
+                resetBtn();
+                document.getElementById('download-btn').style.display = 'none';
             }
         }
 

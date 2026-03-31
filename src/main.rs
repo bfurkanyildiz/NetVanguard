@@ -15,6 +15,27 @@ use trust_dns_resolver::TokioAsyncResolver;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
+use tokio_util::sync::CancellationToken;
+use once_cell::sync::Lazy;
+use tokio::sync::Mutex;
+use std::sync::Arc;
+use tokio::process::Child;
+
+// ═══════════════════════════════════════════════════════════
+//  İŞLEM YÖNETİCİSİ (PROCESS MANAGER)
+// ═══════════════════════════════════════════════════════════
+
+struct ScanManager {
+    child: Mutex<Option<Child>>,
+    cancel_token: Mutex<CancellationToken>,
+}
+
+static PROCESS_MANAGER: Lazy<Arc<ScanManager>> = Lazy::new(|| {
+    Arc::new(ScanManager {
+        child: Mutex::new(None),
+        cancel_token: Mutex::new(CancellationToken::new()),
+    })
+});
 
 // ═══════════════════════════════════════════════════════════
 //  VERİ YAPILARI
@@ -186,73 +207,109 @@ async fn handle_check_env() -> Json<EnvCheckResponse> {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  KOMUT ÇALIŞTIRICI
+//  KOMUT ÇALIŞTIRICI (ASYNCHRONOUS & CANCELLABLE)
 // ═══════════════════════════════════════════════════════════
 
-fn run_command(program: &str, args: &[&str]) -> (bool, String) {
+async fn run_command(program: &str, args: &[&str]) -> (bool, String) {
     let mut cmd;
+    
+    // Check for cancellation before starting
+    if PROCESS_MANAGER.cancel_token.lock().await.is_cancelled() {
+        return (false, "İşlem iptal edildi.".to_string());
+    }
 
     if cfg!(target_os = "windows") {
-        cmd = Command::new("cmd");
+        cmd = tokio::process::Command::new("cmd");
         let mut cmd_args = vec!["/C", program];
         cmd_args.extend_from_slice(args);
         cmd.args(&cmd_args);
     } else {
         if program == "nmap" {
-            cmd = Command::new("sudo");
+            cmd = tokio::process::Command::new("sudo");
             cmd.arg("-n");
             cmd.arg("/usr/bin/nmap");
         } else {
-            cmd = Command::new(program);
+            cmd = tokio::process::Command::new(program);
         }
         cmd.args(args);
         cmd.env("PATH", "/usr/bin:/bin:/usr/sbin:/sbin");
     }
 
-    match cmd.output() {
-        Ok(output) => {
-            let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-            let combined = if stderr.is_empty() {
-                stdout
-            } else {
-                format!("{}\n{}", stdout, stderr)
-            };
-
-            if !output.status.success() {
-                if program == "nmap" && combined.to_lowercase().contains("not found") {
-                    (
-                        false,
-                        "Nmap bulunamadı! Lütfen sisteminize kurun ve PATH'e ekleyin".to_string(),
-                    )
-                } else {
-                    (
-                        false,
-                        format!("Hata: Sistem komutu yürütülemedi\n{}", combined),
-                    )
-                }
-            } else {
-                (true, combined)
-            }
-        }
-        Err(e) => {
-            if program == "nmap" {
-                (
-                    false,
-                    "Nmap bulunamadı! Lütfen sisteminize kurun ve PATH'e ekleyin".to_string(),
-                )
-            } else {
-                (false, format!("Hata: Sistem komutu yürütülemedi\nDetay: {}\n'{}' programı sisteminizde kurulu mu?", e, program))
-            }
+    // Kill existing child if any (cleanup)
+    {
+        let mut child_lock = PROCESS_MANAGER.child.lock().await;
+        if let Some(mut old_child) = child_lock.take() {
+            let _ = old_child.kill().await;
         }
     }
+
+    match cmd.stdout(std::process::Stdio::piped()).stderr(std::process::Stdio::piped()).spawn() {
+        Ok(child) => {
+            // Store child handle
+            {
+                let mut child_lock = PROCESS_MANAGER.child.lock().await;
+                *child_lock = Some(child);
+            }
+
+            // Wait for output or cancellation
+            let token = PROCESS_MANAGER.cancel_token.lock().await.clone();
+            
+            tokio::select! {
+                result = async {
+                    // We take the child to wait_with_output (which consumes it)
+                    // If cancellation happens first, this block is aborted.
+                    let mut child_opt = PROCESS_MANAGER.child.lock().await;
+                    if let Some(c) = child_opt.take() {
+                        c.wait_with_output().await
+                    } else {
+                        Err(std::io::Error::new(std::io::ErrorKind::Other, "İşlem zaten sonlandırılmış."))
+                    }
+                } => {
+                    match result {
+                        Ok(output) => {
+                            let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+                            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+                            let combined = if stderr.is_empty() { stdout } else { format!("{}\n{}", stdout, stderr) };
+
+                            if !output.status.success() {
+                                if program == "nmap" && combined.to_lowercase().contains("not found") {
+                                    (false, "Nmap bulunamadı! Lütfen sisteminize kurun ve PATH'e ekleyin".to_string())
+                                } else {
+                                    (false, format!("Hata: Sistem komutu yürütülemedi\n{}", combined))
+                                }
+                            } else {
+                                (true, combined)
+                            }
+                        }
+                        Err(e) => (false, format!("Hata: Komut çıktısı okunamadı: {}", e))
+                    }
+                }
+                _ = token.cancelled() => {
+                    // Force kill (in case handle_stop didn't get to it yet or we reached here first)
+                    let mut child_lock = PROCESS_MANAGER.child.lock().await;
+                    if let Some(mut child) = child_lock.take() {
+                        let _ = child.kill().await;
+                    }
+                    (false, "İşlem sonlandırıldı.".to_string())
+                }
+            }
+        }
+        Err(e) => (false, format!("Hata: Komut başlatılamadı: {}", e))
+    }
 }
+
 
 // ═══════════════════════════════════════════════════════════
 //  ANA API HANDLER
 // ═══════════════════════════════════════════════════════════
 
 async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
+    // Reset cancellation token for a new scan (cancel old one first)
+    {
+        let mut token_lock = PROCESS_MANAGER.cancel_token.lock().await;
+        token_lock.cancel(); // Abort any previous task using this manager
+        *token_lock = CancellationToken::new();
+    }
     let mut target = body.target.trim().to_string();
 
     // ── Akıllı Ağ Keşfi Override ──
@@ -294,13 +351,14 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         } else {
             vec!["-c", "4", &target]
         };
-        let (ok, out) = run_command("ping", &ping_args);
+        let (ok, out) = run_command("ping", &ping_args).await;
         overall_success = ok;
         all_output.push_str(&out);
     }
 
     // ── Ağ Keşfi (Brute-Force Discovery) ──
     if body.net_discover {
+        if PROCESS_MANAGER.cancel_token.lock().await.is_cancelled() { return Json(ScanResponse { success: false, target: target.clone(), scan_type: "cancelled".into(), output: "İptal edildi.".into() }); }
         scan_types.push("net_discover");
         if !all_output.is_empty() {
             all_output.push_str("\n══════════════════════════════════════\n\n");
@@ -316,7 +374,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
                 "60s",
                 &target,
             ],
-        );
+        ).await;
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -339,7 +397,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
                 "60s",
                 &target,
             ],
-        );
+        ).await;
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -368,7 +426,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
                 "1s",
                 &target,
             ],
-        );
+        ).await;
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -396,7 +454,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
                 "60s",
                 &target,
             ],
-        );
+        ).await;
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -419,7 +477,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
                 "60s",
                 &target,
             ],
-        );
+        ).await;
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -441,7 +499,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
                 "120s",
                 &target,
             ],
-        );
+        ).await;
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -492,33 +550,36 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
 
 #[allow(dead_code)]
 async fn handle_stop() -> Json<ScanResponse> {
-    let mut cmd = if cfg!(target_os = "windows") {
-        let mut c = Command::new("cmd");
-        c.args(&["/C", "taskkill /F /IM nmap.exe /T"]);
-        c
+    // 1. Trigger cancellation token
+    PROCESS_MANAGER.cancel_token.lock().await.cancel();
+
+    // 2. Kill the active process if any
+    {
+        let mut child_lock = PROCESS_MANAGER.child.lock().await;
+        if let Some(mut child) = child_lock.take() {
+            let _ = child.kill().await;
+        }
+    }
+
+    // 3. Fallback: System-wide killall for nmap
+    let _ = if cfg!(target_os = "windows") {
+        tokio::process::Command::new("cmd")
+            .args(&["/C", "taskkill /F /IM nmap.exe /T"])
+            .output()
+            .await
     } else {
-        let mut c = Command::new("sudo");
-        c.arg("-n");
-        c.arg("killall");
-        c.arg("nmap");
-        c.env("PATH", "/usr/bin:/bin:/usr/sbin:/sbin");
-        c
+        tokio::process::Command::new("sudo")
+            .args(&["-n", "killall", "nmap"])
+            .output()
+            .await
     };
 
-    match cmd.output() {
-        Ok(_) => Json(ScanResponse {
-            success: true,
-            target: "".into(),
-            scan_type: "stop".into(),
-            output: "Nmap işlemleri zorla durduruldu.".into(),
-        }),
-        Err(e) => Json(ScanResponse {
-            success: false,
-            target: "".into(),
-            scan_type: "stop".into(),
-            output: format!("Durdurma hatası: {}", e),
-        }),
-    }
+    Json(ScanResponse {
+        success: true,
+        target: "".into(),
+        scan_type: "stop".into(),
+        output: "İşlemler başarıyla durduruldu ve kaynaklar serbest bırakıldı.".into(),
+    })
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -706,6 +767,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/api/scan", post(handle_scan))
+        .route("/api/stop", post(handle_stop))
         .route("/api/wifi_scan", get(handle_wifi_scan))
         .route("/api/check_env", get(handle_check_env))
         .route("/api/v1/geolocation", get(handle_geolocation))
