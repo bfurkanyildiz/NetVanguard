@@ -12,6 +12,7 @@ use std::time::Duration;
 use tower_http::services::ServeDir;
 use trust_dns_resolver::config::*;
 use trust_dns_resolver::TokioAsyncResolver;
+use std::fs;
 
 // ═══════════════════════════════════════════════════════════
 //  VERİ YAPILARI
@@ -57,7 +58,9 @@ struct EnvCheckResponse {
 #[derive(Serialize)]
 struct WifiInfo {
     ssid: String,
+    bssid: String,
     signal: u8,
+    channel: u32,
 }
 
 #[derive(Serialize)]
@@ -485,6 +488,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
 //  DURDURMA İŞLEMİ (CANCEL)
 // ═══════════════════════════════════════════════════════════
 
+#[allow(dead_code)]
 async fn handle_stop() -> Json<ScanResponse> {
     let mut cmd = if cfg!(target_os = "windows") {
         let mut c = Command::new("cmd");
@@ -516,6 +520,49 @@ async fn handle_stop() -> Json<ScanResponse> {
 }
 
 // ═══════════════════════════════════════════════════════════
+//  WI-FI RADAR YARDIMCI FONKSİYONLAR
+// ═══════════════════════════════════════════════════════════
+
+fn find_wifi_interface() -> Option<String> {
+    if cfg!(target_os = "windows") {
+        return None;
+    }
+
+    // Way 1: Scan /sys/class/net/
+    if let Ok(entries) = fs::read_dir("/sys/class/net/") {
+        for entry in entries.flatten() {
+            if let Ok(name) = entry.file_name().into_string() {
+                // Common WiFi patterns: wlan0, wlp2s0, wlx..., etc.
+                if name.contains('w') && !name.contains("vbox") && !name.contains("docker") {
+                    // Check if it's actually a wireless interface by looking for /wireless subfolder
+                    let wireless_path = format!("/sys/class/net/{}/wireless", name);
+                    if fs::metadata(&wireless_path).is_ok() {
+                        return Some(name);
+                    }
+                    // Fallback: if it starts with 'w', it's likely a wifi card on most modern distros
+                    if name.starts_with('w') {
+                        return Some(name);
+                    }
+                }
+            }
+        }
+    }
+
+    // Way 2: nmcli device status fallback
+    if let Ok(output) = Command::new("nmcli").args(&["-t", "-f", "DEVICE,TYPE", "dev"]).output() {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        for line in stdout.lines() {
+            let parts: Vec<&str> = line.split(':').collect();
+            if parts.len() >= 2 && parts[1] == "wifi" {
+                return Some(parts[0].to_string());
+            }
+        }
+    }
+
+    None
+}
+
+// ═══════════════════════════════════════════════════════════
 //  WI-FI RADAR SİSTEMİ
 // ═══════════════════════════════════════════════════════════
 
@@ -531,8 +578,23 @@ async fn handle_wifi_scan() -> Json<WifiResponse> {
         });
     }
 
+    // 🔍 Dinamik Interface Tespiti
+    let interface = match find_wifi_interface() {
+        Some(i) => i,
+        None => {
+            return Json(WifiResponse {
+                success: false,
+                data: vec![],
+                error: Some("Wi-Fi Adaptörü Bulunamadı! Lütfen cihazınızın takılı ve aktif olduğundan emin olun.".to_string()),
+            });
+        }
+    };
+
+    // Rescan matches UI expectations for fresh data
+    let _ = Command::new("nmcli").args(&["dev", "wifi", "rescan"]).output();
+
     let output = match Command::new("nmcli")
-        .args(&["-t", "-f", "SSID,SIGNAL", "dev", "wifi"])
+        .args(&["-t", "-f", "SSID,BSSID,SIGNAL,CHAN", "dev", "wifi"])
         .output()
     {
         Ok(o) => o,
@@ -540,7 +602,7 @@ async fn handle_wifi_scan() -> Json<WifiResponse> {
             return Json(WifiResponse {
                 success: false,
                 data: vec![],
-                error: Some(format!("nmcli hatası: {}", e)),
+                error: Some(format!("nmcli hatası: {}. Interface: {}", e, interface)),
             })
         }
     };
@@ -552,12 +614,22 @@ async fn handle_wifi_scan() -> Json<WifiResponse> {
         if line.trim().is_empty() {
             continue;
         }
-        let parts: Vec<&str> = line.split(':').collect();
-        if parts.len() >= 2 {
-            let ssid = parts[0].to_string();
-            let signal = parts[1].parse::<u8>().unwrap_or(0);
+
+        // FORMAT: SSID:BSSID:SIGNAL:CHAN
+        // BSSID contains ':' (e.g. AA:BB:CC:DD:EE:FF)
+        // nmcli -t uses ':' as delimiter but handles BSSID by escaping or consistent field count.
+        // Actually, nmcli -t escapes ':' with '\:'. But we can also parse from the end for CHAN and SIGNAL.
+        
+        let parts: Vec<String> = line.replace("\\:", "##COLON##").split(':').map(|s| s.to_string()).collect();
+        
+        if parts.len() >= 4 {
+            let ssid = parts[0].replace("##COLON##", ":").to_string();
+            let bssid = parts[1].replace("##COLON##", ":").to_string();
+            let signal = parts[2].parse::<u8>().unwrap_or(0);
+            let channel = parts[3].parse::<u32>().unwrap_or(0);
+
             if !ssid.is_empty() {
-                networks.push(WifiInfo { ssid, signal });
+                networks.push(WifiInfo { ssid, bssid, signal, channel });
             }
         }
     }
@@ -632,7 +704,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/api/scan", post(handle_scan))
-        .route("/api/wifi", get(handle_wifi_scan))
+        .route("/api/wifi_scan", get(handle_wifi_scan))
         .route("/api/check_env", get(handle_check_env))
         .route("/api/v1/geolocation", get(handle_geolocation))
         .fallback_service(ServeDir::new("static"));

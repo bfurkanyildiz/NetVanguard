@@ -2303,7 +2303,7 @@
          ═══════════════════════════════════════════════════ -->
     <script>
         // --- INSTANT MATRIX BACKGROUND ENGINE ---
-        (function() {
+        (function () {
             const canvas = document.getElementById("matrix-canvas");
             const ctx = canvas.getContext("2d");
             let columns = 0;
@@ -2614,22 +2614,22 @@
             setTimeout(() => {
                 const gate = document.getElementById('cyber-gate');
                 const app = document.getElementById('app-container');
-                if(gate) gate.classList.add('opened');
-                if(app) {
+                if (gate) gate.classList.add('opened');
+                if (app) {
                     app.classList.add('glitch');
                     app.classList.add('screen-shake');
                 }
-                
+
                 setTimeout(() => {
-                    if(gate) {
+                    if (gate) {
                         gate.style.opacity = '0';
                         setTimeout(() => {
                             gate.style.display = 'none';
                             gate.style.zIndex = '-1';
-                            if(app) app.classList.remove('glitch');
+                            if (app) app.classList.remove('glitch');
                         }, 200); // Ultra-fast hide
                     }
-                    if(app) app.classList.remove('screen-shake');
+                    if (app) app.classList.remove('screen-shake');
                 }, 300); // Match 0.3s CSS duration
             }, 300);
         });
@@ -2912,8 +2912,9 @@
                     list.innerHTML += `
                         <div style="background:#0a0b10; border:1px solid #1a1c23; padding:0.8rem; border-radius:6px; display:flex; flex-direction:column; gap:0.4rem;">
                             <strong style="color:#fff; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${net.ssid}">${net.ssid}</strong>
+                            <div style="font-size: 0.7rem; color: #4d7356;">[BSSID: ${net.bssid}]</div>
                             <div style="display:flex; justify-content:space-between; align-items:center; color:#888; font-size:0.8rem;">
-                                <span>Signal</span>
+                                <span>Signal (Ch: ${net.channel})</span>
                                 <span style="color:${lstColor}; font-weight:bold;">${net.signal}%</span>
                             </div>
                             <div style="width:100%; height:3px; background:#1a1c23; border-radius:2px; overflow:hidden;">
@@ -3858,4 +3859,5 @@
         checkEnvironment();
     </script>
 </body>
+
 </html>
