@@ -2203,6 +2203,7 @@
         const terminal = document.getElementById('terminal-body');
         const resCnt = document.getElementById('results-count');
 
+        let currentOS = 'KALI';
         let currentAbortController = null;
         let activeTab = 'dashboard';
 
@@ -2330,7 +2331,7 @@
 
             lastKnownTimeStr = `${timeStr} ${dateStr}`;
             const prefix = useLocalTime ? '[LOCAL MODE] ' : '';
-            updateTickerDisplay(`${prefix}[NODE: KALI-VM] | [LOCATION: ${lastKnownLocation}] | [STATUS: NODE-ONLINE] | [TIME: ${lastKnownTimeStr}]`);
+            updateTickerDisplay(`${prefix}[OS: ${currentOS.toUpperCase()}] | [STATUS: NODE-ONLINE] | [TIME: ${lastKnownTimeStr}]`);
         }
 
         // Initialize time once
@@ -3410,11 +3411,14 @@
 
                 // Live OS Info Integration
                 if (data.os) {
+                    currentOS = data.os;
                     const osVal = (data.os === 'Windows' ? 'Windows' : 'Linux') + ' Node';
                     if (document.getElementById('os-info')) document.getElementById('os-info').textContent = osVal;
                     if (document.getElementById('os-info-2')) document.getElementById('os-info-2').textContent = osVal;
                 } else {
-                    const fallback = (navigator.platform.indexOf('Win') !== -1 ? 'Windows' : 'Linux') + ' Node';
+                    const osType = navigator.platform.indexOf('Win') !== -1 ? 'Windows' : 'Linux';
+                    currentOS = osType;
+                    const fallback = osType + ' Node';
                     if (document.getElementById('os-info')) document.getElementById('os-info').textContent = fallback;
                     if (document.getElementById('os-info-2')) document.getElementById('os-info-2').textContent = fallback;
                 }
