@@ -1,4 +1,6 @@
 use axum::{
+    extract::Query,
+    response::IntoResponse,
     routing::{get, post},
     Json, Router,
 };
@@ -6,7 +8,10 @@ use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use std::process::Command;
+use std::time::Duration;
 use tower_http::services::ServeDir;
+use trust_dns_resolver::config::*;
+use trust_dns_resolver::TokioAsyncResolver;
 
 // ═══════════════════════════════════════════════════════════
 //  VERİ YAPILARI
@@ -60,6 +65,29 @@ struct WifiResponse {
     success: bool,
     data: Vec<WifiInfo>,
     error: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct GeoResponse {
+    pub status: String,
+    pub city: Option<String>,
+    #[serde(rename = "district")]
+    pub district: Option<String>,
+    #[serde(rename = "country_name")]
+    pub country_name: Option<String>,
+    pub isp: Option<String>,
+    pub org: Option<String>,
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
+    #[serde(rename = "as")]
+    pub as_info: Option<String>,
+    #[serde(default)]
+    pub message: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct GeoParams {
+    ip: String,
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -413,16 +441,36 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         all_output.push_str(&out);
     }
 
-    // ── Alan Adı Sorgula ──
+    // ── Alan Adı Sorgula (Rust Native with 5s Timeout) ──
     if body.dns_query {
         scan_types.push("dns_query");
         if !all_output.is_empty() {
             all_output.push_str("\n══════════════════════════════════════\n\n");
         }
 
-        let (ok, out) = run_command("nslookup", &[&target]);
-        overall_success = overall_success && ok;
-        all_output.push_str(&out);
+        let mut dns_out = String::from("DNS SORGULAMA SONUCU:\n--------------------\n");
+        let mut dns_success = false;
+
+        let config = ResolverConfig::default();
+        let mut opts = ResolverOpts::default();
+        opts.timeout = Duration::from_secs(5);
+        opts.attempts = 1;
+
+        let resolver = TokioAsyncResolver::tokio(config, opts);
+        match resolver.lookup_ip(&target).await {
+            Ok(lookup) => {
+                dns_success = true;
+                for ip in lookup.iter() {
+                    dns_out.push_str(&format!("Found IP: {}\n", ip));
+                }
+            }
+            Err(e) => {
+                dns_out.push_str(&format!("Hata: Çözümlenemedi ({})\n", e));
+            }
+        }
+
+        overall_success = overall_success && dns_success;
+        all_output.push_str(&dns_out);
     }
 
     Json(ScanResponse {
@@ -584,9 +632,9 @@ async fn main() {
 
     let app = Router::new()
         .route("/api/scan", post(handle_scan))
-        .route("/api/stop", post(handle_stop))
+        .route("/api/wifi", get(handle_wifi_scan))
         .route("/api/check_env", get(handle_check_env))
-        .route("/api/wifi_scan", get(handle_wifi_scan))
+        .route("/api/v1/geolocation", get(handle_geolocation))
         .fallback_service(ServeDir::new("static"));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -638,4 +686,63 @@ async fn main() {
     axum::serve(listener, app)
         .await
         .expect("Sunucu başlatılamadı!");
+}
+async fn handle_geolocation(Query(params): Query<GeoParams>) -> impl IntoResponse {
+    let target_ip = params.ip.trim();
+
+    // Private IP Range Check (Minimal)
+    if target_ip.starts_with("192.168.")
+        || target_ip.starts_with("10.")
+        || target_ip.starts_with("127.")
+        || target_ip.starts_with("172.16.")
+        || target_ip == "localhost"
+    {
+        return Json(GeoResponse {
+            status: "fail".to_string(),
+            city: Some("Yerel Ağ".to_string()),
+            district: Some("Merkez".to_string()),
+            country_name: Some("Yerel Arayüz".to_string()),
+            isp: Some("Private Network".to_string()),
+            org: Some("Local Host".to_string()),
+            lat: Some(0.0),
+            lon: Some(0.0),
+            as_info: None,
+            message: Some("Yerel/Özel IP adresleri için konum bilgisi sorgulanamaz.".to_string()),
+        });
+    }
+
+    let url = format!("http://ip-api.com/json/{}?fields=status,message,country,city,regionName,lat,lon,isp,org,as", target_ip);
+
+    match reqwest::get(&url).await {
+        Ok(resp) => {
+            if let Ok(geo_data) = resp.json::<GeoResponse>().await {
+                Json(geo_data)
+            } else {
+                Json(GeoResponse {
+                    status: "fail".to_string(),
+                    lat: None,
+                    lon: None,
+                    city: None,
+                    district: None,
+                    country_name: None,
+                    isp: None,
+                    org: None,
+                    as_info: None,
+                    message: Some("Veri parse edilemedi.".to_string()),
+                })
+            }
+        }
+        Err(e) => Json(GeoResponse {
+            status: "fail".to_string(),
+            city: Some("Bilinmiyor".to_string()),
+            district: Some("Merkez".to_string()),
+            country_name: Some("Bilinmiyor".to_string()),
+            isp: Some("Hata".to_string()),
+            org: Some("Hata".to_string()),
+            lat: Some(0.0),
+            lon: Some(0.0),
+            as_info: None,
+            message: Some(format!("API Bağlantı Hatası: {}", e)),
+        }),
+    }
 }
