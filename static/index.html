@@ -820,7 +820,8 @@
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
             border-radius: 14px;
-            padding: 1rem 0.5rem; /* Yatay boşluk azaltıldı */
+            padding: 1rem 0.5rem;
+            /* Yatay boşluk azaltıldı */
             transition: all 0.3s var(--ease-out);
             position: relative;
             overflow: hidden;
@@ -1509,23 +1510,28 @@
             overflow: hidden;
             box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
         }
+
         #network-map-iframe {
             width: 100%;
             height: 100%;
             border: none;
-            filter: grayscale(0.5) contrast(1.2) invert(0.9) hue-rotate(180deg); /* Cyber SOC Look */
+            filter: grayscale(0.5) contrast(1.2) invert(0.9) hue-rotate(180deg);
+            /* Cyber SOC Look */
             display: block;
         }
+
         /* UI HIGHLIGHT: Bulunan IP için Aşırı Neon Efekti */
         .cyber-ip-highlight {
-            font-size: clamp(0.7rem, 4.2vw, 1.5rem) !important; /* Üst sınır 1.5rem'e çekildi */
+            font-size: clamp(0.7rem, 4.2vw, 1.5rem) !important;
+            /* Üst sınır 1.5rem'e çekildi */
             font-weight: 950 !important;
             color: #00ff00 !important;
-            text-shadow: 
-                0 0 10px #00ff00, 
+            text-shadow:
+                0 0 10px #00ff00,
                 0 0 20px #00ff00;
             font-family: 'JetBrains Mono', monospace;
-            letter-spacing: -1px; /* Daha agresif daraltma */
+            letter-spacing: -1px;
+            /* Daha agresif daraltma */
             animation: ipGlow 1.5s infinite alternate;
             display: block;
             width: 100%;
@@ -1534,9 +1540,17 @@
             overflow: hidden;
             line-height: 1.2;
         }
+
         @keyframes ipGlow {
-            from { text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 40px #00ff00; transform: scale(1); }
-            to { text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00, 0 0 60px #00ff00, 0 0 100px #00ff00; transform: scale(1.03); }
+            from {
+                text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 40px #00ff00;
+                transform: scale(1);
+            }
+
+            to {
+                text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00, 0 0 60px #00ff00, 0 0 100px #00ff00;
+                transform: scale(1.03);
+            }
         }
 
         .terminal-ip-glow {
@@ -1570,10 +1584,19 @@
             min-width: 280px;
             backdrop-filter: blur(8px);
         }
+
         @keyframes intelAppear {
-            from { opacity: 0; transform: scale(0.9) translateY(-10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
+
         .map-info-card .intel-header {
             color: #fff;
             font-size: 0.85rem;
@@ -1587,6 +1610,7 @@
             align-items: center;
             gap: 12px;
         }
+
         .intel-dot {
             display: inline-block;
             width: 12px;
@@ -1595,44 +1619,78 @@
             border-radius: 50%;
             box-shadow: 0 0 15px #00ff00;
         }
+
         .intel-dot.pulse {
             animation: intelPulse 2s infinite ease-in-out !important;
             box-shadow: 0 0 15px #00ff00;
         }
+
         @keyframes intelPulse {
-            0% { transform: scale(1); box-shadow: 0 0 5px #00ff00; opacity: 1; }
-            50% { transform: scale(1.4); box-shadow: 0 0 20px #00ff00; opacity: 0.6; }
-            100% { transform: scale(1); box-shadow: 0 0 5px #00ff00; opacity: 1; }
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 5px #00ff00;
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.4);
+                box-shadow: 0 0 20px #00ff00;
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 5px #00ff00;
+                opacity: 1;
+            }
         }
+
         .map-info-card .intel-row {
             margin: 8px 0;
             display: flex;
             flex-direction: column;
             gap: 2px;
         }
+
         .map-info-card .intel-label {
             color: rgba(255, 255, 255, 0.7);
             font-size: 0.65rem;
             text-transform: uppercase;
         }
+
         .map-info-card .intel-value {
             color: #00ff00;
             font-size: 0.9rem;
             font-weight: 800;
             text-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
         }
+
         .map-info-card .coord-small {
             color: #4ade80;
             font-size: 0.7rem;
             opacity: 0.8;
             margin-top: 10px;
-            border-top: 1px solid rgba(255,255,255,0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
             padding-top: 6px;
+        }
+
+        /* Matrix Background Styles */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            opacity: 0.08; /* Subtle yet visible */
+            pointer-events: none;
+            background: #000;
         }
     </style>
 </head>
 
 <body>
+    <canvas id="matrix-canvas"></canvas>
     <!-- The Cyber Gate Explorer Interface -->
     <div id="cyber-gate">
         <div class="matrix-rain" id="matrix-rain-left"></div>
@@ -2035,20 +2093,24 @@
 
                 <!-- Geolocation Harita -->
                 <section class="map-section" id="network-map-container" style="display: none; margin-top:2rem;">
-                    <h3 class="results-title" style="margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <h3 class="results-title"
+                        style="margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; width:100%;">
                         <div style="display:flex; align-items:center; gap:0.5rem;">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;">
                                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                                 <circle cx="12" cy="10" r="3" />
                             </svg>
                             <span data-i18n="geo_title">Hedef Coğrafi Konumu (IP Geolocation)</span>
                         </div>
-                        <button onclick="resetNetworkMap()" class="scan-btn" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; height: auto; background: rgba(255,255,255,0.05); border-color: var(--border-subtle);">
+                        <button onclick="resetNetworkMap()" class="scan-btn"
+                            style="padding: 0.4rem 0.8rem; font-size: 0.75rem; height: auto; background: rgba(255,255,255,0.05); border-color: var(--border-subtle);">
                             🔄 Görünümü Sıfırla
                         </button>
                     </h3>
-                    <div id="map-loader" class="map-loader-overlay" style="display:none; padding: 1rem; color: #888;">GIS ANALİZ EDİLİYOR...</div>
-                    
+                    <div id="map-loader" class="map-loader-overlay" style="display:none; padding: 1rem; color: #888;">
+                        GIS ANALİZ EDİLİYOR...</div>
+
                     <div id="map-info-card" class="map-info-card">
                         <div class="intel-header">
                             <span class="intel-dot pulse"></span>
@@ -2066,13 +2128,15 @@
                             <div class="intel-label" data-i18n="intel_org">Organizasyon (ORG)</div>
                             <div class="intel-value" id="map-org">—</div>
                         </div>
-                        <div class="coord-small" style="display:flex; gap:10px; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px;">
+                        <div class="coord-small"
+                            style="display:flex; gap:10px; border-top:1px solid rgba(255,255,255,0.1); padding-top:8px;">
                             <span id="map-lat-val">📍 LAT: 0.0000</span>
                             <span id="map-lon-val">🌐 LON: 0.0000</span>
                         </div>
                     </div>
 
-                    <iframe id="network-map-iframe" src="https://maps.google.com/maps?q=0,0&hl=tr&z=2&output=embed" style="width: 100%; height: 400px; border: 0; border-radius: 8px;"></iframe>
+                    <iframe id="network-map-iframe" src="https://maps.google.com/maps?q=0,0&hl=tr&z=2&output=embed"
+                        style="width: 100%; height: 400px; border: 0; border-radius: 8px;"></iframe>
                 </section>
 
                 <!-- Stats Grid (Terminal Altı) -->
@@ -2382,7 +2446,7 @@
         async function updateNetworkMap(ip) {
             const container = document.getElementById('network-map-container');
             if (container) container.style.display = 'block';
-            
+
             const mapIframe = document.getElementById('network-map-iframe');
             if (!mapIframe) return;
 
@@ -2397,20 +2461,20 @@
             try {
                 const res = await fetch(`/api/v1/geolocation?ip=${ip}`);
                 const data = await res.json();
-                
+
                 if (data.status === 'success' && data.lat !== undefined && data.lon !== undefined) {
                     const lat = parseFloat(data.lat);
                     const lon = parseFloat(data.lon);
-                    
+
                     if (!isNaN(lat) && !isNaN(lon)) {
                         const city = data.city || 'Unknown';
                         const region = data.region || '';
                         const labelText = region ? `${city} / ${region}` : city;
-                        
+
                         // [FIX] Siyah kutu hatasını gidermek için URL'i sadeleştiriyoruz
                         const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lon}&hl=tr&z=11&output=embed`;
                         mapIframe.src = googleMapsUrl;
-                        
+
                         // [NEW] Custom Info Card Güncellemesi
                         const infoCard = document.getElementById('map-info-card');
                         if (infoCard) {
@@ -2615,7 +2679,7 @@
         function updateRiskAnalysis(portsFound) {
             const riskBar = document.getElementById('risk-bar-fill');
             const riskText = document.getElementById('risk-status-text');
-            
+
             if (!riskBar || !riskText) return;
 
             let score = 0;
@@ -2737,7 +2801,7 @@
                 document.getElementById('nav-scanner').style.background = '';
                 document.getElementById('vue-scanner').style.display = 'block';
                 // Tab geçişinde Leaflet render güvenliği
-                setTimeout(() => { if(leafletMap) leafletMap.invalidateSize(); }, 150);
+                setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 150);
             } else if (mode === 'wifi') {
                 // Hardware warnings are handled by fetchWifi based on SSID discovery
 
@@ -2975,7 +3039,7 @@
             const el = document.createElement('div');
             el.className = 'log-line';
             el.style.animationDelay = `${Math.min(terminal.children.length, 30) * 0.02}s`;
-            
+
             // Satır içinde IP Glow kontrolü
             let finalMsg = msg;
             if (msg.includes('Found IP:')) {
@@ -3184,7 +3248,7 @@
             document.getElementById('cvss-score').textContent = 'RISK: 0.0';
             document.getElementById('cvss-gauge').style.animation = 'none';
             currentMaxScore = 0.0;
-            
+
             const statIp = document.getElementById('stat-ports');
             if (statIp) {
                 statIp.classList.remove('cyber-ip-highlight');
@@ -3291,8 +3355,8 @@
                         liveDnsIp = foundIp;
                         // Dashboard Sync
                         if (document.getElementById('stat-ports-label').textContent === 'HEDEF IP') {
-                           const portEl = document.getElementById('stat-ports');
-                           portEl.innerHTML = `<span class="cyber-ip-highlight">${foundIp}</span>`;
+                            const portEl = document.getElementById('stat-ports');
+                            portEl.innerHTML = `<span class="cyber-ip-highlight">${foundIp}</span>`;
                         }
                     }
                 }
@@ -3829,6 +3893,52 @@
                 gate.style.pointerEvents = 'none';
                 app.classList.remove('screen-shake');
             }, 1200);
+            /* ==========================================================================
+               MATRIX BACKGROUND EFFECT (SUBTLE DIGITAL RAIN)
+               ========================================================================== */
+            const canvas = document.getElementById('matrix-canvas');
+            const ctx = canvas.getContext('2d');
+
+            let width, height, columns;
+            const fontSize = 16;
+            const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()';
+            let drops = [];
+
+            function initMatrix() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+                columns = Math.floor(width / fontSize);
+                drops = [];
+                for (let i = 0; i < columns; i++) {
+                    // Start drops randomly distributed across the screen height
+                    drops[i] = Math.random() * (height / fontSize);
+                }
+            }
+
+            function drawMatrix() {
+                // Dim the previous frame slightly to create a trail effect
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, width, height);
+
+                ctx.fillStyle = '#0f0'; // Cyber Green
+                ctx.font = fontSize + 'px monospace';
+
+                for (let i = 0; i < drops.length; i++) {
+                    const text = characters.charAt(Math.floor(Math.random() * characters.length));
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                    // Reset drop to top if it reaches the bottom
+                    if (drops[i] * fontSize > height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+                requestAnimationFrame(drawMatrix);
+            }
+
+            window.addEventListener('resize', initMatrix);
+            initMatrix();
+            drawMatrix();
         });
     </script>
 </body>

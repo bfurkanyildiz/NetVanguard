@@ -71,10 +71,10 @@ struct WifiResponse {
 struct GeoResponse {
     pub status: String,
     pub city: Option<String>,
-    #[serde(rename = "district")]
+    #[serde(rename = "district", alias = "regionName")]
     pub district: Option<String>,
-    #[serde(rename = "country_name")]
-    pub country_name: Option<String>,
+    #[serde(rename = "country")]
+    pub country: Option<String>,
     pub isp: Option<String>,
     pub org: Option<String>,
     pub lat: Option<f64>,
@@ -701,7 +701,7 @@ async fn handle_geolocation(Query(params): Query<GeoParams>) -> impl IntoRespons
             status: "fail".to_string(),
             city: Some("Yerel Ağ".to_string()),
             district: Some("Merkez".to_string()),
-            country_name: Some("Yerel Arayüz".to_string()),
+            country: Some("Yerel Arayüz".to_string()),
             isp: Some("Private Network".to_string()),
             org: Some("Local Host".to_string()),
             lat: Some(0.0),
@@ -724,7 +724,7 @@ async fn handle_geolocation(Query(params): Query<GeoParams>) -> impl IntoRespons
                     lon: None,
                     city: None,
                     district: None,
-                    country_name: None,
+                    country: None,
                     isp: None,
                     org: None,
                     as_info: None,
@@ -736,7 +736,7 @@ async fn handle_geolocation(Query(params): Query<GeoParams>) -> impl IntoRespons
             status: "fail".to_string(),
             city: Some("Bilinmiyor".to_string()),
             district: Some("Merkez".to_string()),
-            country_name: Some("Bilinmiyor".to_string()),
+            country: Some("Bilinmiyor".to_string()),
             isp: Some("Hata".to_string()),
             org: Some("Hata".to_string()),
             lat: Some(0.0),
