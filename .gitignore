@@ -1,7 +1,41 @@
 # ===================================================================
-# NetVanguard - .gitignore
-# Kapsamlı Rust projesi ignore kuralları + güvenlik kuralları
-# ===================================================================
+# NetVanguard | Professional Protection Rule Set
+# Prevent future bloat for vize sunumu
+
+# --- RUST / CARGO ---
+/target/
+**/*.rs.bk
+Cargo.lock.backup
+
+# --- NODE / FRONTEND ---
+node_modules/
+dist/
+build/
+.cache/
+.next/
+out/
+.env*
+.terraform
+.vscode/
+.idea/
+
+# --- SYSTEM JUNK ---
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+npm-debug.log*
+
+# --- PROJECT SPECIFIC ---
+cleanup.ps1
+cleanup.sh
+task.md
+implementation_plan.md
+walkthrough.md
+*.png
+*.jpg
+*.jpeg
+*.gif
 
 # -------------------------------------------------------------------
 # Rust / Cargo derleme çıktıları
