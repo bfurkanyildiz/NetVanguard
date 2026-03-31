@@ -13,6 +13,8 @@ use tower_http::services::ServeDir;
 use trust_dns_resolver::config::*;
 use trust_dns_resolver::TokioAsyncResolver;
 use std::fs;
+use std::fs::File;
+use std::io::Write;
 
 // ═══════════════════════════════════════════════════════════
 //  VERİ YAPILARI
@@ -817,4 +819,26 @@ async fn handle_geolocation(Query(params): Query<GeoParams>) -> impl IntoRespons
             message: Some(format!("API Bağlantı Hatası: {}", e)),
         }),
     }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RAPORLAMA YARDIMCISI
+// ═══════════════════════════════════════════════════════════
+
+#[allow(dead_code)]
+fn write_report_to_file(target: &str, content: &str) -> std::io::Result<()> {
+    let now = chrono::Local::now();
+    let filename = format!("reports/report_{}_{}.txt", 
+        target.replace(".", "_").replace("/", "_"), 
+        now.format("%Y%m%d_%H%M%S")
+    );
+    
+    // Ensure reports directory exists
+    let _ = std::fs::create_dir_all("reports");
+    
+    if let Ok(mut file) = std::fs::File::create(&filename) {
+        let _ = file.write_all(content.as_bytes());
+    }
+    
+    Ok(())
 }
