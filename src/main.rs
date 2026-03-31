@@ -17,8 +17,11 @@ use std::io::Write;
 use tokio_util::sync::CancellationToken;
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex as StdMutex};
 use tokio::process::Child;
+
+// Log Throttling for Interface Selector
+static LAST_INTERFACE: Lazy<StdMutex<Option<String>>> = Lazy::new(|| StdMutex::new(None));
 
 // ═══════════════════════════════════════════════════════════
 //  İŞLEM YÖNETİCİSİ (PROCESS MANAGER)
@@ -654,25 +657,30 @@ fn get_wireless_interfaces() -> (Vec<WirelessInterface>, Option<String>, String)
                 };
                 interfaces.push(iface);
 
-                // Selection Logic (Priority)
-                if selected.is_none() {
-                    if is_wireless && is_up {
+                // Selection Logic (Strict: Only UP interfaces are candidates for 'selected')
+                if selected.is_none() && is_up {
+                    if is_wireless {
                         selected = Some(name.clone());
-                        selection_reason = format!("Primary: {} is UP and verified Wireless", name);
-                    } else if is_wireless {
-                        selected = Some(name.clone());
-                        selection_reason = format!("Fallback: {} is Wireless (Down)", name);
+                        selection_reason = format!("Primary: {} is UP and Wireless", name);
                     } else if name.starts_with('w') {
                         selected = Some(name.clone());
-                        selection_reason = format!("Name Fallback: {} starts with 'w'", name);
+                        selection_reason = format!("Name Fallback: {} is UP (starts with 'w')", name);
                     }
                 }
             }
         }
     }
 
-    if let Some(ref s) = selected {
-        println!("{} [DEBUG] NetVanguard Selector: {} chosen because: {}", "⚡".yellow(), s.cyan(), selection_reason.white());
+    // Duplicate Log Fix: Only print if the selection or state has changed
+    if let Ok(mut last_iface) = LAST_INTERFACE.lock() {
+        if *last_iface != selected {
+            *last_iface = selected.clone();
+            if let Some(ref s) = selected {
+                println!("{} [DEBUG] Interface Changed: {} chosen because: {}", "⚡".yellow(), s.cyan(), selection_reason.white());
+            } else {
+                println!("{} [DEBUG] Interface Lost: No active (UP) wireless interfaces found.", "⚠️".yellow());
+            }
+        }
     }
 
     (interfaces, selected, selection_reason)
