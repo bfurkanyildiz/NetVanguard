@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="NetVanguard - Gelişmiş Ağ Güvenliği Tarama Paneli">
     <title>NetVanguard v1.0 - Ağ Güvenliği Tarama Paneli</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
     <script src="https://bernii.github.io/gauge.js/dist/gauge.min.js"></script>
     <style>
@@ -21,19 +24,22 @@
             --bg-input: #050608;
 
             /* Accent Colors - Transitions based on Turbo Mode */
-            --accent-main: #00ff41; /* Neon green default */
+            --accent-main: #00ff41;
+            /* Neon green default */
             --accent-glow: rgba(0, 255, 65, 0.2);
             --accent-border: rgba(0, 255, 65, 0.15);
-            
+
             --cyan-400: var(--accent-main);
-            --cyan-500: #00e63a; 
+            --cyan-500: #00e63a;
             --cyan-600: #00b32d;
             --cyan-glow: var(--accent-glow);
-            --emerald-400: #0df0e3; /* Neon cyan */
+            --emerald-400: #0df0e3;
+            /* Neon cyan */
             --emerald-500: #0bc4ba;
-            --violet-400: #ff0055; /* Hot pink */
+            --violet-400: #ff0055;
+            /* Hot pink */
             --violet-500: #e6004c;
-            --rose-400: #ff2a2a; 
+            --rose-400: #ff2a2a;
             --rose-500: #e60000;
             --amber-400: #ffea00;
 
@@ -57,7 +63,9 @@
         /* ═══════════════════════════════════════════════════
            RESET & BASE
            ═══════════════════════════════════════════════════ */
-        *, *::before, *::after {
+        *,
+        *::before,
+        *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -87,8 +95,15 @@
         }
 
         @keyframes gridPulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
         }
 
         .bg-radial {
@@ -143,8 +158,15 @@
         }
 
         @keyframes iconFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-4px); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-4px);
+            }
         }
 
         .logo-icon svg {
@@ -202,8 +224,15 @@
         }
 
         @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
-            50% { box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px rgba(52, 211, 153, 0);
+            }
         }
 
         /* ═══════════════════════════════════════════════════
@@ -309,7 +338,7 @@
             box-shadow: 0 0 0 3px var(--cyan-glow), 0 0 20px rgba(6, 182, 212, 0.08);
         }
 
-        .ip-input:focus + svg,
+        .ip-input:focus+svg,
         .input-wrapper:focus-within svg {
             color: var(--cyan-400);
         }
@@ -340,7 +369,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1), transparent);
+            background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.1), transparent);
             transform: translateX(-100%);
             transition: transform 0.6s var(--ease-out);
         }
@@ -373,7 +402,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* ═══════════════════════════════════════════════════
@@ -429,12 +460,12 @@
             transition: all 0.25s var(--ease-out);
         }
 
-        .option-chip input:checked ~ .checkmark {
+        .option-chip input:checked~.checkmark {
             background: var(--cyan-500);
             border-color: var(--cyan-500);
         }
 
-        .option-chip input:checked ~ .checkmark svg {
+        .option-chip input:checked~.checkmark svg {
             opacity: 1;
             transform: scale(1);
         }
@@ -447,7 +478,7 @@
         }
 
         .option-chip:hover .option-label,
-        .option-chip input:checked ~ .option-label {
+        .option-chip input:checked~.option-label {
             color: var(--text-primary);
         }
 
@@ -465,8 +496,15 @@
         }
 
         @keyframes fadeSlideUp {
-            from { opacity: 0; transform: translateY(16px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .results-header {
@@ -512,7 +550,7 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.75rem 1.25rem;
-            background: rgba(255,255,255,0.02);
+            background: rgba(255, 255, 255, 0.02);
             border-bottom: 1px solid var(--border-subtle);
         }
 
@@ -522,9 +560,17 @@
             border-radius: 50%;
         }
 
-        .terminal-dot.red { background: #ef4444; }
-        .terminal-dot.yellow { background: #eab308; }
-        .terminal-dot.green { background: #22c55e; }
+        .terminal-dot.red {
+            background: #ef4444;
+        }
+
+        .terminal-dot.yellow {
+            background: #eab308;
+        }
+
+        .terminal-dot.green {
+            background: #22c55e;
+        }
 
         .terminal-title {
             font-size: 0.75rem;
@@ -563,8 +609,15 @@
         }
 
         @keyframes logAppear {
-            from { opacity: 0; transform: translateX(-8px); }
-            to { opacity: 1; transform: translateX(0); }
+            from {
+                opacity: 0;
+                transform: translateX(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         .log-time {
@@ -582,11 +635,25 @@
             color: var(--text-secondary);
         }
 
-        .log-msg.success { color: var(--emerald-400); }
-        .log-msg.warn { color: var(--amber-400); }
-        .log-msg.error { color: var(--rose-400); }
-        .log-msg.info { color: var(--cyan-400); }
-        .log-msg.highlight { color: var(--violet-400); }
+        .log-msg.success {
+            color: var(--emerald-400);
+        }
+
+        .log-msg.warn {
+            color: var(--amber-400);
+        }
+
+        .log-msg.error {
+            color: var(--rose-400);
+        }
+
+        .log-msg.info {
+            color: var(--cyan-400);
+        }
+
+        .log-msg.highlight {
+            color: var(--violet-400);
+        }
 
         .os-highlight {
             font-size: 1.5rem;
@@ -613,8 +680,15 @@
         }
 
         @keyframes vulnPulse {
-            0%, 100% { text-shadow: 0 0 8px rgba(255,23,68,0.6), 0 0 20px rgba(255,23,68,0.3); }
-            50% { text-shadow: 0 0 16px rgba(255,23,68,0.9), 0 0 40px rgba(255,23,68,0.5); }
+
+            0%,
+            100% {
+                text-shadow: 0 0 8px rgba(255, 23, 68, 0.6), 0 0 20px rgba(255, 23, 68, 0.3);
+            }
+
+            50% {
+                text-shadow: 0 0 16px rgba(255, 23, 68, 0.9), 0 0 40px rgba(255, 23, 68, 0.5);
+            }
         }
 
         .vuln-url-toggle {
@@ -642,7 +716,7 @@
             margin: 0.25rem 0 0.25rem 1.5rem;
             font-size: 0.78rem;
             color: #777;
-            background: rgba(255,255,255,0.02);
+            background: rgba(255, 255, 255, 0.02);
             border-left: 2px solid var(--border-subtle);
             border-radius: 0 6px 6px 0;
             max-height: 200px;
@@ -650,7 +724,9 @@
             line-height: 1.6;
         }
 
-        .vuln-url-block.open { display: block; }
+        .vuln-url-block.open {
+            display: block;
+        }
 
         /* ═══════════════════════════════════════════════════
            LANGUAGE SWITCHER - DISCREET & MINIMAL
@@ -722,21 +798,23 @@
             letter-spacing: 0.05em;
         }
 
-        .lang-btn:hover, .lang-btn.active {
+        .lang-btn:hover,
+        .lang-btn.active {
             background: var(--accent-main);
             color: #000;
             border-color: var(--accent-main);
             box-shadow: 0 0 20px var(--accent-main);
             opacity: 1;
         }
-        
+
         .lang-btn.active {
             color: #000;
         }
-        
+
         .lang-btn:not(.active) {
             opacity: 0.6;
         }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -764,10 +842,21 @@
             border-radius: 2px 2px 0 0;
         }
 
-        .stat-card.cyan::before { background: var(--cyan-500); }
-        .stat-card.emerald::before { background: var(--emerald-500); }
-        .stat-card.violet::before { background: var(--violet-500); }
-        .stat-card.rose::before { background: var(--rose-500); }
+        .stat-card.cyan::before {
+            background: var(--cyan-500);
+        }
+
+        .stat-card.emerald::before {
+            background: var(--emerald-500);
+        }
+
+        .stat-card.violet::before {
+            background: var(--violet-500);
+        }
+
+        .stat-card.rose::before {
+            background: var(--rose-500);
+        }
 
         .stat-card:hover {
             border-color: var(--border-accent);
@@ -789,10 +878,21 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
-        .stat-value.cyan { color: var(--cyan-400); }
-        .stat-value.emerald { color: var(--emerald-400); }
-        .stat-value.violet { color: var(--violet-400); }
-        .stat-value.rose { color: var(--rose-400); }
+        .stat-value.cyan {
+            color: var(--cyan-400);
+        }
+
+        .stat-value.emerald {
+            color: var(--emerald-400);
+        }
+
+        .stat-value.violet {
+            color: var(--violet-400);
+        }
+
+        .stat-value.rose {
+            color: var(--rose-400);
+        }
 
         /* ═══════════════════════════════════════════════════
            FOOTER
@@ -848,7 +948,7 @@
 
         .progress-track {
             height: 6px;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 3px;
             overflow: hidden;
         }
@@ -869,88 +969,159 @@
             top: 0;
             bottom: 0;
             width: 20px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3));
             animation: shimmer 1.5s ease-in-out infinite;
         }
 
         @keyframes shimmer {
-            0%, 100% { opacity: 0; }
-            50% { opacity: 1; }
+
+            0%,
+            100% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
         }
 
         /* ═══════════════════════════════════════════════════
            RESPONSIVE
            ═══════════════════════════════════════════════════ */
         @media (max-width: 640px) {
-            .app-container { padding: 1rem; }
-            .scan-panel { padding: 1.5rem; }
-            .input-group { flex-direction: column; }
-            .scan-btn { width: 100%; justify-content: center; }
-            .logo-text { font-size: 1.6rem; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .app-container {
+                padding: 1rem;
+            }
+
+            .scan-panel {
+                padding: 1.5rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .scan-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .logo-text {
+                font-size: 1.6rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         /* ── PREMIUM UI: GLASSMORPHISM ── */
-        .stat-card, .scan-panel, .terminal, .nav-button, .top-nav, #status-bar {
+        .stat-card,
+        .scan-panel,
+        .terminal,
+        .nav-button,
+        .top-nav,
+        #status-bar {
             backdrop-filter: blur(12px) saturate(180%);
             -webkit-backdrop-filter: blur(12px) saturate(180%);
             background-color: rgba(10, 11, 16, 0.75);
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
+
         .stat-card:hover {
             border-color: rgba(0, 255, 65, 0.3);
             box-shadow: 0 0 15px rgba(0, 255, 65, 0.1);
         }
 
         /* Minimalist Grid-Only Gate */
-        .lock-container, .gate-hud, .gate-label, .retina-scan { display: none !important; }
+        .lock-container,
+        .gate-hud,
+        .gate-label,
+        .retina-scan {
+            display: none !important;
+        }
 
         #cyber-gate {
-            position: fixed; inset: 0; z-index: 10000;
-            background: #000; display: flex;
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: #000;
+            display: flex;
             transition: all 1s ease;
         }
 
         .gate-panel {
-            flex: 1; height: 100%; background: #000;
-            position: relative; overflow: hidden;
+            flex: 1;
+            height: 100%;
+            background: #000;
+            position: relative;
+            overflow: hidden;
             transition: transform 0.6s cubic-bezier(0.7, 0, 0.3, 1);
         }
 
         /* Digital Grid Lines for Gate */
         .grid-scanner {
-            position: absolute; inset: 0;
-            background-image: 
+            position: absolute;
+            inset: 0;
+            background-image:
                 linear-gradient(rgba(0, 255, 65, 0.15) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 255, 65, 0.15) 1px, transparent 1px);
             background-size: 60px 60px;
             pointer-events: none;
         }
-        
+
         .scanning-line {
-            position: absolute; left: 0; width: 100%; height: 2px;
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 2px;
             background: linear-gradient(90deg, transparent, #00ff41, transparent);
             box-shadow: 0 0 15px #00ff41;
             animation: scanHorizontal 3s linear infinite;
         }
-        
+
         @keyframes scanHorizontal {
-            0% { top: 0; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
+            0% {
+                top: 0;
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 100%;
+                opacity: 0;
+            }
         }
 
-        .gate-panel.left { border-right: 1px solid rgba(0, 255, 65, 0.3); }
-        .gate-panel.right { border-left: 1px solid rgba(0, 255, 65, 0.3); }
-        
-        #cyber-gate.opened .gate-panel.left { transform: translateX(-101%); }
-        #cyber-gate.opened .gate-panel.right { transform: translateX(101%); }
+        .gate-panel.left {
+            border-right: 1px solid rgba(0, 255, 65, 0.3);
+        }
+
+        .gate-panel.right {
+            border-left: 1px solid rgba(0, 255, 65, 0.3);
+        }
+
+        #cyber-gate.opened .gate-panel.left {
+            transform: translateX(-101%);
+        }
+
+        #cyber-gate.opened .gate-panel.right {
+            transform: translateX(101%);
+        }
+
         /* Digital Scanning Grid Squares */
         .grid-scanner {
-            position: absolute; inset: 0;
-            background-image: 
+            position: absolute;
+            inset: 0;
+            background-image:
                 linear-gradient(rgba(0, 255, 65, 0.1) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 255, 65, 0.1) 1px, transparent 1px);
             background-size: 50px 50px;
@@ -960,102 +1131,237 @@
         }
 
         @keyframes neonPulse {
-            0%, 100% { filter: drop-shadow(0 0 15px var(--cyan-400)) brightness(1); }
-            50% { filter: drop-shadow(0 0 35px var(--cyan-500)) brightness(1.4); }
+
+            0%,
+            100% {
+                filter: drop-shadow(0 0 15px var(--cyan-400)) brightness(1);
+            }
+
+            50% {
+                filter: drop-shadow(0 0 35px var(--cyan-500)) brightness(1.4);
+            }
         }
 
         /* Gate Labels below/on top of panels */
         .gate-label {
-            position: absolute; left: 50%; top: 65%; transform: translate(-50%, -50%);
-            z-index: 10001; text-align: center; pointer-events: none;
+            position: absolute;
+            left: 50%;
+            top: 65%;
+            transform: translate(-50%, -50%);
+            z-index: 10001;
+            text-align: center;
+            pointer-events: none;
             transition: opacity 0.5s ease;
         }
-        #cyber-gate.opened .gate-label { opacity: 0; }
-        
+
+        #cyber-gate.opened .gate-label {
+            opacity: 0;
+        }
+
         .gate-title {
-            font-size: 2.5rem; font-weight: 900; color: #00ff41;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #00ff41;
             text-shadow: 0 0 20px rgba(0, 255, 65, 0.6);
-            letter-spacing: 8px; margin-bottom: 0.5rem;
+            letter-spacing: 8px;
+            margin-bottom: 0.5rem;
             font-family: 'Inter', sans-serif;
         }
+
         .gate-subtitle {
-            font-size: 0.9rem; color: rgba(0, 255, 65, 0.5);
-            letter-spacing: 4px; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: rgba(0, 255, 65, 0.5);
+            letter-spacing: 4px;
+            font-family: 'JetBrains Mono', monospace;
         }
-        
+
         .matrix-rain {
-            position: absolute; inset: 0; opacity: 0.15;
-            pointer-events: none; font-family: 'JetBrains Mono', monospace;
-            font-size: 10px; color: #00ff41; line-height: 1;
-            white-space: nowrap; overflow: hidden;
+            position: absolute;
+            inset: 0;
+            opacity: 0.15;
+            pointer-events: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: #00ff41;
+            line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
         }
 
         /* ── OPERATOR HUD TERMINAL ── */
         .gate-hud {
-            position: absolute; bottom: 15%; left: 0; width: 100%;
-            text-align: center; font-family: 'JetBrains Mono', monospace;
-            color: var(--cyan-400); font-size: 0.9rem; z-index: 10005;
-            transition: opacity 0.4s ease; text-transform: uppercase;
-            letter-spacing: 2px; line-height: 1.8;
+            position: absolute;
+            bottom: 15%;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--cyan-400);
+            font-size: 0.9rem;
+            z-index: 10005;
+            transition: opacity 0.4s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            line-height: 1.8;
             text-shadow: 0 0 10px rgba(0, 255, 65, 0.4);
-            display: flex; justify-content: space-around; pointer-events: none;
+            display: flex;
+            justify-content: space-around;
+            pointer-events: none;
         }
-        #gate-hud-left, #gate-hud-right { font-size: 0.8rem; color: #00ff41; text-shadow: 0 0 5px #00ff41; }
-        #cyber-gate.opened .gate-hud { opacity: 0; }
+
+        #gate-hud-left,
+        #gate-hud-right {
+            font-size: 0.8rem;
+            color: #00ff41;
+            text-shadow: 0 0 5px #00ff41;
+        }
+
+        #cyber-gate.opened .gate-hud {
+            opacity: 0;
+        }
 
         /* ── GLITCH & SHAKE ANIMATION ── */
         .app-container.glitch {
-            animation: glitchEffect 0.15s cubic-bezier(.25,.46,.45,.94) both 0.8s;
+            animation: glitchEffect 0.15s cubic-bezier(.25, .46, .45, .94) both 0.8s;
         }
+
         .screen-shake {
-            animation: screenShake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+            animation: screenShake 0.3s cubic-bezier(.36, .07, .19, .97) both;
         }
+
         @keyframes screenShake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
+
+            10%,
+            90% {
+                transform: translate3d(-1px, 0, 0);
+            }
+
+            20%,
+            80% {
+                transform: translate3d(2px, 0, 0);
+            }
+
+            30%,
+            50%,
+            70% {
+                transform: translate3d(-4px, 0, 0);
+            }
+
+            40%,
+            60% {
+                transform: translate3d(4px, 0, 0);
+            }
         }
+
         @keyframes glitchEffect {
-            0% { transform: translate(0); }
-            20% { transform: translate(-3px, 3px); filter: hue-rotate(90deg); }
-            40% { transform: translate(-3px, -3px); }
-            60% { transform: translate(3px, 3px); filter: brightness(150%); }
-            80% { transform: translate(3px, -3px); }
-            100% { transform: translate(0); }
+            0% {
+                transform: translate(0);
+            }
+
+            20% {
+                transform: translate(-3px, 3px);
+                filter: hue-rotate(90deg);
+            }
+
+            40% {
+                transform: translate(-3px, -3px);
+            }
+
+            60% {
+                transform: translate(3px, 3px);
+                filter: brightness(150%);
+            }
+
+            80% {
+                transform: translate(3px, -3px);
+            }
+
+            100% {
+                transform: translate(0);
+            }
         }
 
         /* ── SONAR PULSE ── */
         .sonar-pulse {
-            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            width: 50px; height: 50px; border: 2px solid var(--cyan-400);
-            border-radius: 50%; opacity: 0; pointer-events: none;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border: 2px solid var(--cyan-400);
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
             animation: sonarPulse 2.5s cubic-bezier(0.2, 0.5, 0.8, 0.2) infinite;
         }
+
         @keyframes sonarPulse {
-            0% { width: 0; height: 0; opacity: 0.6; }
-            50% { opacity: 0.3; }
-            100% { width: 600px; height: 600px; opacity: 0; }
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 0.3;
+            }
+
+            100% {
+                width: 600px;
+                height: 600px;
+                opacity: 0;
+            }
         }
 
         /* ── WAR ROOM TICKER ── */
         #security-ticker {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            height: 30px; background: rgba(0,0,0,0.8);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.8);
             border-top: 1px solid var(--border-subtle);
-            backdrop-filter: blur(5px); display: flex; align-items: center;
-            overflow: hidden; z-index: 999;
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            z-index: 999;
         }
-        .ticker-wrapper { display: flex; white-space: nowrap; animation: tickerScroll 40s linear infinite; }
+
+        .ticker-wrapper {
+            display: flex;
+            white-space: nowrap;
+            animation: tickerScroll 40s linear infinite;
+        }
+
         .ticker-item {
-            padding: 0 2rem; font-size: 0.75rem; color: var(--cyan-400);
-            font-weight: bold; letter-spacing: 1px; flex-shrink: 0;
-            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0 2rem;
+            font-size: 0.75rem;
+            color: var(--cyan-400);
+            font-weight: bold;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        .ticker-item::before { content: '●'; font-size: 10px; color: #fff; }
+
+        .ticker-item::before {
+            content: '●';
+            font-size: 10px;
+            color: #fff;
+        }
+
         @keyframes tickerScroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
         }
 
         /* ── TURBO MODE & POLISH STYLES ── */
@@ -1063,42 +1369,97 @@
             border-color: #ff1717;
             box-shadow: 0 0 30px rgba(255, 23, 23, 0.2);
         }
-        #vue-wifi.turbo-on .sonar-pulse { 
-            animation-duration: 0.4s; 
+
+        #vue-wifi.turbo-on .sonar-pulse {
+            animation-duration: 0.4s;
             border-color: #ff1717;
         }
-        #vue-wifi.turbo-on .turbo-label { color: #ff1744; }
+
+        #vue-wifi.turbo-on .turbo-label {
+            color: #ff1744;
+        }
 
         #vue-wifi .turbo-container {
-            display: flex; align-items: center; gap: 0.5rem;
-            background: rgba(255,255,255,0.03); padding: 0.2rem 0.8rem;
-            border-radius: 20px; border: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-subtle);
         }
-        
-        .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 34px;
+            height: 18px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
         .slider {
-            position: absolute; cursor: pointer; inset: 0; background-color: #333;
-            transition: .4s; border-radius: 34px;
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: #333;
+            transition: .4s;
+            border-radius: 34px;
         }
+
         .slider:before {
-            position: absolute; content: ""; height: 12px; width: 12px;
-            left: 3px; bottom: 3px; background-color: white; transition: .4s;
+            position: absolute;
+            content: "";
+            height: 12px;
+            width: 12px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
             border-radius: 50%;
         }
-        input:checked + .slider { background-color: var(--accent-main); }
-        input:checked + .slider:before { transform: translateX(16px); }
 
-        .risk-bar-fill.high { background: #ff1744 !important; box-shadow: 0 0 10px rgba(255, 23, 68, 0.5); }
-        .risk-bar-fill.secure { background: #00ff41 !important; box-shadow: 0 0 10px rgba(0, 255, 65, 0.5); }
+        input:checked+.slider {
+            background-color: var(--accent-main);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(16px);
+        }
+
+        .risk-bar-fill.high {
+            background: #ff1744 !important;
+            box-shadow: 0 0 10px rgba(255, 23, 68, 0.5);
+        }
+
+        .risk-bar-fill.secure {
+            background: #00ff41 !important;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+        }
 
         .wlan-warning {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.85);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 1001; backdrop-filter: blur(8px); border-radius: 8px;
-            border: 2px dashed rgba(255, 23, 68, 0.3); padding: 2rem; text-align: center;
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            backdrop-filter: blur(8px);
+            border-radius: 8px;
+            border: 2px dashed rgba(255, 23, 68, 0.3);
+            padding: 2rem;
+            text-align: center;
         }
-        .wlan-warning.active { display: flex; }
+
+        .wlan-warning.active {
+            display: flex;
+        }
 
         .wifi-hardware-alert {
             background: rgba(255, 23, 68, 0.1);
@@ -1111,22 +1472,46 @@
             position: relative;
             display: block;
         }
+
         .close-warn {
-            position: absolute; top: 5px; right: 10px; cursor: pointer;
-            font-weight: bold; font-family: 'JetBrains Mono', monospace;
-            opacity: 0.7; transition: opacity 0.2s;
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: 'JetBrains Mono', monospace;
+            opacity: 0.7;
+            transition: opacity 0.2s;
         }
-        .close-warn:hover { opacity: 1; }
-        .wlan-warning h2 { color: #ff1744; font-size: 1.2rem; margin-bottom: 1rem; letter-spacing: 3px; font-weight: 900; }
-        .wlan-icon { width: 64px; height: 64px; color: #ff1744; margin-bottom: 1rem; animation: vulnPulse 1.5s infinite; }
+
+        .close-warn:hover {
+            opacity: 1;
+        }
+
+        .wlan-warning h2 {
+            color: #ff1744;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            letter-spacing: 3px;
+            font-weight: 900;
+        }
+
+        .wlan-icon {
+            width: 64px;
+            height: 64px;
+            color: #ff1744;
+            margin-bottom: 1rem;
+            animation: vulnPulse 1.5s infinite;
+        }
     </style>
 </head>
+
 <body>
     <!-- The Cyber Gate Explorer Interface -->
     <div id="cyber-gate">
         <div class="matrix-rain" id="matrix-rain-left"></div>
         <div class="matrix-rain" id="matrix-rain-right"></div>
-        
+
         <!-- Retina Scan Overlay -->
         <div class="retina-scan" style="left: calc(50% - 90px); top: calc(50% - 90px);"></div>
 
@@ -1139,7 +1524,7 @@
             <div class="grid-scanner"></div>
             <div class="scanning-line"></div>
         </div>
-        
+
         <div class="gate-panel right">
             <div class="grid-scanner"></div>
             <div class="scanning-line" style="animation-delay: 1.5s;"></div>
@@ -1147,11 +1532,22 @@
     </div>
     <div class="lang-switcher">
         <button class="lang-btn active" id="btn-tr" onclick="setLanguage('tr')">
-            <svg viewBox="0 0 30 20" width="16" height="11"><rect width="30" height="20" fill="#E30A17"/><circle cx="12" cy="10" r="4" fill="#fff"/><circle cx="13" cy="10" r="3" fill="#E30A17"/><path d="M16 10l1 3 1-3 3-1-3-1-1-3-1 3-3 1z" fill="#fff"/></svg>
+            <svg viewBox="0 0 30 20" width="16" height="11">
+                <rect width="30" height="20" fill="#E30A17" />
+                <circle cx="12" cy="10" r="4" fill="#fff" />
+                <circle cx="13" cy="10" r="3" fill="#E30A17" />
+                <path d="M16 10l1 3 1-3 3-1-3-1-1-3-1 3-3 1z" fill="#fff" />
+            </svg>
             TR
         </button>
         <button class="lang-btn" id="btn-en" onclick="setLanguage('en')">
-            <svg viewBox="0 0 60 30" width="16" height="11"><rect width="60" height="30" fill="#012169"/><path d="M0 0l60 30M60 0L0 30" stroke="#fff" stroke-width="6"/><path d="M0 0l60 30M60 0L0 30" stroke="#C8102E" stroke-width="4"/><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="8"/><path d="M30 0v30M0 15h60" stroke="#C8102E" stroke-width="4"/></svg>
+            <svg viewBox="0 0 60 30" width="16" height="11">
+                <rect width="60" height="30" fill="#012169" />
+                <path d="M0 0l60 30M60 0L0 30" stroke="#fff" stroke-width="6" />
+                <path d="M0 0l60 30M60 0L0 30" stroke="#C8102E" stroke-width="4" />
+                <path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="8" />
+                <path d="M30 0v30M0 15h60" stroke="#C8102E" stroke-width="4" />
+            </svg>
             EN
         </button>
     </div>
@@ -1163,8 +1559,9 @@
         <header class="header">
             <div class="logo-container">
                 <div class="logo-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                     </svg>
                 </div>
                 <h1>
@@ -1176,10 +1573,14 @@
         </header>
 
         <!-- ═══ NAVIGATION BAR ═══ -->
-        <nav class="top-nav" style="display:flex; justify-content:center; gap:1.5rem; margin-top:2rem; margin-bottom:2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 2rem;">
-            <button class="nav-button active" onclick="switchVue('dashboard')" id="nav-dashboard" data-i18n="nav_dashboard">🏠 Dashboard</button>
-            <button class="nav-button" onclick="switchVue('scanner')" id="nav-scanner" data-i18n="nav_scanner">🔍 Network Scanner</button>
-            <button class="nav-button" onclick="switchVue('wifi')" id="nav-wifi" data-i18n="nav_wifi">🛰️ Wi-Fi Radar</button>
+        <nav class="top-nav"
+            style="display:flex; justify-content:center; gap:1.5rem; margin-top:2rem; margin-bottom:2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 2rem;">
+            <button class="nav-button active" onclick="switchVue('dashboard')" id="nav-dashboard"
+                data-i18n="nav_dashboard">🏠 Dashboard</button>
+            <button class="nav-button" onclick="switchVue('scanner')" id="nav-scanner" data-i18n="nav_scanner">🔍
+                Network Scanner</button>
+            <button class="nav-button" onclick="switchVue('wifi')" id="nav-wifi" data-i18n="nav_wifi">🛰️ Wi-Fi
+                Radar</button>
         </nav>
 
         <style>
@@ -1196,8 +1597,9 @@
                 display: flex;
                 align-items: center;
                 gap: 0.75rem;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             }
+
             .nav-button:hover {
                 background: rgba(255, 255, 255, 0.05);
                 transform: translateY(-4px);
@@ -1205,6 +1607,7 @@
                 box-shadow: 0 10px 25px rgba(0, 242, 254, 0.15);
                 color: #fff;
             }
+
             .nav-button.active {
                 background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(79, 70, 229, 0.15));
                 border-color: var(--cyan-400);
@@ -1216,58 +1619,84 @@
 
         <!-- ═══ VUE: DASHBOARD ═══ -->
         <div id="vue-dashboard" style="display:block;">
-            <div id="status-bar" style="margin-bottom: 2.5rem; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); color: var(--text-secondary); transition: all 0.3s ease;">
-                <svg id="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;animation: spin 2s linear infinite;"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                <span id="status-text" data-i18n="status_init">Sistem kontrol ediliyor...</span>
-            </div>
 
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:2rem; margin-bottom: 2rem;">
+            <div
+                style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:2rem; margin-bottom: 2rem;">
                 <!-- System Health Card -->
-                <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
-                    <h3 style="color:var(--cyan-400); margin-bottom:1.5rem; font-size:1.3rem; display:flex; align-items:center; gap:0.5rem; font-weight:800;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <div
+                    style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+                    <h3
+                        style="color:var(--cyan-400); margin-bottom:1.5rem; font-size:1.3rem; display:flex; align-items:center; gap:0.5rem; font-weight:800;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                        </svg>
                         <span data-i18n="sys_health">System Health (Kali Node)</span>
                     </h3>
                     <div style="display:flex; flex-direction:column; gap:1.5rem;">
                         <div>
-                            <div style="display:flex; justify-content:space-between; color:#ccc; margin-bottom:0.5rem; font-size:0.95rem;">
-                                <span data-i18n="cpu">CPU Usage</span><span id="sys-cpu" style="color:var(--cyan-400); font-weight:bold;">12%</span>
+                            <div
+                                style="display:flex; justify-content:space-between; color:#ccc; margin-bottom:0.5rem; font-size:0.95rem;">
+                                <span data-i18n="cpu">CPU Usage</span><span id="sys-cpu"
+                                    style="color:var(--cyan-400); font-weight:bold;">12%</span>
                             </div>
-                            <div style="width:100%; height:8px; background:rgba(0,0,0,0.5); border-radius:4px; overflow:hidden;">
-                                <div id="sys-cpu-bar" style="width:12%; height:100%; background:linear-gradient(90deg, var(--cyan-500), var(--violet-500)); transition:width 1s ease;"></div>
+                            <div
+                                style="width:100%; height:8px; background:rgba(0,0,0,0.5); border-radius:4px; overflow:hidden;">
+                                <div id="sys-cpu-bar"
+                                    style="width:12%; height:100%; background:linear-gradient(90deg, var(--cyan-500), var(--violet-500)); transition:width 1s ease;">
+                                </div>
                             </div>
                         </div>
                         <div>
-                            <div style="display:flex; justify-content:space-between; color:#ccc; margin-bottom:0.5rem; font-size:0.95rem;">
-                                <span data-i18n="ram">RAM Usage</span><span id="sys-ram" style="color:var(--emerald-400); font-weight:bold;">45%</span>
+                            <div
+                                style="display:flex; justify-content:space-between; color:#ccc; margin-bottom:0.5rem; font-size:0.95rem;">
+                                <span data-i18n="ram">RAM Usage</span><span id="sys-ram"
+                                    style="color:var(--emerald-400); font-weight:bold;">45%</span>
                             </div>
-                            <div style="width:100%; height:8px; background:rgba(0,0,0,0.5); border-radius:4px; overflow:hidden;">
-                                <div id="sys-ram-bar" style="width:45%; height:100%; background:linear-gradient(90deg, var(--emerald-500), var(--cyan-400)); transition:width 1s ease;"></div>
+                            <div
+                                style="width:100%; height:8px; background:rgba(0,0,0,0.5); border-radius:4px; overflow:hidden;">
+                                <div id="sys-ram-bar"
+                                    style="width:45%; height:100%; background:linear-gradient(90deg, var(--emerald-500), var(--cyan-400)); transition:width 1s ease;">
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Recent Summary Card -->
-                <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
-                    <h3 style="color:var(--emerald-400); margin-bottom:1.5rem; font-size:1.3rem; display:flex; align-items:center; gap:0.5rem; font-weight:800;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M2 12a10 10 0 1 0 20 0 10 10 0 1 0-20 0"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg>
+                <div
+                    style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+                    <h3
+                        style="color:var(--emerald-400); margin-bottom:1.5rem; font-size:1.3rem; display:flex; align-items:center; gap:0.5rem; font-weight:800;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;">
+                            <path d="M2 12a10 10 0 1 0 20 0 10 10 0 1 0-20 0" />
+                            <path d="m15 9-6 6" />
+                            <path d="M9 9h.01" />
+                            <path d="M15 15h.01" />
+                        </svg>
                         <span data-i18n="scan_summary">Son Tarama Özeti</span>
                     </h3>
-                    <div id="recent-summary-content" style="background:rgba(0,0,0,0.3); padding:1rem; border-radius:8px; border:1px solid var(--border-subtle); box-shadow:inset 0 0 10px rgba(0,0,0,0.2);">
-                        <div style="margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
+                    <div id="recent-summary-content"
+                        style="background:rgba(0,0,0,0.3); padding:1rem; border-radius:8px; border:1px solid var(--border-subtle); box-shadow:inset 0 0 10px rgba(0,0,0,0.2);">
+                        <div
+                            style="margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
                             <span style="color:#ccc;" data-i18n="label_status">Durum:</span>
-                            <strong id="scan-status" style="color:var(--cyan-400);" data-i18n="val_waiting">ANALİZ BEKLENİYOR</strong>
+                            <strong id="scan-status" style="color:var(--cyan-400);" data-i18n="val_waiting">ANALİZ
+                                BEKLENİYOR</strong>
                         </div>
-                        <div style="margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
+                        <div
+                            style="margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
                             <span style="color:#ccc;" data-i18n="label_assets">Varlık Sayısı:</span>
                             <strong id="scan-count" style="color:var(--emerald-400);">0</strong>
                         </div>
-                        <div style="margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
+                        <div
+                            style="margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
                             <span style="color:#ccc;" data-i18n="label_threat">Tehdit Seviyesi:</span>
                             <strong id="risk-level" style="color:var(--rose-400);" data-i18n="val_clean">TEMİZ</strong>
                         </div>
-                        <div style="color:#888; font-style:italic; font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem; margin-top: 0.5rem;" data-i18n="dashboard_footer">
+                        <div style="color:#888; font-style:italic; font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem; margin-top: 0.5rem;"
+                            data-i18n="dashboard_footer">
                             Yeni bir tarama başlatıldığında veriler burada güncellenecektir.
                         </div>
                     </div>
@@ -1278,213 +1707,266 @@
         <!-- ═══ VUE: NETWORK SCANNER ═══ -->
         <div id="vue-scanner" style="display:none;">
 
-        <!-- ═══ SCAN PANEL ═══ -->
-        <main class="scan-panel" id="scan-panel">
-            <h2 class="panel-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                </svg>
-                <span data-i18n="target_scan">Hedef Tarama</span>
-            </h2>
-            <p class="panel-desc" data-i18n="panel_desc">Hedef IP adresini veya alan adını girerek ağ güvenlik taramasını başlatın.</p>
-
-            <div class="input-group">
-                <div class="input-wrapper">
-                    <input
-                        type="text"
-                        id="target-ip"
-                        class="ip-input"
-                        placeholder="Örn: 192.168.1.1, example.com veya 192.168.1.0/24"
-                        data-i18n="placeholder_ip"
-                        autocomplete="off"
-                        spellcheck="false"
-                    />
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
-                        <line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+            <!-- ═══ SCAN PANEL ═══ -->
+            <main class="scan-panel" id="scan-panel">
+                <h2 class="panel-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
                     </svg>
-                </div>
-                <div class="timing-wrapper" style="position: relative;">
-                    <select id="scan-speed" style="padding: 0.95rem 1rem; background: var(--bg-input); border: 1.5px solid var(--border-subtle); border-radius: 12px; color: var(--cyan-400); font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; font-weight: 600; outline: none; appearance: none; cursor: pointer; transition: all 0.3s var(--ease-out); height: 100%;">
-                        <option value="T0" data-i18n="speed_T0">T0: Paranoyak (Çok yavaş)</option>
-                        <option value="T1" data-i18n="speed_T1">T1: Sinsi (Yavaş)</option>
-                        <option value="T2" data-i18n="speed_T2">T2: Kibar (Hedefi yormaz)</option>
-                        <option value="T3" selected data-i18n="speed_T3">T3: Normal (Dengeli)</option>
-                        <option value="T4" data-i18n="speed_T4">T4: Hızlı (Agresif)</option>
-                        <option value="T5" data-i18n="speed_T5">T5: İnsafsız (Cyber)</option>
-                    </select>
-                </div>
-                <button class="scan-btn" id="scan-button" onclick="startScan()">
-                    <svg id="scan-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="5 3 19 12 5 21 5 3"/>
-                    </svg>
-                    <span id="scan-btn-text" data-i18n="btn_start">Taramayı Başlat</span>
-                </button>
-                <button class="scan-btn" id="stop-btn" onclick="stopScan()" style="background: linear-gradient(135deg, var(--rose-500), var(--rose-400)); display: none;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="6" y="6" width="12" height="12" rx="2" ry="2"/>
-                    </svg>
-                    <span data-i18n="btn_stop">Durdur</span>
-                </button>
-            </div>
+                    <span data-i18n="target_scan">Hedef Tarama</span>
+                </h2>
+                <p class="panel-desc" data-i18n="panel_desc">Hedef IP adresini veya alan adını girerek ağ güvenlik
+                    taramasını başlatın.</p>
 
-            <!-- Scan Options -->
-            <div class="scan-options">
-                <label class="option-chip">
-                    <input type="checkbox" id="opt-ports" checked>
-                    <span class="checkmark">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    </span>
-                    <span class="option-label" data-i18n="opt_ports">Port Tarama</span>
-                </label>
-                <label class="option-chip">
-                    <input type="checkbox" id="opt-vuln" checked onchange="toggleVulnSpeedLock()">
-                    <span class="checkmark">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    </span>
-                    <span class="option-label" data-i18n="opt_vuln">Zafiyet Analizi</span>
-                </label>
-                <label class="option-chip">
-                    <input type="checkbox" id="opt-os">
-                    <span class="checkmark">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    </span>
-                    <span class="option-label" data-i18n="opt_os">İşletim Sistemi Tespiti</span>
-                </label>
-                <label class="option-chip">
-                    <input type="checkbox" id="opt-dns">
-                    <span class="checkmark">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    </span>
-                    <span class="option-label" data-i18n="opt_dns">DNS Sorgulama</span>
-                </label>
-                <label class="option-chip">
-                    <input type="checkbox" id="opt-sv">
-                    <span class="checkmark">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    </span>
-                    <span class="option-label" data-i18n="opt_sv">Servis Versiyon Tespiti</span>
-                </label>
-                <label class="option-chip">
-                    <input type="checkbox" id="opt-a">
-                    <span class="checkmark">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    </span>
-                    <span class="option-label" data-i18n="opt_a">Kapsamlı Agresif Tarama</span>
-                </label>
-                <label class="option-chip">
-                    <input type="checkbox" id="opt-net" onchange="toggleNetworkScan(this)">
-                    <span class="checkmark">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    </span>
-                    <span class="option-label" data-i18n="opt_net">Ağdaki Cihazları Bul</span>
-                </label>
-            </div>
-
-            <!-- Progress Bar -->
-            <div class="progress-container" id="progress-container">
-                <div class="progress-info">
-                    <span class="progress-label" id="progress-label" data-i18n="progress_init">Tarama başlatılıyor...</span>
-                    <span class="progress-percent" id="progress-percent">0%</span>
-                </div>
-                <div class="progress-track">
-                    <div class="progress-fill" id="progress-fill"></div>
-                </div>
-            </div>
-        </main>
-
-        <!-- ═══ RESULTS ═══ -->
-        <section class="results-section" id="results-section">
-            <div class="results-header">
-                <h3 class="results-title">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                    </svg>
-                    <span data-i18n="results_title">Tarama Sonuçları</span>
-                </h3>
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span class="results-count" id="results-count"></span>
-                    <button id="download-btn" class="scan-btn" onclick="downloadReport()" style="padding: 0.5rem 1rem; font-size: 0.8rem; height: auto; display: none;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:0.3rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        <span data-i18n="btn_report">Rapor İndir</span>
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <input type="text" id="target-ip" class="ip-input"
+                            placeholder="Örn: 192.168.1.1, example.com veya 192.168.1.0/24" data-i18n="placeholder_ip"
+                            autocomplete="off" spellcheck="false" />
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+                            <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+                            <line x1="6" y1="6" x2="6.01" y2="6" />
+                            <line x1="6" y1="18" x2="6.01" y2="18" />
+                        </svg>
+                    </div>
+                    <div class="timing-wrapper" style="position: relative;">
+                        <select id="scan-speed"
+                            style="padding: 0.95rem 1rem; background: var(--bg-input); border: 1.5px solid var(--border-subtle); border-radius: 12px; color: var(--cyan-400); font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; font-weight: 600; outline: none; appearance: none; cursor: pointer; transition: all 0.3s var(--ease-out); height: 100%;">
+                            <option value="T0" data-i18n="speed_T0">T0: Paranoyak (Çok yavaş)</option>
+                            <option value="T1" data-i18n="speed_T1">T1: Sinsi (Yavaş)</option>
+                            <option value="T2" data-i18n="speed_T2">T2: Kibar (Hedefi yormaz)</option>
+                            <option value="T3" selected data-i18n="speed_T3">T3: Normal (Dengeli)</option>
+                            <option value="T4" data-i18n="speed_T4">T4: Hızlı (Agresif)</option>
+                            <option value="T5" data-i18n="speed_T5">T5: İnsafsız (Cyber)</option>
+                        </select>
+                    </div>
+                    <button class="scan-btn" id="scan-button" onclick="startScan()">
+                        <svg id="scan-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="5 3 19 12 5 21 5 3" />
+                        </svg>
+                        <span id="scan-btn-text" data-i18n="btn_start">Taramayı Başlat</span>
+                    </button>
+                    <button class="scan-btn" id="stop-btn" onclick="stopScan()"
+                        style="background: linear-gradient(135deg, var(--rose-500), var(--rose-400)); display: none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="6" y="6" width="12" height="12" rx="2" ry="2" />
+                        </svg>
+                        <span data-i18n="btn_stop">Durdur</span>
                     </button>
                 </div>
-            </div>
 
-            <!-- Terminal & Harita Output -->
-            <div class="terminal" id="vue-terminal" style="margin-top: 2rem;">
-                <div class="terminal-header" style="position:relative; z-index: 10;">
-                    <div>
-                        <span class="terminal-dot red"></span>
-                        <span class="terminal-dot yellow"></span>
-                        <span class="terminal-dot green"></span>
-                        <span class="terminal-title">netvanguard — scan output</span>
-                    </div>
-                    <!-- CVSS Gauge Container -->
-                    <div style="position:absolute; right:16px; top: 4px; text-align:center;">
-                        <canvas id="cvss-gauge" width="80" height="40"></canvas>
-                        <div id="cvss-score" style="font-size:0.75rem; color:#fff; font-weight:bold; margin-top:-5px; letter-spacing:1px;"><span data-i18n="risk_score_prefix">RISK:</span> 0.0</div>
-                    </div>
-                </div>
-                
-                <!-- Cytoscape Map Wrapper -->
-                <div id="cy-wrapper" style="position: relative; width: 100%; display:none; border-bottom: 1px solid var(--border);">
-                    <div id="cy" style="width: 100%; height: 250px; background: #08080b;"></div>
-                    <button onclick="if(cyMap){cyMap.fit(); cyMap.center();}" style="position: absolute; bottom: 10px; right: 10px; z-index: 100; background: rgba(10,11,16,0.8); border: 1px solid var(--border); color: #fff; padding: 4px 8px; font-size: 0.75rem; border-radius: 4px; cursor: pointer; backdrop-filter: blur(4px);">🔄 Görünümü Sıfırla</button>
+                <!-- Scan Options -->
+                <div class="scan-options">
+                    <label class="option-chip">
+                        <input type="checkbox" id="opt-ports" checked>
+                        <span class="checkmark">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </span>
+                        <span class="option-label" data-i18n="opt_ports">Port Tarama</span>
+                    </label>
+                    <label class="option-chip">
+                        <input type="checkbox" id="opt-vuln" checked onchange="toggleVulnSpeedLock()">
+                        <span class="checkmark">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </span>
+                        <span class="option-label" data-i18n="opt_vuln">Zafiyet Analizi</span>
+                    </label>
+                    <label class="option-chip">
+                        <input type="checkbox" id="opt-os">
+                        <span class="checkmark">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </span>
+                        <span class="option-label" data-i18n="opt_os">İşletim Sistemi Tespiti</span>
+                    </label>
+                    <label class="option-chip">
+                        <input type="checkbox" id="opt-dns">
+                        <span class="checkmark">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </span>
+                        <span class="option-label" data-i18n="opt_dns">DNS Sorgulama</span>
+                    </label>
+                    <label class="option-chip">
+                        <input type="checkbox" id="opt-sv">
+                        <span class="checkmark">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </span>
+                        <span class="option-label" data-i18n="opt_sv">Servis Versiyon Tespiti</span>
+                    </label>
+                    <label class="option-chip">
+                        <input type="checkbox" id="opt-a">
+                        <span class="checkmark">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </span>
+                        <span class="option-label" data-i18n="opt_a">Kapsamlı Agresif Tarama</span>
+                    </label>
+                    <label class="option-chip">
+                        <input type="checkbox" id="opt-net" onchange="toggleNetworkScan(this)">
+                        <span class="checkmark">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </span>
+                        <span class="option-label" data-i18n="opt_net">Ağdaki Cihazları Bul</span>
+                    </label>
                 </div>
 
-                <div class="terminal-body" id="terminal-body">
-                    <!-- Log lines injected here -->
-                </div>
-            </div>
-
-            <!-- Stats Grid (Terminal Altı) -->
-            <div class="stats-grid" id="stats-grid" style="margin-top: 2rem; margin-bottom: 2rem;">
-                <div class="stat-card cyan">
-                    <div class="stat-label" data-i18n="stat_type_label">Tarama Tipi</div>
-                    <div class="stat-value cyan" id="stat-type">—</div>
-                </div>
-                <div class="stat-card emerald">
-                    <div class="stat-label" id="stat-ports-label" data-i18n="stat_ports_label">Açık Port</div>
-                    <div class="stat-value emerald" id="stat-ports">—</div>
-                </div>
-                <div class="stat-card violet">
-                    <div class="stat-label" id="stat-latency-label" data-i18n="stat_latency_label">Yanıt Süresi</div>
-                    <div class="stat-value violet" id="stat-latency">—</div>
-                </div>
-                <div class="stat-card rose">
-                    <div class="stat-label" data-i18n="stat_status_label">Durum</div>
-                    <div class="stat-value rose" id="stat-threats">0</div>
-                </div>
-
-                <!-- Risk Analysis Section -->
-                <div class="risk-container" style="grid-column: span 4; background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border);">
-                    <div class="risk-header" style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-                        <span class="risk-label" style="color: #888; font-size: 0.9rem;" data-i18n="risk_label">Zafiyet Skoru (Risk Score)</span>
-                        <span class="risk-status" id="risk-status-text" style="color: var(--rose-400); font-weight: bold;" data-i18n="val_waiting">ANALİZ BEKLENİYOR</span>
+                <!-- Progress Bar -->
+                <div class="progress-container" id="progress-container">
+                    <div class="progress-info">
+                        <span class="progress-label" id="progress-label" data-i18n="progress_init">Tarama
+                            başlatılıyor...</span>
+                        <span class="progress-percent" id="progress-percent">0%</span>
                     </div>
-                    <div class="risk-bar-bg" style="width: 100%; height: 12px; background: #1a1a1a; border-radius: 6px; overflow: hidden; margin-bottom: 1.5rem;">
-                        <div class="risk-bar-fill" id="risk-bar-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--emerald-500), var(--rose-500)); transition: width 0.5s ease;"></div>
+                    <div class="progress-track">
+                        <div class="progress-fill" id="progress-fill"></div>
                     </div>
-                    <button class="report-btn" id="export-report-btn" onclick="downloadReport()" style="width: 100%; padding: 1rem; background: var(--bg-input); border: 1px solid var(--border); color: #fff; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 600;">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16l4-4h6a2 2 0 002-2V4a2 2 0 00-2-2zM8 6h4M8 10h4"/></svg>
-                        <span data-i18n="btn_export">📄 GENEL RAPORU DIŞA AKTAR</span>
-                    </button>
                 </div>
-            </div>
-            
+            </main>
+
+            <!-- ═══ RESULTS ═══ -->
+            <section class="results-section" id="results-section">
+                <div class="results-header">
+                    <h3 class="results-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                        </svg>
+                        <span data-i18n="results_title">Tarama Sonuçları</span>
+                    </h3>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span class="results-count" id="results-count"></span>
+                        <button id="download-btn" class="scan-btn" onclick="downloadReport()"
+                            style="padding: 0.5rem 1rem; font-size: 0.8rem; height: auto; display: none;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round"
+                                style="width:14px;height:14px;margin-right:0.3rem;">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                            <span data-i18n="btn_report">Rapor İndir</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Terminal & Harita Output -->
+                <div class="terminal" id="vue-terminal" style="margin-top: 2rem;">
+                    <div class="terminal-header" style="position:relative; z-index: 10;">
+                        <div>
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                            <span class="terminal-title">netvanguard — scan output</span>
+                        </div>
+                        <!-- CVSS Gauge Container -->
+                        <div style="position:absolute; right:16px; top: 4px; text-align:center;">
+                            <canvas id="cvss-gauge" width="80" height="40"></canvas>
+                            <div id="cvss-score"
+                                style="font-size:0.75rem; color:#fff; font-weight:bold; margin-top:-5px; letter-spacing:1px;">
+                                <span data-i18n="risk_score_prefix">RISK:</span> 0.0</div>
+                        </div>
+                    </div>
+
+                    <!-- Cytoscape Map Wrapper -->
+                    <div id="cy-wrapper"
+                        style="position: relative; width: 100%; display:none; border-bottom: 1px solid var(--border);">
+                        <div id="cy" style="width: 100%; height: 250px; background: #08080b;"></div>
+                        <button onclick="if(cyMap){cyMap.fit(); cyMap.center();}"
+                            style="position: absolute; bottom: 10px; right: 10px; z-index: 100; background: rgba(10,11,16,0.8); border: 1px solid var(--border); color: #fff; padding: 4px 8px; font-size: 0.75rem; border-radius: 4px; cursor: pointer; backdrop-filter: blur(4px);">🔄
+                            Görünümü Sıfırla</button>
+                    </div>
+
+                    <div class="terminal-body" id="terminal-body">
+                        <!-- Log lines injected here -->
+                    </div>
+                </div>
+
+                <!-- Stats Grid (Terminal Altı) -->
+                <div class="stats-grid" id="stats-grid" style="margin-top: 2rem; margin-bottom: 2rem;">
+                    <div class="stat-card cyan">
+                        <div class="stat-label" data-i18n="stat_type_label">Tarama Tipi</div>
+                        <div class="stat-value cyan" id="stat-type">—</div>
+                    </div>
+                    <div class="stat-card emerald">
+                        <div class="stat-label" id="stat-ports-label" data-i18n="stat_ports_label">Açık Port</div>
+                        <div class="stat-value emerald" id="stat-ports">—</div>
+                    </div>
+                    <div class="stat-card violet">
+                        <div class="stat-label" id="stat-latency-label" data-i18n="stat_latency_label">Yanıt Süresi
+                        </div>
+                        <div class="stat-value violet" id="stat-latency">—</div>
+                    </div>
+                    <div class="stat-card rose">
+                        <div class="stat-label" data-i18n="stat_status_label">Durum</div>
+                        <div class="stat-value rose" id="stat-threats">0</div>
+                    </div>
+
+                    <!-- Risk Analysis Section -->
+                    <div class="risk-container"
+                        style="grid-column: span 4; background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border);">
+                        <div class="risk-header"
+                            style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                            <span class="risk-label" style="color: #888; font-size: 0.9rem;"
+                                data-i18n="risk_label">Zafiyet Skoru (Risk Score)</span>
+                            <span class="risk-status" id="risk-status-text"
+                                style="color: var(--rose-400); font-weight: bold;" data-i18n="val_waiting">ANALİZ
+                                BEKLENİYOR</span>
+                        </div>
+                        <div class="risk-bar-bg"
+                            style="width: 100%; height: 12px; background: #1a1a1a; border-radius: 6px; overflow: hidden; margin-bottom: 1.5rem;">
+                            <div class="risk-bar-fill" id="risk-bar-fill"
+                                style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--emerald-500), var(--rose-500)); transition: width 0.5s ease;">
+                            </div>
+                        </div>
+                        <button class="report-btn" id="export-report-btn" onclick="downloadReport()"
+                            style="width: 100%; padding: 1rem; background: var(--bg-input); border: 1px solid var(--border); color: #fff; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 600;">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 00-2 2v16l4-4h6a2 2 0 002-2V4a2 2 0 00-2-2zM8 6h4M8 10h4" />
+                            </svg>
+                            <span data-i18n="btn_export">📄 GENEL RAPORU DIŞA AKTAR</span>
+                        </button>
+                    </div>
+                </div>
+
             </section>
         </div>
 
         <!-- ═══ VUE: WI-FI RADAR ═══ -->
-        <div class="terminal" id="vue-wifi" style="display:none; padding: 1.5rem; background:#08080b; min-height:350px;">
+        <div class="terminal" id="vue-wifi"
+            style="display:none; padding: 1.5rem; background:#08080b; min-height:350px;">
             <div id="wifi-hardware-alert" class="wifi-hardware-alert">
                 <span class="close-warn" onclick="this.parentElement.style.display='none'">[X]</span>
                 <strong>🚨 EXTERNAL HARDWARE REQUIRED</strong>
                 Harici Wi-Fi donanımı tespit edilmedi (Ralink RT5370 vb. gerekli).<br>
                 <span data-i18n="wifi_hw_warn_body">Sistem varsayılan simülasyon modunda çalışıyor.</span>
             </div>
-            <h4 style="color:#fff; margin-bottom: 1.5rem; display:flex; align-items:center; gap:0.5rem; justify-content:space-between;">
+            <h4
+                style="color:#fff; margin-bottom: 1.5rem; display:flex; align-items:center; gap:0.5rem; justify-content:space-between;">
                 <span data-i18n="wifi_radar_title">📡 Radar Taraması (Çevredeki Ağlar)</span>
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <div class="turbo-container">
@@ -1494,39 +1976,62 @@
                             <span class="slider"></span>
                         </label>
                     </div>
-                    <button onclick="fetchWifi()" class="scan-btn" style="padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem; height:auto;" data-i18n="wifi_refresh">Yenile</button>
+                    <button onclick="fetchWifi()" class="scan-btn"
+                        style="padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem; height:auto;"
+                        data-i18n="wifi_refresh">Yenile</button>
                 </div>
             </h4>
-            
+
             <div style="display: flex; gap: 1rem; width: 100%; min-height: 400px; flex-wrap: wrap;">
                 <!-- Liste Görünümü -->
-                <div id="wifi-list" style="flex: 1; min-width: 250px; max-height:400px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; padding-right: 0.5rem;">
-                    <div style="color:#888;" data-i18n="wifi_waiting">Veri bekleniyor... Taramayı başlatmak için yenileyin.</div>
+                <div id="wifi-list"
+                    style="flex: 1; min-width: 250px; max-height:400px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; padding-right: 0.5rem;">
+                    <div style="color:#888;" data-i18n="wifi_waiting">Veri bekleniyor... Taramayı başlatmak için
+                        yenileyin.</div>
                 </div>
-                
+
                 <!-- Kat Planı / Heatmap Görünümü -->
-                <div id="radar-container" style="flex: 2; min-width: 300px; min-height: 400px; position: relative; background: url('https://www.transparenttextures.com/patterns/blueprint.png') rgba(16, 25, 40, 0.9); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                <div id="radar-container"
+                    style="flex: 2; min-width: 300px; min-height: 400px; position: relative; background: url('https://www.transparenttextures.com/patterns/blueprint.png') rgba(16, 25, 40, 0.9); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
                     <!-- Advanced Warning Overlay -->
                     <div id="wlan-warning" class="wlan-warning">
                         <span class="close-warn" onclick="this.parentElement.style.display='none'">[X]</span>
-                        <svg class="wlan-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.58 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg>
+                        <svg class="wlan-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.58 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01" />
+                        </svg>
                         <h2>WARNING: WLAN INTERFACE REQUIRED</h2>
-                        <span style="color: #ff1744; font-weight: bold; font-family: 'JetBrains Mono'; margin-bottom: 0.5rem;">ETH0 DETECTED</span>
-                        <p data-i18n="wifi_wlan_warn_body">Kablolu ağ bağlantısı algılandı. Radar modülü için harici bir Wi-Fi adaptörü gereklidir.</p>
+                        <span
+                            style="color: #ff1744; font-weight: bold; font-family: 'JetBrains Mono'; margin-bottom: 0.5rem;">ETH0
+                            DETECTED</span>
+                        <p data-i18n="wifi_wlan_warn_body">Kablolu ağ bağlantısı algılandı. Radar modülü için harici bir
+                            Wi-Fi adaptörü gereklidir.</p>
                     </div>
-                    
+
                     <!-- Grid Daireleri (Koordinat Sistemi) -->
-                    <div style="position:absolute; width:90%; height:90%; border-radius:50%; border:1px solid rgba(0, 242, 254, 0.1); top:5%; left:5%; pointer-events:none;"></div>
-                    <div style="position:absolute; width:60%; height:60%; border-radius:50%; border:1px solid rgba(0, 242, 254, 0.15); top:20%; left:20%; pointer-events:none;"></div>
-                    <div style="position:absolute; width:30%; height:30%; border-radius:50%; border:1px dashed rgba(0, 242, 254, 0.3); top:35%; left:35%; pointer-events:none;"></div>
+                    <div
+                        style="position:absolute; width:90%; height:90%; border-radius:50%; border:1px solid rgba(0, 242, 254, 0.1); top:5%; left:5%; pointer-events:none;">
+                    </div>
+                    <div
+                        style="position:absolute; width:60%; height:60%; border-radius:50%; border:1px solid rgba(0, 242, 254, 0.15); top:20%; left:20%; pointer-events:none;">
+                    </div>
+                    <div
+                        style="position:absolute; width:30%; height:30%; border-radius:50%; border:1px dashed rgba(0, 242, 254, 0.3); top:35%; left:35%; pointer-events:none;">
+                    </div>
                     <!-- Eksenler -->
-                    <div style="position:absolute; width:100%; height:2px; background:rgba(0, 242, 254, 0.1); top:50%; left:0; pointer-events:none;"></div>
-                    <div style="position:absolute; width:2px; height:100%; background:rgba(0, 242, 254, 0.1); top:0; left:50%; pointer-events:none;"></div>
-                    
+                    <div
+                        style="position:absolute; width:100%; height:2px; background:rgba(0, 242, 254, 0.1); top:50%; left:0; pointer-events:none;">
+                    </div>
+                    <div
+                        style="position:absolute; width:2px; height:100%; background:rgba(0, 242, 254, 0.1); top:0; left:50%; pointer-events:none;">
+                    </div>
+
                     <!-- Sonar Pulse -->
                     <div class="sonar-pulse"></div>
 
-                    <div style="position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:rgba(255,255,255,0.05); font-size:2rem; font-weight:bold; pointer-events:none; white-space:nowrap;">NETVANGUARD RADAR</div>
+                    <div
+                        style="position: absolute; top:50%; left:50%; transform:translate(-50%, -50%); color:rgba(255,255,255,0.05); font-size:2rem; font-weight:bold; pointer-events:none; white-space:nowrap;">
+                        NETVANGUARD RADAR</div>
                 </div>
             </div>
         </div>
@@ -1686,17 +2191,17 @@
             document.getElementById('btn-en').classList.toggle('active', lang === 'en');
         }
 
-        const ipInput   = document.getElementById('target-ip');
-        const scanBtn   = document.getElementById('scan-button');
-        const scanIcon  = document.getElementById('scan-icon');
-        const scanText  = document.getElementById('scan-btn-text');
-        const progCont  = document.getElementById('progress-container');
-        const progFill  = document.getElementById('progress-fill');
+        const ipInput = document.getElementById('target-ip');
+        const scanBtn = document.getElementById('scan-button');
+        const scanIcon = document.getElementById('scan-icon');
+        const scanText = document.getElementById('scan-btn-text');
+        const progCont = document.getElementById('progress-container');
+        const progFill = document.getElementById('progress-fill');
         const progLabel = document.getElementById('progress-label');
-        const progPct   = document.getElementById('progress-percent');
-        const results   = document.getElementById('results-section');
-        const terminal  = document.getElementById('terminal-body');
-        const resCnt    = document.getElementById('results-count');
+        const progPct = document.getElementById('progress-percent');
+        const results = document.getElementById('results-section');
+        const terminal = document.getElementById('terminal-body');
+        const resCnt = document.getElementById('results-count');
 
         let currentAbortController = null;
         let activeTab = 'dashboard';
@@ -1709,7 +2214,7 @@
                 const res = await fetch('https://ipapi.co/json/', { signal: controller.signal });
                 const data = await res.json();
                 clearTimeout(timeoutId);
-                
+
                 // Ethical Data Masking
                 const ipParts = (data.ip || '0.0.0.0').split('.');
                 const maskedIp = ipParts.length === 4 ? `${ipParts[0]}.${ipParts[1]}.*.*` : 'ENCRYPTED';
@@ -1738,14 +2243,14 @@
         // ═══════════════════════════════════════════════════
         //  EVOLUTION: TABS, GAUGE & CYTOSCAPE MAP
         // ═══════════════════════════════════════════════════
-        
+
         // The Cyber Gate Lifecycle
         window.addEventListener('load', async () => {
             // Matrix Rain Effect
             const rains = [document.getElementById('matrix-rain-left'), document.getElementById('matrix-rain-right')];
             rains.forEach(r => {
                 let content = '';
-                for(let i=0; i<50; i++) {
+                for (let i = 0; i < 50; i++) {
                     content += Math.random().toString(36).substring(2, 15) + '<br>';
                 }
                 r.innerHTML = content;
@@ -1753,7 +2258,7 @@
 
             // Start Data Fetching Immediately
             const opData = await fetchOperatorInfo();
-            
+
             // Grid Scanner Movement logic
             const moveGrid = (e) => {
                 document.querySelectorAll('.grid-scanner').forEach(gs => {
@@ -1775,7 +2280,7 @@
             await typeHud('gate-hud-right', '[PRIVACY MODE: ENABLED | DATA OBFUSCATED]');
             await new Promise(r => setTimeout(r, 400));
             await typeHud('gate-hud-left', '[IDENTITY: AUTHORIZED ACCESS]');
-            
+
             await new Promise(r => setTimeout(r, 800));
 
             // Open Gate & Effects
@@ -1797,7 +2302,7 @@
         // Smart System Status & Time Logic
         let lastKnownLocation = 'UNKNOWN';
         let lastKnownTimeStr = '';
-        
+
         let serverTime = null;
         let useLocalTime = false;
 
@@ -1822,7 +2327,7 @@
             const now = useLocalTime || !serverTime ? new Date() : serverTime;
             const timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const dateStr = now.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            
+
             lastKnownTimeStr = `${timeStr} ${dateStr}`;
             const prefix = useLocalTime ? '[LOCAL MODE] ' : '';
             updateTickerDisplay(`${prefix}[NODE: KALI-VM] | [LOCATION: ${lastKnownLocation}] | [STATUS: NODE-ONLINE] | [TIME: ${lastKnownTimeStr}]`);
@@ -1836,7 +2341,7 @@
             const scannerActive = scanBtn.classList.contains('scanning');
             const targetIp = ipInput.value || 'NONE';
             const portCount = document.getElementById('stat-ports').textContent || '0';
-            
+
             let message = "";
             if (scannerActive) {
                 message = `[TARGET: ${targetIp}] | [PORTS FOUND: ${portCount}] | [STATUS: ANALYZING...]`;
@@ -1854,7 +2359,7 @@
             } else {
                 message = statusMsg;
             }
-            
+
             tickerItems.forEach(item => { item.textContent = message; });
         }
 
@@ -1877,9 +2382,9 @@
             const riskBar = document.getElementById('risk-bar-fill');
             const riskText = document.getElementById('risk-status-text');
             const criticalPorts = [21, 22, 23, 445, 3389];
-            
+
             const foundCritical = portsFound.some(p => criticalPorts.includes(parseInt(p)));
-            
+
             riskBar.className = 'risk-bar-fill';
             if (portsFound.length === 0) {
                 riskBar.classList.add('secure');
@@ -1934,11 +2439,11 @@
         setInterval(() => {
             const cpu = Math.floor(Math.random() * 25) + 5; // 5-30%
             const ram = Math.floor(Math.random() * 30) + 40; // 40-70%
-            
+
             const cpuEl = document.getElementById('sys-cpu');
             const cpuBar = document.getElementById('sys-cpu-bar');
             if (cpuEl) { cpuEl.textContent = cpu + '%'; cpuBar.style.width = cpu + '%'; }
-            
+
             const ramEl = document.getElementById('sys-ram');
             const ramBar = document.getElementById('sys-ram-bar');
             if (ramEl) { ramEl.textContent = ram + '%'; ramBar.style.width = ram + '%'; }
@@ -1953,31 +2458,31 @@
             document.getElementById('nav-dashboard').classList.remove('active');
             document.getElementById('nav-scanner').classList.remove('active');
             document.getElementById('nav-wifi').classList.remove('active');
-            
+
             document.getElementById('nav-dashboard').style.background = 'var(--bg-secondary)';
             document.getElementById('nav-scanner').style.background = 'var(--bg-secondary)';
             document.getElementById('nav-wifi').style.background = 'var(--bg-secondary)';
-            
+
             document.getElementById('vue-dashboard').style.display = 'none';
             document.getElementById('vue-scanner').style.display = 'none';
             document.getElementById('vue-wifi').style.display = 'none';
-            
+
             if (wifiInterval) { clearInterval(wifiInterval); wifiInterval = null; }
 
             // Update Ticker Context
             updateTickerContext(mode);
 
-            if(mode === 'dashboard') {
+            if (mode === 'dashboard') {
                 document.getElementById('nav-dashboard').classList.add('active');
                 document.getElementById('nav-dashboard').style.background = '';
                 document.getElementById('vue-dashboard').style.display = 'block';
-            } else if(mode === 'scanner') {
+            } else if (mode === 'scanner') {
                 document.getElementById('nav-scanner').classList.add('active');
                 document.getElementById('nav-scanner').style.background = '';
                 document.getElementById('vue-scanner').style.display = 'block';
-            } else if(mode === 'wifi') {
+            } else if (mode === 'wifi') {
                 // Hardware warnings are handled by fetchWifi based on SSID discovery
-                
+
                 document.getElementById('nav-wifi').classList.add('active');
                 document.getElementById('nav-wifi').style.background = '';
                 document.getElementById('vue-wifi').style.display = 'block';
@@ -1996,7 +2501,7 @@
             } else {
                 messages = ["SYSTEM SECURE", "THREAT LEVEL: MINIMAL", "KALI LINUX NODE: ONLINE", "OPERATOR: AUTHORIZED"];
             }
-            
+
             ticker.innerHTML = '';
             messages.concat(messages).forEach(msg => {
                 ticker.innerHTML += `<div class="ticker-item">${msg}</div>`;
@@ -2006,16 +2511,16 @@
         async function fetchWifi() {
             const list = document.getElementById('wifi-list');
             const map = document.getElementById('radar-container');
-            
+
             // list.innerHTML = '<div style="color:#888;">📡 Taranıyor... Lütfen bekleyin.</div>';
-            
+
             try {
                 const r = await fetch('/api/wifi_scan');
                 const d = await r.json();
-                if(!d.success) return; // Sessizce atla
-                
+                if (!d.success) return; // Sessizce atla
+
                 // Smart Hardware Detection (Dynamic Fix)
-                if(d.data.length > 0) {
+                if (d.data.length > 0) {
                     const alertBox = document.getElementById('wifi-hardware-alert');
                     const warningOverlay = document.getElementById('wlan-warning');
                     if (alertBox) alertBox.style.display = 'none';
@@ -2023,27 +2528,27 @@
                 } else {
                     return; // No data to show
                 }
-                
+
                 list.innerHTML = '';
                 const currentSsids = new Set();
 
                 d.data.forEach(net => {
                     currentSsids.add(net.ssid);
-                    
+
                     let lstColor = '#3b82f6'; // Mavi
                     let mapColor = 'rgba(59, 130, 246, 0.5)';
-                    
-                    if(net.signal >= 80) { 
-                        lstColor = '#10b981'; 
-                        mapColor = 'rgba(16, 185, 129, 0.6)'; 
-                    } else if(net.signal >= 50) { 
-                        lstColor = '#f59e0b'; 
-                        mapColor = 'rgba(245, 158, 11, 0.6)'; 
-                    } else { 
-                        lstColor = '#ef4444'; 
-                        mapColor = 'rgba(239, 68, 68, 0.6)'; 
+
+                    if (net.signal >= 80) {
+                        lstColor = '#10b981';
+                        mapColor = 'rgba(16, 185, 129, 0.6)';
+                    } else if (net.signal >= 50) {
+                        lstColor = '#f59e0b';
+                        mapColor = 'rgba(245, 158, 11, 0.6)';
+                    } else {
+                        lstColor = '#ef4444';
+                        mapColor = 'rgba(239, 68, 68, 0.6)';
                     }
-                    
+
                     // List Item Eklenmesi
                     list.innerHTML += `
                         <div style="background:#0a0b10; border:1px solid #1a1c23; padding:0.8rem; border-radius:6px; display:flex; flex-direction:column; gap:0.4rem;">
@@ -2061,25 +2566,25 @@
                     // Heatmap DOM Düğümü Kontrolü
                     const size = 30 + (net.signal * 1.5);
                     let node = wifiNodes[net.ssid];
-                    
+
                     // Mesafe Fizigi Hesaplaması
                     const distanceFactor = 100 - net.signal; // %100 sinyal = 0 distance, %20 sinyal = 80 distance
                     const radius = distanceFactor * 0.45; // Max %45 radius, ekranın dairesi içinde kalsın
-                    
+
                     // Deterministic Bearing Base on SSID
                     const hashSSID = (s) => {
                         let h = 0;
-                        for(let i=0; i<s.length; i++) h = (h << 5) - h + s.charCodeAt(i);
+                        for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i);
                         return Math.abs(h);
                     };
-                    const angle = (hashSSID(net.ssid) % 360) * (Math.PI / 180); 
-                    
+                    const angle = (hashSSID(net.ssid) % 360) * (Math.PI / 180);
+
                     const left = 50 + radius * Math.cos(angle);
                     const top = 50 + radius * Math.sin(angle);
-                    
+
                     if (!node) {
                         node = { el: document.createElement('div') };
-                        
+
                         node.el.style.position = 'absolute';
                         node.el.style.left = left + '%';
                         node.el.style.top = top + '%';
@@ -2093,12 +2598,12 @@
                         node.el.style.cursor = 'crosshair';
                         node.el.style.animation = 'vulnPulse 3s infinite alternate';
                         node.el.style.transition = 'width 1s ease-in-out, height 1s ease-in-out, background 1s ease-in-out';
-                        
+
                         node.el.innerHTML = `<strong style="color:#fff; font-size:10px; text-shadow: 0 0 5px #000; word-break: break-all; padding: 0 4px; pointer-events:none;">${net.ssid}</strong>`;
                         map.appendChild(node.el);
                         wifiNodes[net.ssid] = node;
                     }
-                    
+
                     // Dinamik Güncelleme (Geçiş Animasyonlu)
                     node.el.style.width = size + 'px';
                     node.el.style.height = size + 'px';
@@ -2108,7 +2613,7 @@
                     node.el.style.background = `radial-gradient(circle, ${mapColor} 0%, transparent 70%)`;
                     node.el.title = `Ağ: ${net.ssid}\nSinyal: %${net.signal}`;
                 });
-                
+
                 // Eski (Kaybolan) Ağları Temizle
                 for (const ssid in wifiNodes) {
                     if (!currentSsids.has(ssid)) {
@@ -2116,7 +2621,7 @@
                         delete wifiNodes[ssid];
                     }
                 }
-            } catch(e) {
+            } catch (e) {
                 list.innerHTML = `<div style="color:#ef4444;">Ağ hatası: ${e.message}</div>`;
             }
         }
@@ -2129,17 +2634,17 @@
         };
         let cvssGauge = null;
         let currentMaxScore = 0.0;
-        
+
         function initGauge() {
-            if(!cvssGauge && typeof Gauge !== 'undefined') {
+            if (!cvssGauge && typeof Gauge !== 'undefined') {
                 const target = document.getElementById('cvss-gauge');
                 cvssGauge = new Gauge(target).setOptions({
                     angle: 0.15, lineWidth: 0.3, radiusScale: 1, pointer: { length: 0.5, strokeWidth: 0.035, color: '#fff' },
                     staticZones: [
-                        {strokeStyle: "#10b981", min: 0, max: 3.9},
-                        {strokeStyle: "#f59e0b", min: 4.0, max: 6.9},
-                        {strokeStyle: "#ef4444", min: 7.0, max: 8.9},
-                        {strokeStyle: "#991b1b", min: 9.0, max: 10.0}
+                        { strokeStyle: "#10b981", min: 0, max: 3.9 },
+                        { strokeStyle: "#f59e0b", min: 4.0, max: 6.9 },
+                        { strokeStyle: "#ef4444", min: 7.0, max: 8.9 },
+                        { strokeStyle: "#991b1b", min: 9.0, max: 10.0 }
                     ]
                 });
                 cvssGauge.maxValue = 10;
@@ -2147,21 +2652,21 @@
                 cvssGauge.set(0);
             }
         }
-        
+
         function updateRisk(text) {
             let foundScore = 0.0;
             const lower = text.toLowerCase();
             for (const [key, score] of Object.entries(cveDictionary)) {
-                if(lower.includes(key) && score > foundScore) foundScore = score;
+                if (lower.includes(key) && score > foundScore) foundScore = score;
             }
-            if(lower.includes('vulnerable') && foundScore === 0) foundScore = 5.0; // fallback
-            
-            if(foundScore > currentMaxScore) {
+            if (lower.includes('vulnerable') && foundScore === 0) foundScore = 5.0; // fallback
+
+            if (foundScore > currentMaxScore) {
                 currentMaxScore = foundScore;
-                if(cvssGauge) cvssGauge.set(currentMaxScore);
+                if (cvssGauge) cvssGauge.set(currentMaxScore);
                 const gaugeText = document.getElementById('cvss-score');
                 gaugeText.textContent = `RISK: ${currentMaxScore.toFixed(1)}`;
-                if(currentMaxScore >= 7.0) {
+                if (currentMaxScore >= 7.0) {
                     gaugeText.style.color = '#ff1744';
                     document.getElementById('cvss-gauge').style.animation = 'vulnPulse 1s infinite alternate';
                 }
@@ -2174,10 +2679,10 @@
         function initCyMap(rootIp) {
             document.getElementById('cy-wrapper').style.display = 'block';
             cyRootId = rootIp;
-            if(window.cytoscape) {
+            if (window.cytoscape) {
                 cyMap = cytoscape({
                     container: document.getElementById('cy'),
-                    elements: [ { data: { id: rootIp, label: rootIp }, classes: 'root' } ],
+                    elements: [{ data: { id: rootIp, label: rootIp }, classes: 'root' }],
                     style: [
                         { selector: 'node', style: { 'label': 'data(label)', 'color': '#fff', 'background-color': '#00f2fe', 'text-outline-color': '#08080b', 'text-outline-width': 2, 'font-size': '10px' } },
                         { selector: '.root', style: { 'width': '40px', 'height': '40px', 'background-color': '#4f46e5' } },
@@ -2214,7 +2719,7 @@
             el.style.animationDelay = `${Math.min(terminal.children.length, 30) * 0.02}s`;
             el.innerHTML = `<span class="log-time">${ts()}</span><span class="log-prefix">▸</span><span class="log-msg ${type}">${msg}</span>`;
             terminal.appendChild(el);
-            
+
             // Performans: Maksimum 500 satır DOM'da tut
             if (terminal.children.length > 500) {
                 terminal.removeChild(terminal.firstChild);
@@ -2228,21 +2733,21 @@
             if (label) progLabel.textContent = label;
         }
 
-        function setStat(id, val) { 
-            const el = document.getElementById(id); 
-            if(el) el.textContent = val; 
+        function setStat(id, val) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = val;
         }
         function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
         /** Ham çıktıdan satır tipini tahmin eder (renklendirme için) */
         function guessLineType(line) {
             const l = line.toLowerCase();
-            if (l.includes('open'))                      return 'success';
+            if (l.includes('open')) return 'success';
             if (l.includes('closed') || l.includes('filtered')) return 'warn';
             if (l.match(/timed?\s*out|unreachable|down|failed|error|hata/)) return 'error';
             if (l.match(/^nmap|starting|host is up|dns|server|name:|address:/i)) return 'info';
-            if (l.match(/reply|yanıt|ttl|bytes|bayt/))  return 'success';
-            if (l.match(/loss|kayb|average|ortalama/))   return 'warn';
+            if (l.match(/reply|yanıt|ttl|bytes|bayt/)) return 'success';
+            if (l.match(/loss|kayb|average|ortalama/)) return 'warn';
             if (l.match(/port|service|version|latency/)) return 'highlight';
             return '';
         }
@@ -2287,7 +2792,7 @@
         /** Seçili opsiyonları Türkçe etiket olarak döndürür */
         function getScanLabel(data) {
             const map = {
-                'ping':      'Ping',
+                'ping': 'Ping',
                 'net_discover': 'Ağ Keşfi',
                 'port_scan': 'Nmap',
                 'vuln_scan': 'Zafiyet',
@@ -2343,7 +2848,7 @@
             addLog('[ACTION] Tarama başlatılıyor...', 'info');
             let target = ipInput.value.trim();
             const isNetDiscover = document.getElementById('opt-net').checked;
-            
+
             if (!target && !isNetDiscover) {
                 ipInput.style.borderColor = 'var(--rose-400)';
                 ipInput.style.boxShadow = '0 0 0 3px rgba(244,63,94,0.15)';
@@ -2380,13 +2885,13 @@
             results.classList.remove('active');
             let dlBtn = document.getElementById('download-btn');
             if (dlBtn) dlBtn.style.display = 'none';
-            ['stat-type','stat-ports','stat-latency','stat-status'].forEach(id => setStat(id, '—'));
+            ['stat-type', 'stat-ports', 'stat-latency', 'stat-status'].forEach(id => setStat(id, '—'));
 
             // Dinamik kart başlıklarını önceden ayarla (DNS Desteği)
             const portsLabel = document.getElementById('stat-ports-label');
             const latencyLabel = document.getElementById('stat-latency-label');
             latencyLabel.textContent = 'YANIT SÜRESİ';
-            
+
             if (opts.dns_query && !opts.port_scan && !opts.vuln_scan && !opts.aggressive_scan) {
                 portsLabel.textContent = 'HEDEF IP'; // DNS taranıyorsa port yerine IP göster
             } else if (opts.net_discover) {
@@ -2489,7 +2994,7 @@
                 const uid = 'urlblock-' + Math.random().toString(36).slice(2, 8);
                 const count = urlBuffer.length;
                 addLog(`<span class="vuln-url-toggle" onclick="document.getElementById('${uid}').classList.toggle('open'); this.textContent = this.textContent.includes('Gör') ? '[-] Taranan URL Listesini Gizle (${count})' : '[+] Taranan URL Listesini Gör (${count})'">[+] Taranan URL Listesini Gör (${count})</span>`, '');
-                const urlHtml = urlBuffer.map(u => u.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')).join('<br>');
+                const urlHtml = urlBuffer.map(u => u.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')).join('<br>');
                 addLog(`<div id="${uid}" class="vuln-url-block">${urlHtml}</div>`, '');
                 urlBuffer = [];
             }
@@ -2540,7 +3045,7 @@
                     if (ipMatch) {
                         const parsedIp = ipMatch[1].trim();
                         cyRootId = parsedIp;
-                        if(cyMap && cyMap.getElementById(parsedIp).length === 0) {
+                        if (cyMap && cyMap.getElementById(parsedIp).length === 0) {
                             cyMap.add({ data: { id: parsedIp, label: parsedIp }, classes: 'root' });
                             cyMap.layout({ name: 'cose' }).run();
                         }
@@ -2559,14 +3064,14 @@
                                 // Lokal ağı yoksay, sadece asıl dış IP parlasın
                                 if (!matchedIp.startsWith('192.168.')) {
                                     liveDnsIp = matchedIp; // En son yakalanan gerçek dış IP (IPv4) kalacak
-                                    
+
                                     // Dinamik DNS Parent Node
                                     cyRootId = liveDnsIp;
-                                    if(cyMap && cyMap.getElementById(liveDnsIp).length === 0) {
+                                    if (cyMap && cyMap.getElementById(liveDnsIp).length === 0) {
                                         cyMap.add({ data: { id: liveDnsIp, label: liveDnsIp }, classes: 'root' });
                                         cyMap.layout({ name: 'cose' }).run();
                                     }
-                                    
+
                                     if (document.getElementById('stat-ports-label').textContent === 'HEDEF IP') {
                                         const portEl = document.getElementById('stat-ports');
                                         // IP'yi doğrudan neon renk ile karta bas
@@ -2614,22 +3119,22 @@
                 }
 
                 // Detect hardware from logs if not wifi
-            const lRaw = raw.toLowerCase();
-            if (lRaw.includes('eth0') || lRaw.includes('ethernet')) {
-                const warningOverlay = document.getElementById('wlan-warning');
-                if (warningOverlay) warningOverlay.classList.add('active');
-            }
-            
-            // Smart Hardware Detection (Logic Fix)
-            if (lRaw.includes('wlan') || lRaw.includes('interface') || lRaw.includes('scanning') || lRaw.includes('ralink')) {
-                const alertBox = document.getElementById('wifi-hardware-alert');
-                const warningOverlay = document.getElementById('wlan-warning');
-                if (alertBox) alertBox.style.display = 'none';
-                if (warningOverlay) warningOverlay.style.display = 'none';
-            }
+                const lRaw = raw.toLowerCase();
+                if (lRaw.includes('eth0') || lRaw.includes('ethernet')) {
+                    const warningOverlay = document.getElementById('wlan-warning');
+                    if (warningOverlay) warningOverlay.classList.add('active');
+                }
 
-            // HTML escape
-                let safe = raw.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                // Smart Hardware Detection (Logic Fix)
+                if (lRaw.includes('wlan') || lRaw.includes('interface') || lRaw.includes('scanning') || lRaw.includes('ralink')) {
+                    const alertBox = document.getElementById('wifi-hardware-alert');
+                    const warningOverlay = document.getElementById('wlan-warning');
+                    if (alertBox) alertBox.style.display = 'none';
+                    if (warningOverlay) warningOverlay.style.display = 'none';
+                }
+
+                // HTML escape
+                let safe = raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
                 // ── OS Bilgisini Vurgula ──
                 if (opts.os_detect && (raw.startsWith('Running:') || raw.startsWith('OS details:') || raw.startsWith('OS CPE:'))) {
@@ -2646,7 +3151,7 @@
                     safe = `<span class="vuln-critical" style="display:inline-block; width:100%; box-sizing:border-box; background: rgba(255, 23, 68, 0.15); border-left: 4px solid #ff1744; margin-top: 4px; padding: 4px 10px; color:#ff1744; font-weight:900; text-shadow: 0 0 10px rgba(255, 23, 68, 0.7); animation: vulnPulse 2s ease-in-out infinite;">🚨 ${safe}</span>`;
                     updateRisk(raw);
                     addCyNode(`vuln-${i}`, 'Zafiyet!', 'vuln');
-                    if(cyRootId && cyMap) cyMap.getElementById(cyRootId).addClass('vuln');
+                    if (cyRootId && cyMap) cyMap.getElementById(cyRootId).addClass('vuln');
                 } else if (opts.vuln_scan && (raw.match(/\bExploitable\b/i) || raw.match(/State: LIKELY VULNERABLE/i))) {
                     safe = `<span class="vuln-critical">🔴 ${safe}</span>`;
                     updateRisk(raw);
@@ -2683,7 +3188,7 @@
                     // nslookup çıktısında latency olmaz, bu yüzden genel tarama süresini latency kabul ediyoruz.
                     liveLatency = scanDuration + 's';
                 }
-                
+
                 if (liveLatency) {
                     setStat('stat-latency', liveLatency);
                     document.getElementById('stat-latency').style.opacity = '1';
@@ -2871,7 +3376,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `NetVanguard_Report_${target.replace(/[^a-z0-9]/gi, '_')}_${now.toISOString().slice(0,10)}.txt`;
+            a.download = `NetVanguard_Report_${target.replace(/[^a-z0-9]/gi, '_')}_${now.toISOString().slice(0, 10)}.txt`;
             a.click();
             URL.revokeObjectURL(url);
         }
@@ -2881,15 +3386,19 @@
             const statusBar = document.getElementById('status-bar');
             const statusIcon = document.getElementById('status-icon');
             const statusText = document.getElementById('status-text');
-            
+
             // 1. Önce gerçek internet bağlantısını kontrol et
             if (!navigator.onLine) {
-                statusBar.style.background = 'rgba(239, 68, 68, 0.15)';
-                statusBar.style.color = '#ef4444';
-                statusBar.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-                statusIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
-                statusIcon.style.animation = 'none';
-                statusText.textContent = '⚠️ HATA: İnternet Bağlantısı Kesildi!';
+                if (statusBar) {
+                    statusBar.style.background = 'rgba(239, 68, 68, 0.15)';
+                    statusBar.style.color = '#ef4444';
+                    statusBar.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                }
+                if (statusIcon) {
+                    statusIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
+                    statusIcon.style.animation = 'none';
+                }
+                if (statusText) statusText.textContent = '⚠️ HATA: İnternet Bağlantısı Kesildi!';
                 return;
             }
 
@@ -2898,50 +3407,77 @@
                 const res = await fetch('/api/check_env', { cache: 'no-store' });
                 if (!res.ok) throw new Error('API Yanıt Vermedi');
                 const data = await res.json();
-                
+
+                // Live OS Info Integration
+                if (data.os) {
+                    const osVal = (data.os === 'Windows' ? 'Windows' : 'Linux') + ' Node';
+                    if (document.getElementById('os-info')) document.getElementById('os-info').textContent = osVal;
+                    if (document.getElementById('os-info-2')) document.getElementById('os-info-2').textContent = osVal;
+                } else {
+                    const fallback = (navigator.platform.indexOf('Win') !== -1 ? 'Windows' : 'Linux') + ' Node';
+                    if (document.getElementById('os-info')) document.getElementById('os-info').textContent = fallback;
+                    if (document.getElementById('os-info-2')) document.getElementById('os-info-2').textContent = fallback;
+                }
+
                 if (data.nmap && data.root) {
-                    statusBar.style.background = 'rgba(16, 185, 129, 0.15)';
-                    statusBar.style.color = '#10b981';
-                    statusBar.style.border = '1px solid rgba(16, 185, 129, 0.3)';
-                    statusIcon.innerHTML = '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>';
-                    statusIcon.style.animation = 'none';
-                    statusText.textContent = `Sistem Hazır: Nmap ${data.version || ''} | Yetki: ROOT`;
+                    if (statusBar) {
+                        statusBar.style.background = 'rgba(16, 185, 129, 0.15)';
+                        statusBar.style.color = '#10b981';
+                        statusBar.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+                    }
+                    if (statusIcon) {
+                        statusIcon.innerHTML = '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>';
+                        statusIcon.style.animation = 'none';
+                    }
+                    if (statusText) statusText.textContent = `Sistem Hazır: Nmap ${data.version || ''} | Yetki: ROOT`;
                 } else if (data.nmap && !data.root) {
-                    statusBar.style.background = 'rgba(249, 115, 22, 0.15)';
-                    statusBar.style.color = '#f97316';
-                    statusBar.style.border = '1px solid rgba(249, 115, 22, 0.3)';
-                    statusIcon.innerHTML = '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>';
-                    statusIcon.style.animation = 'none';
-                    statusText.textContent = `UYARI: Root yetkisi yok, OS tespiti kısıtlı olabilir!`;
+                    if (statusBar) {
+                        statusBar.style.background = 'rgba(249, 115, 22, 0.15)';
+                        statusBar.style.color = '#f97316';
+                        statusBar.style.border = '1px solid rgba(249, 115, 22, 0.3)';
+                    }
+                    if (statusIcon) {
+                        statusIcon.innerHTML = '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>';
+                        statusIcon.style.animation = 'none';
+                    }
+                    if (statusText) statusText.textContent = `UYARI: Root yetkisi yok, OS tespiti kısıtlı olabilir!`;
                 } else if (!data.nmap) {
-                    statusBar.style.background = 'rgba(239, 68, 68, 0.15)';
-                    statusBar.style.color = '#ef4444';
-                    statusBar.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-                    statusIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
-                    statusIcon.style.animation = 'none';
-                    statusText.textContent = `HATA: Nmap bulunamadı!`;
+                    if (statusBar) {
+                        statusBar.style.background = 'rgba(239, 68, 68, 0.15)';
+                        statusBar.style.color = '#ef4444';
+                        statusBar.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                    }
+                    if (statusIcon) {
+                        statusIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
+                        statusIcon.style.animation = 'none';
+                    }
+                    if (statusText) statusText.textContent = `HATA: Nmap bulunamadı!`;
                 }
             } catch (e) {
                 console.error("Environment check failed", e);
-                statusBar.style.background = 'rgba(239, 68, 68, 0.15)';
-                statusBar.style.color = '#ef4444';
-                statusBar.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-                statusIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
-                statusIcon.style.animation = 'none';
-                statusText.textContent = `HATA: Sunucuyla bağlantı kesildi!`;
+                if (statusBar) {
+                    statusBar.style.background = 'rgba(239, 68, 68, 0.15)';
+                    statusBar.style.color = '#ef4444';
+                    statusBar.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                }
+                if (statusIcon) {
+                    statusIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
+                    statusIcon.style.animation = 'none';
+                }
+                if (statusText) statusText.textContent = `HATA: Sunucuyla bağlantı kesildi!`;
             }
         }
-        
+
         // 3. UI Speed Lock (Hız Kısıtlaması)
         function toggleVulnSpeedLock() {
             const checkbox = document.getElementById('opt-vuln');
             const select = document.getElementById('scan-speed');
             const opts = select.options;
-            
+
             if (checkbox && checkbox.checked) {
                 // T4 ve T5'i devre dışı bırak
-                for(let i=0; i<opts.length; i++) {
-                    if(opts[i].value === 'T4' || opts[i].value === 'T5') {
+                for (let i = 0; i < opts.length; i++) {
+                    if (opts[i].value === 'T4' || opts[i].value === 'T5') {
                         opts[i].disabled = true;
                     }
                 }
@@ -2951,7 +3487,7 @@
                 }
             } else if (checkbox) {
                 // Hepsini aktifleştir
-                for(let i=0; i<opts.length; i++) {
+                for (let i = 0; i < opts.length; i++) {
                     opts[i].disabled = false;
                 }
             }
@@ -2962,15 +3498,19 @@
             const statusBar = document.getElementById('status-bar');
             const statusIcon = document.getElementById('status-icon');
             const statusText = document.getElementById('status-text');
-            statusBar.style.background = 'rgba(239, 68, 68, 0.15)';
-            statusBar.style.color = '#ef4444';
-            statusBar.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-            statusIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
-            statusIcon.style.animation = 'none';
-            statusText.textContent = `HATA: Sunucuyla bağlantı kesildi!`;
+            if (statusBar) {
+                statusBar.style.background = 'rgba(239, 68, 68, 0.15)';
+                statusBar.style.color = '#ef4444';
+                statusBar.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+            }
+            if (statusIcon) {
+                statusIcon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
+                statusIcon.style.animation = 'none';
+            }
+            if (statusText) statusText.textContent = `HATA: Sunucuyla bağlantı kesildi!`;
         });
         window.addEventListener('online', checkEnvironment);
-        
+
         // Form load olduğunda çalıştır
         document.addEventListener('DOMContentLoaded', () => {
             toggleVulnSpeedLock(); // İlk açılışta state'i ayarla
@@ -2980,20 +3520,21 @@
             // ── GATE EMERGENCY OPENING ──
             const gate = document.getElementById('cyber-gate');
             const app = document.getElementById('app-container');
-            
+
             setTimeout(() => {
                 gate.classList.add('opened');
                 app.classList.add('glitch');
                 app.classList.add('screen-shake');
             }, 600); // 0.6s sonra aç (Hızlı Kapı)
-            
+
             // Kapı açıldıktan sonra butonlara tıklanabilmesi için
             setTimeout(() => {
                 gate.style.zIndex = '-1';
                 gate.style.pointerEvents = 'none';
                 app.classList.remove('screen-shake');
-            }, 1200); 
+            }, 1200);
         });
     </script>
 </body>
+
 </html>
