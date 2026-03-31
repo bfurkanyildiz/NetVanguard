@@ -653,8 +653,90 @@
         .vuln-url-block.open { display: block; }
 
         /* ═══════════════════════════════════════════════════
+           LANGUAGE SWITCHER - DISCREET & MINIMAL
+           ═══════════════════════════════════════════════════ */
+        .lang-switcher {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 1000;
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .lang-btn {
+            padding: 0.4rem 1rem;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--accent-main);
+            color: var(--accent-main);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.05);
+            letter-spacing: 0.05em;
+        }
+
+        .lang-btn:hover {
+            background: var(--accent-main);
+            color: #000;
+            box-shadow: 0 0 25px var(--accent-main);
+        }
+
+        .lang-btn.active {
+            background: var(--accent-main);
+            color: #000;
+            box-shadow: 0 0 15px var(--accent-main);
+        }
+
+        /* ═══════════════════════════════════════════════════
            STAT CARDS
            ═══════════════════════════════════════════════════ */
+        .lang-switcher {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 1000;
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .lang-btn {
+            padding: 0.4rem 1rem;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            color: rgba(0, 255, 65, 0.5);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+
+        .lang-btn:hover, .lang-btn.active {
+            background: var(--accent-main);
+            color: #000;
+            border-color: var(--accent-main);
+            box-shadow: 0 0 20px var(--accent-main);
+            opacity: 1;
+        }
+        
+        .lang-btn.active {
+            color: #000;
+        }
+        
+        .lang-btn:not(.active) {
+            opacity: 0.6;
+        }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1063,7 +1145,16 @@
             <div class="scanning-line" style="animation-delay: 1.5s;"></div>
         </div>
     </div>
-    <!-- Background Effects -->
+    <div class="lang-switcher">
+        <button class="lang-btn active" id="btn-tr" onclick="setLanguage('tr')">
+            <svg viewBox="0 0 30 20" width="16" height="11"><rect width="30" height="20" fill="#E30A17"/><circle cx="12" cy="10" r="4" fill="#fff"/><circle cx="13" cy="10" r="3" fill="#E30A17"/><path d="M16 10l1 3 1-3 3-1-3-1-1-3-1 3-3 1z" fill="#fff"/></svg>
+            TR
+        </button>
+        <button class="lang-btn" id="btn-en" onclick="setLanguage('en')">
+            <svg viewBox="0 0 60 30" width="16" height="11"><rect width="60" height="30" fill="#012169"/><path d="M0 0l60 30M60 0L0 30" stroke="#fff" stroke-width="6"/><path d="M0 0l60 30M60 0L0 30" stroke="#C8102E" stroke-width="4"/><path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="8"/><path d="M30 0v30M0 15h60" stroke="#C8102E" stroke-width="4"/></svg>
+            EN
+        </button>
+    </div>
     <div class="bg-grid"></div>
     <div class="bg-radial"></div>
 
@@ -1081,14 +1172,14 @@
                     <span class="logo-version">v1.0</span>
                 </h1>
             </div>
-            <p class="header-subtitle">Gelişmiş Ağ Güvenliği Tarama &amp; Analiz Paneli</p>
+            <p class="header-subtitle" data-i18n="header_subtitle">Gelişmiş Ağ Güvenliği Tarama &amp; Analiz Paneli</p>
         </header>
 
         <!-- ═══ NAVIGATION BAR ═══ -->
         <nav class="top-nav" style="display:flex; justify-content:center; gap:1.5rem; margin-top:2rem; margin-bottom:2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 2rem;">
-            <button class="nav-button active" onclick="switchVue('dashboard')" id="nav-dashboard">🏠 Dashboard</button>
-            <button class="nav-button" onclick="switchVue('scanner')" id="nav-scanner">🔍 Network Scanner</button>
-            <button class="nav-button" onclick="switchVue('wifi')" id="nav-wifi">🛰️ Wi-Fi Radar</button>
+            <button class="nav-button active" onclick="switchVue('dashboard')" id="nav-dashboard" data-i18n="nav_dashboard">🏠 Dashboard</button>
+            <button class="nav-button" onclick="switchVue('scanner')" id="nav-scanner" data-i18n="nav_scanner">🔍 Network Scanner</button>
+            <button class="nav-button" onclick="switchVue('wifi')" id="nav-wifi" data-i18n="nav_wifi">🛰️ Wi-Fi Radar</button>
         </nav>
 
         <style>
@@ -1127,7 +1218,7 @@
         <div id="vue-dashboard" style="display:block;">
             <div id="status-bar" style="margin-bottom: 2.5rem; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.75rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); color: var(--text-secondary); transition: all 0.3s ease;">
                 <svg id="status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;animation: spin 2s linear infinite;"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                <span id="status-text">Sistem kontrol ediliyor...</span>
+                <span id="status-text" data-i18n="status_init">Sistem kontrol ediliyor...</span>
             </div>
 
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:2rem; margin-bottom: 2rem;">
@@ -1135,12 +1226,12 @@
                 <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
                     <h3 style="color:var(--cyan-400); margin-bottom:1.5rem; font-size:1.3rem; display:flex; align-items:center; gap:0.5rem; font-weight:800;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                        System Health (Kali Node)
+                        <span data-i18n="sys_health">System Health (Kali Node)</span>
                     </h3>
                     <div style="display:flex; flex-direction:column; gap:1.5rem;">
                         <div>
                             <div style="display:flex; justify-content:space-between; color:#ccc; margin-bottom:0.5rem; font-size:0.95rem;">
-                                <span>CPU Usage</span><span id="sys-cpu" style="color:var(--cyan-400); font-weight:bold;">12%</span>
+                                <span data-i18n="cpu">CPU Usage</span><span id="sys-cpu" style="color:var(--cyan-400); font-weight:bold;">12%</span>
                             </div>
                             <div style="width:100%; height:8px; background:rgba(0,0,0,0.5); border-radius:4px; overflow:hidden;">
                                 <div id="sys-cpu-bar" style="width:12%; height:100%; background:linear-gradient(90deg, var(--cyan-500), var(--violet-500)); transition:width 1s ease;"></div>
@@ -1148,7 +1239,7 @@
                         </div>
                         <div>
                             <div style="display:flex; justify-content:space-between; color:#ccc; margin-bottom:0.5rem; font-size:0.95rem;">
-                                <span>RAM Usage</span><span id="sys-ram" style="color:var(--emerald-400); font-weight:bold;">45%</span>
+                                <span data-i18n="ram">RAM Usage</span><span id="sys-ram" style="color:var(--emerald-400); font-weight:bold;">45%</span>
                             </div>
                             <div style="width:100%; height:8px; background:rgba(0,0,0,0.5); border-radius:4px; overflow:hidden;">
                                 <div id="sys-ram-bar" style="width:45%; height:100%; background:linear-gradient(90deg, var(--emerald-500), var(--cyan-400)); transition:width 1s ease;"></div>
@@ -1161,22 +1252,22 @@
                 <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
                     <h3 style="color:var(--emerald-400); margin-bottom:1.5rem; font-size:1.3rem; display:flex; align-items:center; gap:0.5rem; font-weight:800;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M2 12a10 10 0 1 0 20 0 10 10 0 1 0-20 0"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg>
-                        Son Tarama Özeti
+                        <span data-i18n="scan_summary">Son Tarama Özeti</span>
                     </h3>
                     <div id="recent-summary-content" style="background:rgba(0,0,0,0.3); padding:1rem; border-radius:8px; border:1px solid var(--border-subtle); box-shadow:inset 0 0 10px rgba(0,0,0,0.2);">
                         <div style="margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
-                            <span style="color:#ccc;">Durum:</span>
-                            <strong id="scan-status" style="color:var(--cyan-400);">ANALİZ BEKLENİYOR</strong>
+                            <span style="color:#ccc;" data-i18n="label_status">Durum:</span>
+                            <strong id="scan-status" style="color:var(--cyan-400);" data-i18n="val_waiting">ANALİZ BEKLENİYOR</strong>
                         </div>
                         <div style="margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
-                            <span style="color:#ccc;">Varlık Sayısı:</span>
+                            <span style="color:#ccc;" data-i18n="label_assets">Varlık Sayısı:</span>
                             <strong id="scan-count" style="color:var(--emerald-400);">0</strong>
                         </div>
                         <div style="margin-bottom:0.8rem; display:flex; justify-content:space-between; align-items:center;">
-                            <span style="color:#ccc;">Tehdit Seviyesi:</span>
-                            <strong id="risk-level" style="color:var(--rose-400);">TEMİZ</strong>
+                            <span style="color:#ccc;" data-i18n="label_threat">Tehdit Seviyesi:</span>
+                            <strong id="risk-level" style="color:var(--rose-400);" data-i18n="val_clean">TEMİZ</strong>
                         </div>
-                        <div style="color:#888; font-style:italic; font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem; margin-top: 0.5rem;">
+                        <div style="color:#888; font-style:italic; font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem; margin-top: 0.5rem;" data-i18n="dashboard_footer">
                             Yeni bir tarama başlatıldığında veriler burada güncellenecektir.
                         </div>
                     </div>
@@ -1193,9 +1284,9 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
                 </svg>
-                Hedef Tarama
+                <span data-i18n="target_scan">Hedef Tarama</span>
             </h2>
-            <p class="panel-desc">Hedef IP adresini veya alan adını girerek ağ güvenlik taramasını başlatın.</p>
+            <p class="panel-desc" data-i18n="panel_desc">Hedef IP adresini veya alan adını girerek ağ güvenlik taramasını başlatın.</p>
 
             <div class="input-group">
                 <div class="input-wrapper">
@@ -1204,6 +1295,7 @@
                         id="target-ip"
                         class="ip-input"
                         placeholder="Örn: 192.168.1.1, example.com veya 192.168.1.0/24"
+                        data-i18n="placeholder_ip"
                         autocomplete="off"
                         spellcheck="false"
                     />
@@ -1214,25 +1306,25 @@
                 </div>
                 <div class="timing-wrapper" style="position: relative;">
                     <select id="scan-speed" style="padding: 0.95rem 1rem; background: var(--bg-input); border: 1.5px solid var(--border-subtle); border-radius: 12px; color: var(--cyan-400); font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; font-weight: 600; outline: none; appearance: none; cursor: pointer; transition: all 0.3s var(--ease-out); height: 100%;">
-                        <option value="T0">T0: Paranoyak (Çok yavaş)</option>
-                        <option value="T1">T1: Sinsi (Yavaş)</option>
-                        <option value="T2">T2: Kibar (Hedefi yormaz)</option>
-                        <option value="T3" selected>T3: Normal (Dengeli)</option>
-                        <option value="T4">T4: Hızlı (Agresif)</option>
-                        <option value="T5">T5: İnsafsız (Cyber)</option>
+                        <option value="T0" data-i18n="speed_T0">T0: Paranoyak (Çok yavaş)</option>
+                        <option value="T1" data-i18n="speed_T1">T1: Sinsi (Yavaş)</option>
+                        <option value="T2" data-i18n="speed_T2">T2: Kibar (Hedefi yormaz)</option>
+                        <option value="T3" selected data-i18n="speed_T3">T3: Normal (Dengeli)</option>
+                        <option value="T4" data-i18n="speed_T4">T4: Hızlı (Agresif)</option>
+                        <option value="T5" data-i18n="speed_T5">T5: İnsafsız (Cyber)</option>
                     </select>
                 </div>
                 <button class="scan-btn" id="scan-button" onclick="startScan()">
                     <svg id="scan-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polygon points="5 3 19 12 5 21 5 3"/>
                     </svg>
-                    <span id="scan-btn-text">Taramayı Başlat</span>
+                    <span id="scan-btn-text" data-i18n="btn_start">Taramayı Başlat</span>
                 </button>
                 <button class="scan-btn" id="stop-btn" onclick="stopScan()" style="background: linear-gradient(135deg, var(--rose-500), var(--rose-400)); display: none;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="6" y="6" width="12" height="12" rx="2" ry="2"/>
                     </svg>
-                    <span>Durdur</span>
+                    <span data-i18n="btn_stop">Durdur</span>
                 </button>
             </div>
 
@@ -1243,56 +1335,56 @@
                     <span class="checkmark">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     </span>
-                    <span class="option-label">Port Tarama</span>
+                    <span class="option-label" data-i18n="opt_ports">Port Tarama</span>
                 </label>
                 <label class="option-chip">
                     <input type="checkbox" id="opt-vuln" checked onchange="toggleVulnSpeedLock()">
                     <span class="checkmark">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     </span>
-                    <span class="option-label">Zafiyet Analizi</span>
+                    <span class="option-label" data-i18n="opt_vuln">Zafiyet Analizi</span>
                 </label>
                 <label class="option-chip">
                     <input type="checkbox" id="opt-os">
                     <span class="checkmark">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     </span>
-                    <span class="option-label">İşletim Sistemi Tespiti</span>
+                    <span class="option-label" data-i18n="opt_os">İşletim Sistemi Tespiti</span>
                 </label>
                 <label class="option-chip">
                     <input type="checkbox" id="opt-dns">
                     <span class="checkmark">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     </span>
-                    <span class="option-label">DNS Sorgulama</span>
+                    <span class="option-label" data-i18n="opt_dns">DNS Sorgulama</span>
                 </label>
                 <label class="option-chip">
                     <input type="checkbox" id="opt-sv">
                     <span class="checkmark">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     </span>
-                    <span class="option-label">Servis Versiyon Tespiti</span>
+                    <span class="option-label" data-i18n="opt_sv">Servis Versiyon Tespiti</span>
                 </label>
                 <label class="option-chip">
                     <input type="checkbox" id="opt-a">
                     <span class="checkmark">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     </span>
-                    <span class="option-label">Kapsamlı Agresif Tarama</span>
+                    <span class="option-label" data-i18n="opt_a">Kapsamlı Agresif Tarama</span>
                 </label>
                 <label class="option-chip">
                     <input type="checkbox" id="opt-net" onchange="toggleNetworkScan(this)">
                     <span class="checkmark">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     </span>
-                    <span class="option-label">Ağdaki Cihazları Bul</span>
+                    <span class="option-label" data-i18n="opt_net">Ağdaki Cihazları Bul</span>
                 </label>
             </div>
 
             <!-- Progress Bar -->
             <div class="progress-container" id="progress-container">
                 <div class="progress-info">
-                    <span class="progress-label" id="progress-label">Tarama başlatılıyor...</span>
+                    <span class="progress-label" id="progress-label" data-i18n="progress_init">Tarama başlatılıyor...</span>
                     <span class="progress-percent" id="progress-percent">0%</span>
                 </div>
                 <div class="progress-track">
@@ -1308,13 +1400,13 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                     </svg>
-                    Tarama Sonuçları
+                    <span data-i18n="results_title">Tarama Sonuçları</span>
                 </h3>
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <span class="results-count" id="results-count"></span>
                     <button id="download-btn" class="scan-btn" onclick="downloadReport()" style="padding: 0.5rem 1rem; font-size: 0.8rem; height: auto; display: none;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:0.3rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        Rapor İndir
+                        <span data-i18n="btn_report">Rapor İndir</span>
                     </button>
                 </div>
             </div>
@@ -1331,7 +1423,7 @@
                     <!-- CVSS Gauge Container -->
                     <div style="position:absolute; right:16px; top: 4px; text-align:center;">
                         <canvas id="cvss-gauge" width="80" height="40"></canvas>
-                        <div id="cvss-score" style="font-size:0.75rem; color:#fff; font-weight:bold; margin-top:-5px; letter-spacing:1px;">RISK: 0.0</div>
+                        <div id="cvss-score" style="font-size:0.75rem; color:#fff; font-weight:bold; margin-top:-5px; letter-spacing:1px;"><span data-i18n="risk_score_prefix">RISK:</span> 0.0</div>
                     </div>
                 </div>
                 
@@ -1349,34 +1441,34 @@
             <!-- Stats Grid (Terminal Altı) -->
             <div class="stats-grid" id="stats-grid" style="margin-top: 2rem; margin-bottom: 2rem;">
                 <div class="stat-card cyan">
-                    <div class="stat-label">Tarama Tipi</div>
+                    <div class="stat-label" data-i18n="stat_type_label">Tarama Tipi</div>
                     <div class="stat-value cyan" id="stat-type">—</div>
                 </div>
                 <div class="stat-card emerald">
-                    <div class="stat-label" id="stat-ports-label">Açık Port</div>
+                    <div class="stat-label" id="stat-ports-label" data-i18n="stat_ports_label">Açık Port</div>
                     <div class="stat-value emerald" id="stat-ports">—</div>
                 </div>
                 <div class="stat-card violet">
-                    <div class="stat-label" id="stat-latency-label">Yanıt Süresi</div>
+                    <div class="stat-label" id="stat-latency-label" data-i18n="stat_latency_label">Yanıt Süresi</div>
                     <div class="stat-value violet" id="stat-latency">—</div>
                 </div>
                 <div class="stat-card rose">
-                    <div class="stat-label">Durum</div>
+                    <div class="stat-label" data-i18n="stat_status_label">Durum</div>
                     <div class="stat-value rose" id="stat-threats">0</div>
                 </div>
 
                 <!-- Risk Analysis Section -->
                 <div class="risk-container" style="grid-column: span 4; background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border);">
                     <div class="risk-header" style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-                        <span class="risk-label" style="color: #888; font-size: 0.9rem;">Zafiyet Skoru (Risk Score)</span>
-                        <span class="risk-status" id="risk-status-text" style="color: var(--rose-400); font-weight: bold;">ANALİZ BEKLENİYOR</span>
+                        <span class="risk-label" style="color: #888; font-size: 0.9rem;" data-i18n="risk_label">Zafiyet Skoru (Risk Score)</span>
+                        <span class="risk-status" id="risk-status-text" style="color: var(--rose-400); font-weight: bold;" data-i18n="val_waiting">ANALİZ BEKLENİYOR</span>
                     </div>
                     <div class="risk-bar-bg" style="width: 100%; height: 12px; background: #1a1a1a; border-radius: 6px; overflow: hidden; margin-bottom: 1.5rem;">
                         <div class="risk-bar-fill" id="risk-bar-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--emerald-500), var(--rose-500)); transition: width 0.5s ease;"></div>
                     </div>
                     <button class="report-btn" id="export-report-btn" onclick="downloadReport()" style="width: 100%; padding: 1rem; background: var(--bg-input); border: 1px solid var(--border); color: #fff; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 600;">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16l4-4h6a2 2 0 002-2V4a2 2 0 00-2-2zM8 6h4M8 10h4"/></svg>
-                        📄 GENEL RAPORU DIŞA AKTAR
+                        <span data-i18n="btn_export">📄 GENEL RAPORU DIŞA AKTAR</span>
                     </button>
                 </div>
             </div>
@@ -1390,10 +1482,10 @@
                 <span class="close-warn" onclick="this.parentElement.style.display='none'">[X]</span>
                 <strong>🚨 EXTERNAL HARDWARE REQUIRED</strong>
                 Harici Wi-Fi donanımı tespit edilmedi (Ralink RT5370 vb. gerekli).<br>
-                Sistem varsayılan simülasyon modunda çalışıyor.
+                <span data-i18n="wifi_hw_warn_body">Sistem varsayılan simülasyon modunda çalışıyor.</span>
             </div>
             <h4 style="color:#fff; margin-bottom: 1.5rem; display:flex; align-items:center; gap:0.5rem; justify-content:space-between;">
-                <span>📡 Radar Taraması (Çevredeki Ağlar)</span>
+                <span data-i18n="wifi_radar_title">📡 Radar Taraması (Çevredeki Ağlar)</span>
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <div class="turbo-container">
                         <span class="turbo-label">TURBO</span>
@@ -1402,14 +1494,14 @@
                             <span class="slider"></span>
                         </label>
                     </div>
-                    <button onclick="fetchWifi()" class="scan-btn" style="padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem; height:auto;">Yenile</button>
+                    <button onclick="fetchWifi()" class="scan-btn" style="padding:0.25rem 0.5rem; border-radius:4px; font-size:0.8rem; height:auto;" data-i18n="wifi_refresh">Yenile</button>
                 </div>
             </h4>
             
             <div style="display: flex; gap: 1rem; width: 100%; min-height: 400px; flex-wrap: wrap;">
                 <!-- Liste Görünümü -->
                 <div id="wifi-list" style="flex: 1; min-width: 250px; max-height:400px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; padding-right: 0.5rem;">
-                    <div style="color:#888;">Veri bekleniyor... Taramayı başlatmak için yenileyin.</div>
+                    <div style="color:#888;" data-i18n="wifi_waiting">Veri bekleniyor... Taramayı başlatmak için yenileyin.</div>
                 </div>
                 
                 <!-- Kat Planı / Heatmap Görünümü -->
@@ -1420,7 +1512,7 @@
                         <svg class="wlan-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.58 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg>
                         <h2>WARNING: WLAN INTERFACE REQUIRED</h2>
                         <span style="color: #ff1744; font-weight: bold; font-family: 'JetBrains Mono'; margin-bottom: 0.5rem;">ETH0 DETECTED</span>
-                        <p>Kablolu ağ bağlantısı algılandı. Radar modülü için harici bir Wi-Fi adaptörü gereklidir.</p>
+                        <p data-i18n="wifi_wlan_warn_body">Kablolu ağ bağlantısı algılandı. Radar modülü için harici bir Wi-Fi adaptörü gereklidir.</p>
                     </div>
                     
                     <!-- Grid Daireleri (Koordinat Sistemi) -->
@@ -1442,7 +1534,7 @@
         <!-- ═══ FOOTER ═══ -->
         <footer class="footer">
             <p class="footer-text">
-                <span>NetVanguard v1.0</span> · Rust + Axum ile güçlendirilmiştir · 2026
+                <span data-i18n="footer_text">NetVanguard v1.0 · Rust + Axum ile güçlendirilmiştir · 2026</span>
             </p>
         </footer>
 
@@ -1471,6 +1563,129 @@
          JAVASCRIPT ENGINE
          ═══════════════════════════════════════════════════ -->
     <script>
+        const translations = {
+            tr: {
+                header_subtitle: "Gelişmiş Ağ Güvenliği Tarama & Analiz Paneli",
+                nav_dashboard: "🏠 Dashboard",
+                nav_scanner: "🔍 Network Scanner",
+                nav_wifi: "🛰️ Wi-Fi Radar",
+                sys_health: "System Health (Kali Node)",
+                cpu: "CPU Usage",
+                ram: "RAM Usage",
+                scan_summary: "Son Tarama Özeti",
+                label_status: "Durum:",
+                val_waiting: "ANALİZ BEKLENİYOR",
+                label_assets: "Varlık Sayısı:",
+                label_threat: "Tehdit Seviyesi:",
+                val_clean: "TEMİZ",
+                dashboard_footer: "Yeni bir tarama başlatıldığında veriler burada güncellenecektir.",
+                target_scan: "Hedef Tarama",
+                panel_desc: "Hedef IP adresini veya alan adını girerek ağ güvenlik taramasını başlatın.",
+                placeholder_ip: "Örn: 192.168.1.1, example.com veya 192.168.1.0/24",
+                speed_T0: "T0: Paranoyak (Çok yavaş)",
+                speed_T1: "T1: Sinsi (Yavaş)",
+                speed_T2: "T2: Kibar (Hedefi yormaz)",
+                speed_T3: "T3: Normal (Dengeli)",
+                speed_T4: "T4: Hızlı (Agresif)",
+                speed_T5: "T5: İnsafsız (Cyber)",
+                btn_start: "Taramayı Başlat",
+                btn_stop: "Durdur",
+                btn_report: "Rapor İndir",
+                btn_export: "📄 GENEL RAPORU DIŞA AKTAR",
+                status_init: "Sistem kontrol ediliyor...",
+                opt_ports: "Port Tarama",
+                opt_vuln: "Zafiyet Analizi",
+                opt_os: "İşletim Sistemi Tespiti",
+                opt_dns: "DNS Sorgulama",
+                opt_sv: "Servis Versiyon Tespiti",
+                opt_a: "Kapsamlı Agresif Tarama",
+                opt_net: "Ağdaki Cihazları Bul",
+                progress_init: "Tarama başlatılıyor...",
+                results_title: "Tarama Sonuçları",
+                risk_score_prefix: "RİSK:",
+                risk_label: "Zafiyet Skoru (Risk Score)",
+                stat_type_label: "Tarama Tipi",
+                stat_ports_label: "Açık Port",
+                stat_latency_label: "Yanıt Süresi",
+                stat_status_label: "Durum",
+                wifi_radar_title: "📡 Radar Taraması (Çevredeki Ağlar)",
+                wifi_hw_warn_body: "Harici Wi-Fi donanımı tespit edilmedi. Sistem varsayılan simülasyon modunda çalışıyor.",
+                wifi_refresh: "Yenile",
+                wifi_waiting: "Veri bekleniyor... Taramayı başlatmak için yenileyin.",
+                wifi_wlan_warn_body: "Kablolu ağ bağlantısı algılandı. Radar modülü için harici bir Wi-Fi adaptörü gereklidir.",
+                footer_text: "NetVanguard v1.0 · Rust + Axum ile güçlendirilmiştir · 2026"
+            },
+            en: {
+                header_subtitle: "Advanced Network Security Scan & Analysis Dashboard",
+                nav_dashboard: "🏠 Dashboard",
+                nav_scanner: "🔍 Network Scanner",
+                nav_wifi: "🛰️ Wi-Fi Radar",
+                sys_health: "System Health (Kali Node)",
+                cpu: "CPU Usage",
+                ram: "RAM Usage",
+                scan_summary: "Last Scan Summary",
+                label_status: "Status:",
+                val_waiting: "AWAITING ANALYSIS",
+                label_assets: "Asset Count:",
+                label_threat: "Threat Level:",
+                val_clean: "CLEAN",
+                dashboard_footer: "Data will be updated here when a new scan is started.",
+                target_scan: "Target Scan",
+                panel_desc: "Start a network security scan by entering a target IP address or domain.",
+                placeholder_ip: "Ex: 192.168.1.1, example.com or 192.168.1.0/24",
+                speed_T0: "T0: Paranoid (Very slow)",
+                speed_T1: "T1: Sneaky (Slow)",
+                speed_T2: "T2: Polite (Doesn't fatigue target)",
+                speed_T3: "T3: Normal (Balanced)",
+                speed_T4: "T4: Fast (Aggressive)",
+                speed_T5: "T5: Insane (Cyber)",
+                btn_start: "Start Scan",
+                btn_stop: "Stop",
+                btn_report: "Download Report",
+                btn_export: "📄 EXPORT FULL REPORT",
+                status_init: "Checking system...",
+                opt_ports: "Port Scan",
+                opt_vuln: "Vulnerability Analysis",
+                opt_os: "OS Detection",
+                opt_dns: "DNS Query",
+                opt_sv: "Service Version Detection",
+                opt_a: "Comprehensive Aggressive Scan",
+                opt_net: "Find Devices on Network",
+                progress_init: "Scan initializing...",
+                results_title: "Scan Results",
+                risk_score_prefix: "RISK:",
+                risk_label: "Risk Score (Vulnerability Score)",
+                stat_type_label: "Scan Type",
+                stat_ports_label: "Open Ports",
+                stat_latency_label: "Response Time",
+                stat_status_label: "Status",
+                wifi_radar_title: "📡 Radar Scan (Surrounding Networks)",
+                wifi_hw_warn_body: "External hardware not detected. Operating in simulation mode.",
+                wifi_refresh: "Refresh",
+                wifi_waiting: "Awaiting data... Refresh to start scanning.",
+                wifi_wlan_warn_body: "Wired network connection detected. External Wi-Fi adapter required for Radar.",
+                footer_text: "NetVanguard v1.0 · Powered by Rust + Axum · 2026"
+            }
+        };
+
+        function setLanguage(lang) {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    if (el.tagName === 'INPUT') {
+                        el.placeholder = translations[lang][key];
+                    } else if (el.tagName === 'OPTION') {
+                        el.textContent = translations[lang][key];
+                    } else {
+                        el.textContent = translations[lang][key];
+                    }
+                }
+            });
+            // Update active state for TR/EN buttons
+            document.getElementById('btn-tr').classList.toggle('active', lang === 'tr');
+            document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+        }
+
         const ipInput   = document.getElementById('target-ip');
         const scanBtn   = document.getElementById('scan-button');
         const scanIcon  = document.getElementById('scan-icon');
