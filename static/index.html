@@ -732,9 +732,9 @@
            LANGUAGE SWITCHER - DISCREET & MINIMAL
            ═══════════════════════════════════════════════════ */
         .lang-switcher {
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
             z-index: 1000;
             display: flex;
             gap: 0.8rem;
@@ -771,14 +771,7 @@
         /* ═══════════════════════════════════════════════════
            STAT CARDS
            ═══════════════════════════════════════════════════ */
-        .lang-switcher {
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            z-index: 1000;
-            display: flex;
-            gap: 0.8rem;
-        }
+
 
         .lang-btn {
             padding: 0.4rem 1rem;
@@ -1888,7 +1881,8 @@
                             <canvas id="cvss-gauge" width="80" height="40"></canvas>
                             <div id="cvss-score"
                                 style="font-size:0.75rem; color:#fff; font-weight:bold; margin-top:-5px; letter-spacing:1px;">
-                                <span data-i18n="risk_score_prefix">RISK:</span> 0.0</div>
+                                <span data-i18n="risk_score_prefix">RISK:</span> 0.0
+                            </div>
                         </div>
                     </div>
 
