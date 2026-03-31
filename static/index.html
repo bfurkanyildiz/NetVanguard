@@ -1436,6 +1436,49 @@
             box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
         }
 
+        /* ── WIFI INTERFACE STATUS BAR ── */
+        .wifi-status-bar {
+            background: rgba(0, 242, 254, 0.05);
+            border: 1px solid rgba(0, 242, 254, 0.2);
+            border-radius: 4px;
+            padding: 0.5rem 1rem;
+            margin-bottom: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--cyan-400);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff41;
+            box-shadow: 0 0 8px #00ff41;
+            animation: pulse-green 1.5s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .iface-label {
+            color: var(--text-secondary);
+            font-weight: normal;
+        }
+
+        .iface-value {
+            color: #fff;
+            font-weight: bold;
+            text-shadow: 0 0 5px var(--cyan-500);
+        }
+
         .wlan-warning {
             position: absolute;
             inset: 0;
@@ -1555,15 +1598,75 @@
 
         .terminal-ip-glow {
             font-size: 1.4rem !important;
-            font-weight: 800 !important;
-            color: #00ff00 !important;
-            text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00;
+            font-weight: 900 !important;
+            color: #00ff41 !important;
+            text-shadow: 0 0 10px #00ff41;
+            animation: terminalIpPulse 1s infinite alternate;
             display: inline-block;
             margin: 4px 0;
             padding: 2px 8px;
             background: rgba(0, 255, 0, 0.1);
             border-radius: 4px;
             border: 1px solid rgba(0, 255, 0, 0.3);
+        }
+
+        @keyframes terminalIpPulse {
+            from { text-shadow: 0 0 5px #00ff41; opacity: 0.8; }
+            to { text-shadow: 0 0 20px #00ff41; opacity: 1; }
+        }
+
+        /* ── HARDWARE STATUS PANEL ── */
+        .hw-status-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .hw-card {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .hw-card.active {
+            border-color: var(--emerald-500);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+        }
+
+        .hw-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: bold;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .hw-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-weight: 900;
+        }
+
+        .hw-badge.active { background: var(--emerald-600) !important; color: #fff !important; }
+        .hw-badge.primary { background: var(--cyan-600) !important; color: #fff !important; }
+        .hw-badge.down { background: #333 !important; color: #888 !important; }
+
+        .hw-reason {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            font-style: italic;
         }
 
         /* 📍 INTELLIGENCE PANEL: Enhanced location overlay */
@@ -2199,6 +2302,17 @@
                 Harici Wi-Fi donanımı tespit edilmedi (Ralink RT5370 vb. gerekli).<br>
                 <span data-i18n="wifi_hw_warn_body">Sistem varsayılan simülasyon modunda çalışıyor.</span>
             </div>
+
+            <!-- DYNAMIC INTERFACE STATUS LINE -->
+            <div class="wifi-status-bar" id="wifi-interface-bar">
+                <div class="status-indicator"></div>
+                <span class="iface-label">SYSTEM STATUS:</span>
+                <span class="iface-value" id="wifi-status-val">ACTIVE</span>
+                <span style="color:rgba(255,255,255,0.2)">|</span>
+                <span class="iface-label">INTERFACE:</span>
+                <span class="iface-value" id="wifi-iface-val">SEARCHING...</span>
+            </div>
+
             <h4
                 style="color:#fff; margin-bottom: 1.5rem; display:flex; align-items:center; gap:0.5rem; justify-content:space-between;">
                 <span data-i18n="wifi_radar_title">📡 Radar Taraması (Çevredeki Ağlar)</span>
@@ -2914,6 +3028,7 @@
                 document.getElementById('nav-wifi').classList.add('active');
                 document.getElementById('nav-wifi').style.background = '';
                 document.getElementById('vue-wifi').style.display = 'block';
+                fetchWifiStatus();
                 fetchWifi();
                 wifiInterval = setInterval(fetchWifi, 5000);
             }
@@ -2945,6 +3060,13 @@
             try {
                 const r = await fetch('/api/wifi_scan');
                 const d = await r.json();
+                
+                // Update interface name from scan results
+                if (d.active_interface) {
+                    const ifaceVal = document.getElementById('wifi-iface-val');
+                    if (ifaceVal) ifaceVal.textContent = d.active_interface;
+                }
+
                 if (!d.success) return; // Sessizce atla
 
                 // Smart Hardware Detection (Dynamic Fix)
@@ -3289,6 +3411,52 @@
                 ipInput.placeholder = ipInput.dataset.oldPlace || 'Örn: 192.168.1.1, example.com veya 192.168.1.0/24';
                 ipInput.value = ipInput.dataset.oldVal || '';
                 ipInput.style.opacity = '1';
+            }
+        }
+
+        async function fetchWifiStatus() {
+            try {
+                const res = await fetch('/api/wifi_status');
+                const data = await res.json();
+                
+                // Update Step 3.1: Global Status Bar
+                const ifaceVal = document.getElementById('wifi-iface-val');
+                const statusVal = document.getElementById('wifi-status-val');
+                if (ifaceVal) ifaceVal.textContent = data.selected || 'NONE';
+                if (statusVal) statusVal.textContent = data.status || 'ACTIVE';
+
+                const ifaceBar = document.getElementById('wifi-interface-bar');
+                if (ifaceBar && !data.selected) {
+                    ifaceBar.style.borderColor = 'rgba(255,23,68,0.4)';
+                    ifaceBar.style.background = 'rgba(255,23,68,0.05)';
+                } else if (ifaceBar) {
+                    ifaceBar.style.borderColor = 'rgba(0, 242, 254, 0.2)';
+                    ifaceBar.style.background = 'rgba(0, 242, 254, 0.05)';
+                }
+
+                // Update Step 3.2: Render Hardware Cards
+                const hwPanel = document.getElementById('hw-discovery-panel');
+                if (hwPanel && data.interfaces) {
+                    hwPanel.innerHTML = data.interfaces.map(iface => {
+                        const isActive = iface.name === data.selected;
+                        return `
+                            <div class="hw-card ${isActive ? 'active' : ''}">
+                                <div class="hw-name">
+                                    <svg width="14" height="14" fill="none" stroke="${isActive ? '#10b981' : '#666'}" stroke-width="2"><path d="M2 10V5a2 2 0 012-2h12a2 2 0 012 2v5m-16 0a2 2 0 002 2h12a2 2 0 002-2m-16 0h16m-12 2v3m8-3v3"/></svg>
+                                    ${iface.name}
+                                </div>
+                                <div style="display: flex; gap: 0.4rem; margin-bottom: 0.5rem;">
+                                    ${isActive ? '<span class="hw-badge active">ACTIVE</span>' : ''}
+                                    ${isActive ? '<span class="hw-badge primary">PRIMARY</span>' : ''}
+                                    ${!iface.is_up ? '<span class="hw-badge down">DOWN</span>' : ''}
+                                </div>
+                                <div class="hw-reason">${iface.reason}</div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (err) {
+                console.error("WiFi status fetch fail", err);
             }
         }
 

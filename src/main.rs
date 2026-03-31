@@ -13,7 +13,6 @@ use tower_http::services::ServeDir;
 use trust_dns_resolver::config::*;
 use trust_dns_resolver::TokioAsyncResolver;
 use std::fs;
-use std::fs::File;
 use std::io::Write;
 use tokio_util::sync::CancellationToken;
 use once_cell::sync::Lazy;
@@ -91,6 +90,23 @@ struct WifiResponse {
     success: bool,
     data: Vec<WifiInfo>,
     error: Option<String>,
+    active_interface: Option<String>,
+}
+
+#[derive(Serialize, Clone)]
+struct WirelessInterface {
+    name: String,
+    is_up: bool,
+    is_wireless: bool,
+    reason: String,
+}
+
+#[derive(Serialize)]
+struct WifiStatusResponse {
+    interfaces: Vec<WirelessInterface>,
+    selected: Option<String>,
+    status: String,
+    reason: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -586,48 +602,101 @@ async fn handle_stop() -> Json<ScanResponse> {
 //  WI-FI RADAR YARDIMCI FONKSİYONLAR
 // ═══════════════════════════════════════════════════════════
 
-fn find_wifi_interface() -> Option<String> {
+fn get_wireless_interfaces() -> (Vec<WirelessInterface>, Option<String>, String) {
+    let mut interfaces = Vec::new();
+    let mut selected = None;
+    let mut selection_reason = "No wireless interface found".to_string();
+
+    // Windows / Fallback simulation
     if cfg!(target_os = "windows") {
-        return None;
+        interfaces.push(WirelessInterface {
+            name: "wlan0 (Simulated)".to_string(),
+            is_up: true,
+            is_wireless: true,
+            reason: "Simulated Wireless Interface for Windows".to_string(),
+        });
+        selected = Some("wlan0 (Simulated)".to_string());
+        selection_reason = "Simulated primary for development".to_string();
+        return (interfaces, selected, selection_reason);
     }
 
-    // Way 1: Scan /sys/class/net/
+    // Scan /sys/class/net/
     if let Ok(entries) = fs::read_dir("/sys/class/net/") {
         for entry in entries.flatten() {
             if let Ok(name) = entry.file_name().into_string() {
-                // Common WiFi patterns: wlan0, wlp2s0, wlx..., etc.
-                if name.contains('w') && !name.contains("vbox") && !name.contains("docker") {
-                    // Check if it's actually a wireless interface by looking for /wireless subfolder
-                    let wireless_path = format!("/sys/class/net/{}/wireless", name);
-                    if fs::metadata(&wireless_path).is_ok() {
-                        return Some(name);
-                    }
-                    // Fallback: if it starts with 'w', it's likely a wifi card on most modern distros
-                    if name.starts_with('w') {
-                        return Some(name);
+                if name == "lo" || name.contains("vbox") || name.contains("docker") || name.contains("br-") {
+                    continue;
+                }
+
+                let wireless_path = format!("/sys/class/net/{}/wireless", name);
+                let operstate_path = format!("/sys/class/net/{}/operstate", name);
+                
+                let is_wireless = fs::metadata(&wireless_path).is_ok();
+                let operstate = fs::read_to_string(&operstate_path).unwrap_or_else(|_| "unknown".to_string()).trim().to_string();
+                let is_up = operstate == "up";
+
+                let reason = if is_wireless && is_up {
+                    "Interface is UP and Wireless".to_string()
+                } else if is_wireless {
+                    "Wireless detected but DOWN".to_string()
+                } else if name.starts_with('w') {
+                    "Potential WiFi (Name starts with 'w')".to_string()
+                } else {
+                    "Standard Network Interface".to_string()
+                };
+
+                // Add to list
+                let iface = WirelessInterface {
+                    name: name.clone(),
+                    is_up,
+                    is_wireless,
+                    reason: reason.clone(),
+                };
+                interfaces.push(iface);
+
+                // Selection Logic (Priority)
+                if selected.is_none() {
+                    if is_wireless && is_up {
+                        selected = Some(name.clone());
+                        selection_reason = format!("Primary: {} is UP and verified Wireless", name);
+                    } else if is_wireless {
+                        selected = Some(name.clone());
+                        selection_reason = format!("Fallback: {} is Wireless (Down)", name);
+                    } else if name.starts_with('w') {
+                        selected = Some(name.clone());
+                        selection_reason = format!("Name Fallback: {} starts with 'w'", name);
                     }
                 }
             }
         }
     }
 
-    // Way 2: nmcli device status fallback
-    if let Ok(output) = Command::new("nmcli").args(&["-t", "-f", "DEVICE,TYPE", "dev"]).output() {
-        let stdout = String::from_utf8_lossy(&output.stdout);
-        for line in stdout.lines() {
-            let parts: Vec<&str> = line.split(':').collect();
-            if parts.len() >= 2 && parts[1] == "wifi" {
-                return Some(parts[0].to_string());
-            }
-        }
+    if let Some(ref s) = selected {
+        println!("{} [DEBUG] NetVanguard Selector: {} chosen because: {}", "⚡".yellow(), s.cyan(), selection_reason.white());
     }
 
-    None
+    (interfaces, selected, selection_reason)
+}
+
+fn find_wifi_interface() -> Option<String> {
+    let (_, selected, _) = get_wireless_interfaces();
+    selected
 }
 
 // ═══════════════════════════════════════════════════════════
 //  WI-FI RADAR SİSTEMİ
 // ═══════════════════════════════════════════════════════════
+
+async fn handle_wifi_status() -> Json<WifiStatusResponse> {
+    let (interfaces, selected, reason) = get_wireless_interfaces();
+    Json(WifiStatusResponse {
+        interfaces,
+        selected,
+        status: "ACTIVE".to_string(),
+        reason,
+    })
+}
+
 
 async fn handle_wifi_scan() -> Json<WifiResponse> {
     if cfg!(target_os = "windows") {
@@ -638,6 +707,7 @@ async fn handle_wifi_scan() -> Json<WifiResponse> {
                 "Wi-Fi Radar özelliği sadece Linux/Kali sistemlerde `nmcli` aracı ile çalışır."
                     .to_string(),
             ),
+            active_interface: None,
         });
     }
 
@@ -649,6 +719,7 @@ async fn handle_wifi_scan() -> Json<WifiResponse> {
                 success: false,
                 data: vec![],
                 error: Some("Wi-Fi Adaptörü Bulunamadı! Lütfen cihazınızın takılı ve aktif olduğundan emin olun.".to_string()),
+                active_interface: None,
             });
         }
     };
@@ -666,6 +737,7 @@ async fn handle_wifi_scan() -> Json<WifiResponse> {
                 success: false,
                 data: vec![],
                 error: Some(format!("nmcli hatası: {}. Interface: {}", e, interface)),
+                active_interface: Some(interface),
             })
         }
     };
@@ -707,6 +779,7 @@ async fn handle_wifi_scan() -> Json<WifiResponse> {
         success: true,
         data: networks,
         error: None,
+        active_interface: Some(interface),
     })
 }
 
@@ -769,6 +842,7 @@ async fn main() {
         .route("/api/scan", post(handle_scan))
         .route("/api/stop", post(handle_stop))
         .route("/api/wifi_scan", get(handle_wifi_scan))
+        .route("/api/wifi_status", get(handle_wifi_status))
         .route("/api/check_env", get(handle_check_env))
         .route("/api/v1/geolocation", get(handle_geolocation))
         .fallback_service(ServeDir::new("static"));
