@@ -2768,17 +2768,11 @@
         // Continuous Offline/Online Monitor
         function updateConnectionStatus() {
             const banner = document.getElementById('offline-banner');
-            const scanBtn = document.getElementById('scan-button');
-            const wifiBtn = document.getElementById('wifi-scan-btn');
 
             if (!navigator.onLine) {
                 if (banner) banner.style.display = 'block';
-                if (scanBtn) scanBtn.disabled = true;
-                if (wifiBtn) wifiBtn.disabled = true;
             } else {
                 if (banner) banner.style.display = 'none';
-                if (scanBtn && !scanBtn.classList.contains('scanning')) scanBtn.disabled = false;
-                if (wifiBtn && !wifiBtn.classList.contains('scanning')) wifiBtn.disabled = false;
             }
         }
         window.addEventListener('offline', updateConnectionStatus);
