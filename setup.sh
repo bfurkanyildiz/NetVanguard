@@ -81,7 +81,7 @@ echo -e "${GREEN}[+] Project built successfully.${NC}\n"
 
 # 6. Outro / Installation Details
 echo -e "${CYAN}======================================================${NC}"
-echo -e "${GREEN}   ✅ NETVANGUARD v1.1.0 SETUP COMPLETED SUCCESSFULLY   ${NC}"
+echo -e "${GREEN}   ✅ NETVANGUARD v1.0.0 SETUP COMPLETED SUCCESSFULLY   ${NC}"
 echo -e "${CYAN}======================================================${NC}"
 echo -e "\nTo start the application, navigate to the project directory and run:"
 echo -e "${YELLOW}sudo ./target/release/netvanguard${NC}\n"

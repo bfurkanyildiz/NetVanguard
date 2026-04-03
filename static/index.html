@@ -2463,12 +2463,12 @@
         const translations = {
             tr: {
                 header_subtitle: "Gelişmiş Ağ Güvenliği Tarama & Analiz Paneli",
-                nav_dashboard: "🏠 Dashboard",
-                nav_scanner: "🔍 Network Scanner",
-                nav_wifi: "🛰️ Wi-Fi Radar",
-                sys_health: "System Health (Kali Node)",
-                cpu: "CPU Usage",
-                ram: "RAM Usage",
+                nav_dashboard: "🏠 Kontrol Paneli",
+                nav_scanner: "🔍 Ağ Tarayıcı",
+                nav_wifi: "🛰️ Wi-Fi Radarı",
+                sys_health: "Sistem Sağlığı (Kali Node)",
+                cpu: "CPU Kullanımı",
+                ram: "RAM Kullanımı",
                 scan_summary: "Son Tarama Özeti",
                 label_status: "Durum:",
                 val_waiting: "ANALİZ BEKLENİYOR",
@@ -2602,6 +2602,9 @@
         let activeTab = 'dashboard';
         let scanHistory = [];
         let lastGeoData = null;
+
+        // [FIX] Initialize default language translation correctly on page load
+        setLanguage('tr');
 
         /** [FINAL] EMERGENCY GOOGLE MAPS EMBED ENGINE **/
         async function updateNetworkMap(ip) {
