@@ -1843,6 +1843,10 @@
     <div class="bg-radial"></div>
 
     <div class="app-container" id="app-container">
+        <!-- OFFLINE BANNER -->
+        <div id="offline-banner" style="display:none; width:100%; padding:1rem; background:var(--rose-600); color:white; text-align:center; font-weight:bold; z-index:9999; animation: pulse 2s infinite; letter-spacing: 2px;">
+            !! İNTERNET BAĞLANTISI KESİLDİ !!
+        </div>
         <!-- ═══ HEADER ═══ -->
         <header class="header">
             <div class="logo-container">
@@ -2703,6 +2707,59 @@
         }
 
         ipInput.addEventListener('keydown', e => { if (e.key === 'Enter') startScan(); });
+
+        // ═══════════════════════════════════════════════════
+        //  SECURITY & AWARENESS ENFORCEMENTS
+        // ═══════════════════════════════════════════════════
+        
+        // Continuous Offline/Online Monitor
+        function updateConnectionStatus() {
+            const banner = document.getElementById('offline-banner');
+            const scanBtn = document.getElementById('scan-button');
+            const wifiBtn = document.getElementById('wifi-scan-btn');
+            
+            if (!navigator.onLine) {
+                if (banner) banner.style.display = 'block';
+                if (scanBtn) scanBtn.disabled = true;
+                if (wifiBtn) wifiBtn.disabled = true;
+            } else {
+                if (banner) banner.style.display = 'none';
+                if (scanBtn && !scanBtn.classList.contains('scanning')) scanBtn.disabled = false;
+                if (wifiBtn && !wifiBtn.classList.contains('scanning')) wifiBtn.disabled = false;
+            }
+        }
+        window.addEventListener('offline', updateConnectionStatus);
+        window.addEventListener('online', updateConnectionStatus);
+        setInterval(updateConnectionStatus, 3000);
+        updateConnectionStatus(); // initial check
+
+        // Speed Restriction for Vulnerability Scans
+        const optVulnCheckbox = document.getElementById('opt-vuln');
+        
+        function updateSpeedRestrictions() {
+            if (!optVulnCheckbox) return;
+            const speedSelect = document.getElementById('scan-speed');
+            if (!speedSelect) return;
+            const t4 = speedSelect.querySelector('option[value="T4"]');
+            const t5 = speedSelect.querySelector('option[value="T5"]');
+            
+            if (optVulnCheckbox.checked) {
+                if (t4) t4.disabled = true;
+                if (t5) t5.disabled = true;
+                if (speedSelect.value === 'T4' || speedSelect.value === 'T5') {
+                    speedSelect.value = 'T3';
+                }
+            } else {
+                if (t4) t4.disabled = false;
+                if (t5) t5.disabled = false;
+            }
+        }
+
+        if (optVulnCheckbox) {
+            optVulnCheckbox.addEventListener('change', updateSpeedRestrictions);
+            // Run exactly once on load to catch default checked state
+            updateSpeedRestrictions();
+        }
 
         // ═══════════════════════════════════════════════════
         //  EVOLUTION: TABS, GAUGE & CYTOSCAPE MAP

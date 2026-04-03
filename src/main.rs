@@ -356,10 +356,16 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         || body.aggressive_scan
         || body.net_discover;
 
-    let timing_arg = match body.timing.as_str() {
+    let mut timing_arg = match body.timing.as_str() {
         "T0" | "T1" | "T2" | "T3" | "T4" | "T5" => format!("-{}", body.timing),
         _ => "-T3".to_string(),
     };
+
+    // RESTRICT SPEED: Zafiyet analizinde T4/T5 çok riskli ve agresif olduğu için backend T3 zorunlu
+    if body.vuln_scan {
+        timing_arg = "-T3".to_string();
+    }
+
     let t_arg = timing_arg.as_str();
 
     // ── Hiçbir şey seçilmediyse → Ping ──
@@ -583,12 +589,12 @@ async fn handle_stop() -> Json<ScanResponse> {
     // 3. Fallback: System-wide killall for nmap
     let _ = if cfg!(target_os = "windows") {
         tokio::process::Command::new("cmd")
-            .args(&["/C", "taskkill /F /IM nmap.exe /T"])
+            .args(&["/C", "taskkill /F /IM nmap.exe /T"]) // /F ve /T ile tree-SIGKILL gerçekleştirilir
             .output()
             .await
     } else {
         tokio::process::Command::new("sudo")
-            .args(&["-n", "killall", "nmap"])
+            .args(&["-n", "killall", "-9", "nmap"]) // Zorunlu SIGKILL
             .output()
             .await
     };
