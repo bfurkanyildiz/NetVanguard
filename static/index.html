@@ -1463,9 +1463,20 @@
         }
 
         @keyframes pulse-green {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(1.2); }
-            100% { opacity: 1; transform: scale(1); }
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.4;
+                transform: scale(1.2);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         .iface-label {
@@ -1611,8 +1622,15 @@
         }
 
         @keyframes terminalIpPulse {
-            from { text-shadow: 0 0 5px #00ff41; opacity: 0.8; }
-            to { text-shadow: 0 0 20px #00ff41; opacity: 1; }
+            from {
+                text-shadow: 0 0 5px #00ff41;
+                opacity: 0.8;
+            }
+
+            to {
+                text-shadow: 0 0 20px #00ff41;
+                opacity: 1;
+            }
         }
 
         /* ── HARDWARE STATUS PANEL ── */
@@ -1659,9 +1677,20 @@
             font-weight: 900;
         }
 
-        .hw-badge.active { background: var(--emerald-600) !important; color: #fff !important; }
-        .hw-badge.primary { background: var(--cyan-600) !important; color: #fff !important; }
-        .hw-badge.down { background: #333 !important; color: #888 !important; }
+        .hw-badge.active {
+            background: var(--emerald-600) !important;
+            color: #fff !important;
+        }
+
+        .hw-badge.primary {
+            background: var(--cyan-600) !important;
+            color: #fff !important;
+        }
+
+        .hw-badge.down {
+            background: #333 !important;
+            color: #888 !important;
+        }
 
         .hw-reason {
             font-size: 0.7rem;
@@ -1818,6 +1847,29 @@
             <div class="scanning-line" style="animation-delay: 1.5s;"></div>
         </div>
     </div>
+    <style>
+        @keyframes offlinePulse {
+            0% { box-shadow: 0 0 15px rgba(255, 0, 60, 0.4); border-color: rgba(255, 0, 60, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(255, 0, 60, 1); border-color: #ff003c; }
+            100% { box-shadow: 0 0 15px rgba(255, 0, 60, 0.4); border-color: rgba(255, 0, 60, 0.5); }
+        }
+        #offline-banner {
+            animation: offlinePulse 1.5s infinite;
+        }
+        @keyframes lockShake {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-10px) rotate(-2deg); background: var(--rose-600) !important; color: white !important; }
+            40% { transform: translateX(10px) rotate(2deg); background: var(--rose-600) !important; color: white !important; }
+            60% { transform: translateX(-10px) rotate(-2deg); background: var(--rose-600) !important; color: white !important; }
+            80% { transform: translateX(10px) rotate(2deg); background: var(--rose-600) !important; color: white !important; }
+            100% { transform: translateX(0); }
+        }
+        .lock-shake {
+            animation: lockShake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+            border-color: var(--rose-500) !important;
+            box-shadow: 0 0 20px rgba(244,63,94,0.8) !important;
+        }
+    </style>
     <div class="lang-switcher">
         <button class="lang-btn active" id="btn-tr" onclick="setLanguage('tr')">
             <svg viewBox="0 0 30 20" width="16" height="11">
@@ -1844,8 +1896,9 @@
 
     <div class="app-container" id="app-container">
         <!-- OFFLINE BANNER -->
-        <div id="offline-banner" style="display:none; width:100%; padding:1rem; background:var(--rose-600); color:white; text-align:center; font-weight:bold; z-index:9999; animation: pulse 2s infinite; letter-spacing: 2px;">
-            !! İNTERNET BAĞLANTISI KESİLDİ !!
+        <div id="offline-banner" style="display:none; position:fixed; top:2rem; left:50%; transform:translateX(-50%); width:max-content; min-width:300px; padding:1.2rem 3rem; background:rgba(225, 29, 72, 0.95); color:#fff; text-align:center; font-weight:900; font-size:1.2rem; letter-spacing:2px; z-index:99999; border-radius:12px; border: 2px solid #ff003c; box-shadow: 0 0 20px rgba(255, 0, 60, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.2); text-shadow: 0 0 10px rgba(255,255,255,0.8); pointer-events:none;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:text-bottom; margin-right:8px; display:inline-block;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>!! İNTERNET BAĞLANTISI KESİLDİ !!</span>
         </div>
         <!-- ═══ HEADER ═══ -->
         <header class="header">
@@ -2711,13 +2764,13 @@
         // ═══════════════════════════════════════════════════
         //  SECURITY & AWARENESS ENFORCEMENTS
         // ═══════════════════════════════════════════════════
-        
+
         // Continuous Offline/Online Monitor
         function updateConnectionStatus() {
             const banner = document.getElementById('offline-banner');
             const scanBtn = document.getElementById('scan-button');
             const wifiBtn = document.getElementById('wifi-scan-btn');
-            
+
             if (!navigator.onLine) {
                 if (banner) banner.style.display = 'block';
                 if (scanBtn) scanBtn.disabled = true;
@@ -2735,14 +2788,14 @@
 
         // Speed Restriction for Vulnerability Scans
         const optVulnCheckbox = document.getElementById('opt-vuln');
-        
+
         function updateSpeedRestrictions() {
             if (!optVulnCheckbox) return;
             const speedSelect = document.getElementById('scan-speed');
             if (!speedSelect) return;
             const t4 = speedSelect.querySelector('option[value="T4"]');
             const t5 = speedSelect.querySelector('option[value="T5"]');
-            
+
             if (optVulnCheckbox.checked) {
                 if (t4) t4.disabled = true;
                 if (t5) t5.disabled = true;
@@ -2999,7 +3052,7 @@
 
             const sep = '════════════════════════════════════════════════════════';
             const doubleSep = '########################################################';
-            
+
             let report = doubleSep + '\n';
             report += '  [NETVANGUARD FULL AUDIT LOG - BATCH EXPORT]\n';
             report += `  EXPORT DATE : ${new Date().toLocaleString('tr-TR')}\n`;
@@ -3120,7 +3173,7 @@
             try {
                 const r = await fetch('/api/wifi_scan');
                 const d = await r.json();
-                
+
                 // Update interface name from scan results
                 if (d.active_interface) {
                     const ifaceVal = document.getElementById('wifi-iface-val');
@@ -3435,19 +3488,19 @@
             // 2. Clear UI status
             addLog('<span style="color:var(--rose-500);font-weight:bold;">[!] DURDURMA TALEBİ GÖNDERİLDİ</span>', 'error');
             setProgress(100, 'İşlemler Sonlandırılıyor...');
-            
+
             // 3. Notify backend to kill processes
             try {
-                const res = await fetch('/api/stop', { 
+                const res = await fetch('/api/stop', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 });
                 const data = await res.json();
-                
+
                 addLog('════════════════════════════════════', '');
                 addLog(`🛡️ <strong>SİSTEM DURUMU:</strong> ${data.output}`, data.success ? 'success' : 'error');
                 addLog('════════════════════════════════════', '');
-                
+
                 setProgress(100, 'Sistem Hazır');
             } catch (err) {
                 addLog(`[!] Arka plan durdurma hatası: ${err.message}`, 'error');
@@ -3478,7 +3531,7 @@
             try {
                 const res = await fetch('/api/wifi_status');
                 const data = await res.json();
-                
+
                 // Update Step 3.1: Global Status Bar
                 const ifaceVal = document.getElementById('wifi-iface-val');
                 const statusVal = document.getElementById('wifi-status-val');
@@ -3521,6 +3574,16 @@
         }
 
         async function startScan() {
+            if (!navigator.onLine) {
+                const btn = document.getElementById('scan-button');
+                if (btn) {
+                    btn.classList.remove('lock-shake');
+                    void btn.offsetWidth; // trigger reflow
+                    btn.classList.add('lock-shake');
+                    setTimeout(() => btn.classList.remove('lock-shake'), 400);
+                }
+                return;
+            }
             console.log('Tarama Tetiklendi!');
             addLog('[ACTION] Tarama başlatılıyor...', 'info');
             let target = ipInput.value.trim();
