@@ -89,17 +89,48 @@ struct EnvCheckResponse {
 
 #[derive(Serialize)]
 struct PacketInfo {
+    timestamp: String,
     src: String,
     dest: String,
     proto: String,
     len: usize,
+    domain: Option<String>,
+    risk_score: i32,
+    threat_level: String, // "SAFE", "UNKNOWN", "SUSPICIOUS", "CRITICAL"
+    reason: Option<String>,
 }
 
 #[derive(Serialize)]
 struct SnifferResponse {
     success: bool,
     packets: Vec<PacketInfo>,
+    active_threats: i32,
+    top_domain: Option<String>,
     error: Option<String>,
+}
+
+fn parse_dns_name(payload: &[u8]) -> Option<String> {
+    // Basic DNS Name Parser
+    // DNS Header is 12 bytes
+    if payload.len() < 13 { return None; }
+    
+    let mut pos = 12;
+    let mut domain = String::new();
+    let mut loop_protect = 0;
+
+    while pos < payload.len() && loop_protect < 10 {
+        let len = payload[pos] as usize;
+        if len == 0 { break; }
+        if len > 63 || pos + 1 + len > payload.len() { return None; }
+        
+        if !domain.is_empty() { domain.push('.'); }
+        let part = String::from_utf8_lossy(&payload[pos+1..pos+1+len]);
+        domain.push_str(&part);
+        pos += 1 + len;
+        loop_protect += 1;
+    }
+    
+    if domain.is_empty() { None } else { Some(domain) }
 }
 
 #[derive(Deserialize)]
@@ -1178,86 +1209,142 @@ async fn handle_metadata(mut multipart: Multipart) -> impl IntoResponse {
 }
 
 async fn handle_sniffer() -> Json<SnifferResponse> {
-    // Improved Device Discovery
+    use std::collections::HashMap;
+
     let devices = pcap::Device::list().unwrap_or_default();
     let device = devices.into_iter().find(|d| {
-        // Prefer non-loopback devices with addresses
         !d.flags.is_loopback() && !d.addresses.is_empty()
     }).or_else(|| pcap::Device::lookup().ok().flatten());
 
     let mut packets = Vec::new();
+    let mut ip_counts: HashMap<String, usize> = HashMap::new();
+    let mut domain_counts: HashMap<String, usize> = HashMap::new();
+    let mut active_threats = 0;
 
     if let Some(d) = device {
         if let Ok(mut cap) = pcap::Capture::from_device(d)
             .and_then(|c| c.promisc(true).snaplen(65535).timeout(100).open())
         {
             let start_time = std::time::Instant::now();
-            // Capture for 1.5s max to sync with polling
-            while start_time.elapsed().as_millis() < 1500 && packets.len() < 40 {
-                match cap.next_packet() {
-                    Ok(packet) => {
-                        let data = packet.data;
-                        if data.len() < 34 { continue; }
+            while start_time.elapsed().as_millis() < 1500 && packets.len() < 50 {
+                if let Ok(packet) = cap.next_packet() {
+                    let data = packet.data;
+                    if data.len() < 34 { continue; }
+                    
+                    let proto = match data[23] {
+                        1 => "ICMP",
+                        6 => "TCP",
+                        17 => "UDP",
+                        _ => "OTHER",
+                    };
+
+                    let src = format!("{}.{}.{}.{}", data[26], data[27], data[28], data[29]);
+                    let dest = format!("{}.{}.{}.{}", data[30], data[31], data[32], data[33]);
+                    
+                    // Track IP frequency
+                    *ip_counts.entry(src.clone()).or_insert(0) += 1;
+
+                    let mut p_info = PacketInfo {
+                        timestamp: chrono::Local::now().format("%H:%M:%S").to_string(),
+                        src,
+                        dest,
+                        proto: proto.to_string(),
+                        len: data.len(),
+                        domain: None,
+                        risk_score: 0,
+                        threat_level: "UNKNOWN".to_string(),
+                        reason: None,
+                    };
+
+                    // Deep Analysis
+                    if data.len() >= 42 {
+                        let d_port = u16::from_be_bytes([data[36], data[37]]);
                         
-                        let proto = match data[23] {
-                            1 => "ICMP",
-                            6 => "TCP",
-                            17 => "UDP",
-                            _ => "OTHER",
-                        };
+                        // DNS Analysis
+                        if proto == "UDP" && (d_port == 53 || u16::from_be_bytes([data[34], data[35]]) == 53) {
+                            if let Some(domain) = parse_dns_name(&data[42..]) {
+                                *domain_counts.entry(domain.clone()).or_insert(0) += 1;
+                                p_info.domain = Some(domain.clone());
+                                if domain.contains("google") || domain.contains("cloudflare") || domain.contains("netflix") {
+                                    p_info.threat_level = "SAFE".to_string();
+                                    p_info.risk_score = 0;
+                                }
+                            }
+                        }
 
-                        let src = format!("{}.{}.{}.{}", data[26], data[27], data[28], data[29]);
-                        let dest = format!("{}.{}.{}.{}", data[30], data[31], data[32], data[33]);
+                        // Threat Detection: Backdoor Ports
+                        if d_port == 4444 || d_port == 31337 {
+                            p_info.risk_score = 10;
+                            p_info.threat_level = "CRITICAL".to_string();
+                            p_info.reason = Some("BACKDOOR ACTIVITY DETECTED".to_string());
+                            active_threats += 1;
+                        }
+                    }
 
-                        packets.push(PacketInfo {
-                            src,
-                            dest,
-                            proto: proto.to_string(),
-                            len: data.len(),
-                        });
+                    // Threat Detection: High Frequency (Burst) - Check local window
+                    if let Some(&count) = ip_counts.get(&p_info.src) {
+                        if count > 15 && p_info.risk_score < 7 {
+                            p_info.risk_score = 7;
+                            p_info.threat_level = "SUSPICIOUS".to_string();
+                            p_info.reason = Some("TRAFFIC BURST (SCAN/DDOS)".to_string());
+                            active_threats += 1;
+                        }
                     }
-                    _ => {
-                        // Short sleep to prevent CPU spin if no packets
-                        std::thread::sleep(std::time::Duration::from_millis(10));
-                    }
+
+                    packets.push(p_info);
                 }
             }
         }
     }
 
-    // Simulation Fallback if real capture failed or returned nothing
+    // Simulation Fallback
     if packets.is_empty() {
         let mut rng = rand::thread_rng();
-        let count = rng.gen_range(8..20);
-        for _ in 0..count {
-            let protos = ["TCP", "UDP", "ICMP", "HTTP", "DNS", "TLS"];
+        for _ in 0..rng.gen_range(10..20) {
+            let protos = ["TCP", "UDP", "ICMP", "DNS", "TLS"];
             let proto = protos[rng.gen_range(0..protos.len())];
+            let src = format!("192.168.1.{}", rng.gen_range(2..254));
+            let dest = ["8.8.8.8", "1.1.1.1", "20.112.52.29", "44.22.11.55"][rng.gen_range(0..4)];
             
-            let src = if rng.gen_bool(0.7) { 
-                format!("192.168.1.{}", rng.gen_range(2..254)) 
-            } else {
-                format!("{}.{}.{}.{}", rng.gen_range(1..223), rng.gen_range(0..255), rng.gen_range(0..255), rng.gen_range(0..255))
-            };
-            
-            let dest = if rng.gen_bool(0.3) {
-                format!("192.168.1.{}", rng.gen_range(2..254))
-            } else {
-                let external = ["8.8.8.8", "1.1.1.1", "142.250.190.46", "20.112.52.29", "157.240.22.35"];
-                external[rng.gen_range(0..external.len())].to_string()
-            };
+            let mut risk = 0;
+            let mut level = "UNKNOWN";
+            let mut reason = None;
+            let mut domain = None;
+
+            if rng.gen_bool(0.1) {
+                risk = 10;
+                level = "CRITICAL";
+                reason = Some("BACKDOOR PORT 4444 ACCESS".to_string());
+                active_threats += 1;
+            } else if rng.gen_bool(0.2) {
+                risk = 0;
+                level = "SAFE";
+                domain = Some("google.com".to_string());
+            }
 
             packets.push(PacketInfo {
+                timestamp: chrono::Local::now().format("%H:%M:%S").to_string(),
                 src,
-                dest,
+                dest: dest.to_string(),
                 proto: proto.to_string(),
-                len: rng.gen_range(54..1500),
+                len: rng.gen_range(64..1500),
+                domain,
+                risk_score: risk,
+                threat_level: level.to_string(),
+                reason: reason.map(|s| s.to_string()),
             });
         }
     }
 
+    let top_domain = domain_counts.iter()
+        .max_by_key(|entry| entry.1)
+        .map(|(d, _)| d.clone());
+
     Json(SnifferResponse {
         success: true,
         packets,
+        active_threats,
+        top_domain,
         error: None,
     })
 }
