@@ -5,6 +5,9 @@
   <a href="#-english-version">
     <img src="https://img.shields.io/badge/ENGLISH-blue?style=for-the-badge" alt="English">
   </a>
+  <a href="#🛠️-tek-satırda-kurulum-ve-çalıştırma">
+    <img src="https://img.shields.io/badge/⚡-SETUP-yellow?style=for-the-badge" alt="Setup">
+  </a>
 </p>
 
 # 🛡️ NetVanguard v1.0.1
