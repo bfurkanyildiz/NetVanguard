@@ -3081,9 +3081,15 @@
                 if (data.success) {
                     resultsDiv.style.display = 'block';
                     for (const [tag, val] of Object.entries(data.data)) {
+                        let displayVal = val;
+                        // URL Detection and Link Rendering
+                        if (val.startsWith("http")) {
+                            displayVal = `<a href="${val}" target="_blank" style="color: var(--emerald-400); text-decoration: underline; font-weight: 800; background: rgba(0, 255, 65, 0.1); padding: 4px 8px; border-radius: 4px; display: inline-block;">🔗 HARİTADA GÖSTER (GOOGLE MAPS)</a>`;
+                        }
+
                         const row = `<tr>
-                            <td style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--emerald-400);">${tag}</td>
-                            <td style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); color: #fff;">${val}</td>
+                            <td style="padding: 0.75rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--emerald-400); font-weight: bold; width: 40%;">${tag}</td>
+                            <td style="padding: 0.75rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); color: #fff;">${displayVal}</td>
                         </tr>`;
                         tableBody.innerHTML += row;
                     }
@@ -3170,7 +3176,7 @@
             if (snifferActive) {
                 overlay.style.display = 'none';
                 log.innerHTML = `<div style="color: #666; margin-bottom: 0.5rem;">[${new Date().toLocaleTimeString()}] Sniffer initialized. Capturing packets...</div>`;
-                snifferInterval = setInterval(pollSniffer, 2000);
+                snifferInterval = setInterval(pollSniffer, 3000);
             } else {
                 overlay.style.display = 'flex';
                 clearInterval(snifferInterval);
@@ -3191,13 +3197,24 @@
                     data.packets.forEach(p => {
                         const row = document.createElement('div');
                         row.className = 'packet-row';
+                        
+                        // Protocol Based Color Mapping
+                        let color = '#fff';
+                        if (p.proto === 'TCP') color = 'var(--cyan-400)';
+                        else if (p.proto === 'UDP') color = 'var(--violet-400)';
+                        else if (p.proto === 'ICMP') color = 'var(--rose-400)';
+                        else if (p.proto === 'HTTP' || p.proto === 'HTTPS') color = 'var(--emerald-400)';
+                        else if (p.proto === 'DNS' || p.proto === 'TLS') color = 'var(--amber-400)';
+
+                        const hexSim = Array.from({length: 4}, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0')).join(' ');
+
                         row.innerHTML = `
-                            <span class="p-proto">[${p.proto}]</span>
-                            <span class="p-src">${p.src}</span>
-                            <span class="p-arrow">→</span>
-                            <span class="p-dest">${p.dest}</span>
-                            <span class="p-len">${p.len}B</span>
-                            <span style="color: #444; overflow: hidden; white-space: nowrap;">Payload segment detected...</span>
+                            <span class="p-proto" style="color: ${color}; font-weight: bold; min-width: 60px; display: inline-block;">[${p.proto}]</span>
+                            <span class="p-src" style="color: #ccc;">${p.src}</span>
+                            <span class="p-arrow" style="color: #444; margin: 0 8px;">→</span>
+                            <span class="p-dest" style="color: #ccc;">${p.dest}</span>
+                            <span class="p-len" style="color: #666; font-size: 0.8rem; margin-left: 10px;">${p.len}B</span>
+                            <span style="color: #333; font-family: monospace; font-size: 0.75rem; margin-left: auto; letter-spacing: 1px;">0x${hexSim}...</span>
                         `;
                         log.prepend(row);
                     });

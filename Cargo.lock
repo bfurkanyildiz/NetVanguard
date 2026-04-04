@@ -969,6 +969,7 @@ dependencies = [
  "once_cell",
  "open",
  "pcap",
+ "rand",
  "reqwest",
  "serde",
  "serde_json",
