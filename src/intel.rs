@@ -32,6 +32,15 @@ pub const META_GOOGLE_IPS: &[(&str, &str)] = &[
 //  SHODAN & OSINT LOGIC
 // ═══════════════════════════════════════════════════════════
 
+/// # Summary
+/// Fetches enriched host intelligence from the Shodan API or falls back to IP-API.
+/// Includes ASN, ISP, open ports, and historical vulnerability (CVE) data.
+///
+/// # Arguments
+/// * `ip` - The target IPv4 address to investigate.
+///
+/// # Returns
+/// * `Option<ShodanData>` - Structured intelligence data if reachable, otherwise None.
 pub async fn get_shodan_intel(ip: &str) -> Option<ShodanData> {
     let api_key = std::env::var("SHODAN_API_KEY").ok();
     if let Some(key) = api_key {
@@ -96,6 +105,15 @@ pub async fn get_shodan_intel(ip: &str) -> Option<ShodanData> {
     None
 }
 
+/// # Summary
+/// Resolves the physical geographic location of a public IP address.
+/// Automatically identifies and bypasses local/private network ranges.
+///
+/// # Arguments
+/// * `params` - `Query<GeoParams>` containing the target IP address.
+///
+/// # Returns
+/// * `impl IntoResponse` - JSON response containing city, country, coordinates, and ISP details.
 pub async fn handle_geolocation(Query(params): Query<GeoParams>) -> impl IntoResponse {
     let target_ip = params.ip.trim();
     if target_ip.starts_with("192.168.")
@@ -152,6 +170,14 @@ pub async fn handle_geolocation(Query(params): Query<GeoParams>) -> impl IntoRes
     }
 }
 
+/// # Summary
+/// Interrogates the *XposedOrNot* database to check if a specific email address has been compromised in known data breaches.
+///
+/// # Arguments
+/// * `body` - `Json<BreachRequest>` containing the target email address.
+///
+/// # Returns
+/// * `Json<BreachResponse>` - Boolean 'found' flag and a list of specific breach sources.
 pub async fn handle_breach(Json(body): Json<BreachRequest>) -> Json<BreachResponse> {
     let email = body.email.trim().to_lowercase();
     if !email.contains('@') {
@@ -203,6 +229,15 @@ pub async fn handle_breach(Json(body): Json<BreachRequest>) -> Json<BreachRespon
     })
 }
 
+/// # Summary
+/// Extracts embedded EXIF metadata from uploaded image or document files.
+/// Uncovers hidden data such as GPS coordinates, camera models, and software timestamps.
+///
+/// # Arguments
+/// * `multipart` - An Axum multipart stream containing the file buffer.
+///
+/// # Returns
+/// * `impl IntoResponse` - A JSON object containing key-value pairs of discovered metadata.
 pub async fn handle_metadata(mut multipart: Multipart) -> impl IntoResponse {
     let mut metadata = HashMap::new();
     while let Ok(Some(field)) = multipart.next_field().await {
@@ -236,6 +271,14 @@ pub async fn handle_metadata(mut multipart: Multipart) -> impl IntoResponse {
 //  HELPER PARSERS (DNS/TLS)
 // ═══════════════════════════════════════════════════════════
 
+/// # Summary
+/// Low-level parser for identifying domain names from raw DNS Query packet payloads.
+///
+/// # Arguments
+/// * `payload` - Raw byte buffer from a captured DNS packet.
+///
+/// # Returns
+/// * `Option<String>` - The reconstructed domain name (e.g., "example.com").
 pub fn parse_dns_name(payload: &[u8]) -> Option<String> {
     if payload.len() < 13 {
         return None;
@@ -263,6 +306,14 @@ pub fn parse_dns_name(payload: &[u8]) -> Option<String> {
     }
 }
 
+/// # Summary
+/// Extracts A-Record (IPv4) answers and their corresponding domain names from DNS Answer payloads.
+///
+/// # Arguments
+/// * `payload` - Raw byte buffer from a captured DNS response packet.
+///
+/// # Returns
+/// * `Option<(String, String)>` - A tuple of (IP Address, Domain Name) if successfully parsed.
 pub fn parse_dns_answer(payload: &[u8]) -> Option<(String, String)> {
     if payload.len() < 12 {
         return None;
@@ -325,6 +376,15 @@ pub fn parse_dns_answer(payload: &[u8]) -> Option<(String, String)> {
     None
 }
 
+/// # Summary
+/// Analyzes TLS Client Hello packets to extract the Server Name Indication (SNI) extension.
+/// Allows identifying target domains even when traffic is encrypted.
+///
+/// # Arguments
+/// * `payload` - Raw byte buffer from the start of a TLS handshake.
+///
+/// # Returns
+/// * `Option<String>` - The target hostname (SNI) if present in the extensions.
 pub fn parse_tls_sni(payload: &[u8]) -> Option<String> {
     if payload.len() < 11 || payload[0] != 0x16 || payload[5] != 0x01 {
         return None;
@@ -388,7 +448,7 @@ mod tests {
         // assert_eq! kullanımı
         assert_eq!(mock_data.city, "Istanbul");
         assert_eq!(mock_data.ports.len(), 3);
-        
+
         // assert! kullanımı
         assert!(mock_data.vulns.contains(&"CVE-2021-31166".to_string()));
     }
@@ -398,15 +458,20 @@ mod tests {
         // Manuel olarak kurgulanmış bir DNS Query payload'u (google.com)
         // 06 'g' 'o' 'o' 'g' 'l' 'e' 03 'c' 'o' 'm' 00
         let mut payload = vec![0u8; 12]; // Header kısmı (12 byte)
-        payload.extend_from_slice(&[6, b'g', b'o', b'o', b'g', b'l', b'e', 3, b'c', b'o', b'm', 0]);
-        
+        payload.extend_from_slice(&[
+            6, b'g', b'o', b'o', b'g', b'l', b'e', 3, b'c', b'o', b'm', 0,
+        ]);
+
         let parsed_name = parse_dns_name(&payload);
-        
+
         assert!(parsed_name.is_some());
         assert_eq!(parsed_name.unwrap(), "google.com");
-        
+
         // Hatalı/Kısa payload kontrolü (assert_ne)
         let short_payload = vec![0u8; 5];
-        assert_ne!(parse_dns_name(&short_payload), Some("google.com".to_string()));
+        assert_ne!(
+            parse_dns_name(&short_payload),
+            Some("google.com".to_string())
+        );
     }
 }

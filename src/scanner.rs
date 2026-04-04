@@ -6,9 +6,9 @@ use once_cell::sync::Lazy;
 use std::fs;
 use std::io::Write;
 use std::process::Command;
+use std::str::FromStr;
 use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
-use std::str::FromStr;
 
 // ═══════════════════════════════════════════════════════════
 //  PROCESS MANAGER & STATE
@@ -25,6 +25,16 @@ pub static PROCESS_MANAGER: Lazy<Arc<ScanManager>> = Lazy::new(|| {
 //  REPORTING HELPER
 // ═══════════════════════════════════════════════════════════
 
+/// # Summary
+/// Scans generate text reports which are persisted to the local filesystem.
+/// This helper handles the naming and directory creation for these reports.
+///
+/// # Arguments
+/// * `target` - The scanning target (IP or Domain) used for filename generation.
+/// * `content` - The raw string content of the scan output.
+///
+/// # Returns
+/// * `std::io::Result<()>` - Success if the file was written, Error otherwise.
 #[allow(dead_code)]
 pub fn write_report_to_file(target: &str, content: &str) -> std::io::Result<()> {
     let now = chrono::Local::now();
@@ -44,6 +54,14 @@ pub fn write_report_to_file(target: &str, content: &str) -> std::io::Result<()> 
 //  SCANNER ENGINE
 // ═══════════════════════════════════════════════════════════
 
+/// # Summary
+/// Validates the system environment to ensure Nmap is installed and the process has sufficient privileges.
+///
+/// # Arguments
+/// * None (Triggered via API endpoint)
+///
+/// # Returns
+/// * `Json<EnvCheckResponse>` - Contains OS type, Nmap status/version, and Root privilege status.
 pub async fn handle_check_env() -> Json<EnvCheckResponse> {
     let os_type = if cfg!(target_os = "windows") {
         "Windows".to_string()
@@ -104,6 +122,15 @@ pub async fn handle_check_env() -> Json<EnvCheckResponse> {
     })
 }
 
+/// # Summary
+/// A secure wrapper for executing asynchronous shell commands with logic for process cancellation and timeout.
+/// 
+/// # Arguments
+/// * `program` - The executable name (e.g., "nmap", "sudo").
+/// * `args` - A slice of string arguments to pass to the program.
+///
+/// # Returns
+/// * `(bool, String)` - A tuple containing the success status and the combined stdout/stderr output.
 pub async fn run_command(program: &str, args: &[&str]) -> (bool, String) {
     if PROCESS_MANAGER.cancel_token.lock().await.is_cancelled() {
         return (false, "İşlem iptal edildi.".to_string());
@@ -168,6 +195,15 @@ pub async fn run_command(program: &str, args: &[&str]) -> (bool, String) {
     }
 }
 
+/// # Summary
+/// The core orchestration function for multi-stage network reconnaissance. 
+/// Handles Nmap scanning, OS detection, DNS queries, and Shodan intelligence integration.
+///
+/// # Arguments
+/// * `body` - `Json<ScanRequest>` containing target, scan flags (port, vuln, version), and timing profiles.
+///
+/// # Returns
+/// * `Json<ScanResponse>` - Comprehensive scan results including raw output and structured intelligence data.
 pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     {
         let mut token_lock = PROCESS_MANAGER.cancel_token.lock().await;
@@ -357,6 +393,14 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     })
 }
 
+/// # Summary
+/// Forcefully terminates all active scanning processes and cleans up child resources.
+///
+/// # Arguments
+/// * None (Triggered via API shutdown request)
+///
+/// # Returns
+/// * `Json<ScanResponse>` - Confirmation that the scanning engine has been halted.
 pub async fn handle_stop() -> Json<ScanResponse> {
     PROCESS_MANAGER.cancel_token.lock().await.cancel();
     let mut child_lock = PROCESS_MANAGER.child.lock().await;
@@ -381,6 +425,14 @@ pub async fn handle_stop() -> Json<ScanResponse> {
     })
 }
 
+/// # Summary
+/// Retrieves the current status of all network interfaces and identifies the optimal wireless adapter.
+///
+/// # Arguments
+/// * None
+///
+/// # Returns
+/// * `Json<WifiStatusResponse>` - List of interfaces, the selected active interface, and status reason.
 pub async fn handle_wifi_status() -> Json<WifiStatusResponse> {
     let (interfaces, selected, reason) = get_wireless_interfaces();
     Json(WifiStatusResponse {
@@ -391,6 +443,14 @@ pub async fn handle_wifi_status() -> Json<WifiStatusResponse> {
     })
 }
 
+/// # Summary
+/// Performs a live Wi-Fi environment scan using `nmcli` to identify surrounding ESSIDs and signal strengths.
+///
+/// # Arguments
+/// * None
+///
+/// # Returns
+/// * `Json<WifiResponse>` - Detailed list of nearby Wi-Fi networks or an error if hardware is missing.
 pub async fn handle_wifi_scan() -> Json<WifiResponse> {
     if cfg!(target_os = "windows") {
         return Json(WifiResponse {
@@ -455,6 +515,14 @@ pub async fn handle_wifi_scan() -> Json<WifiResponse> {
     })
 }
 
+/// # Summary
+/// Low-level utility to probe the OS filesystem for network interface presence and operational state.
+///
+/// # Arguments
+/// * None
+///
+/// # Returns
+/// * `(Vec<WirelessInterface>, Option<String>, String)` - Interface list, recommended interface, and selection logic notes.
 pub fn get_wireless_interfaces() -> (Vec<WirelessInterface>, Option<String>, String) {
     let mut interfaces = Vec::new();
     let mut selected = None;
@@ -494,18 +562,38 @@ pub fn get_wireless_interfaces() -> (Vec<WirelessInterface>, Option<String>, Str
     (interfaces, selected, "Selection logic".into())
 }
 
+/// # Summary
+/// Helper to extract the name of the first available functional Wi-Fi interface.
+///
+/// # Arguments
+/// * None
+///
+/// # Returns
+/// * `Option<String>` - The interface name (e.g., "wlan0") if found.
 pub fn find_wifi_interface() -> Option<String> {
     let (_, s, _) = get_wireless_interfaces();
     s
 }
 
+/// # Summary
+/// Security gateway that validates target input to prevent command injection and malformed requests.
+///
+/// # Arguments
+/// * `target` - The user-provided IP address or hostname string.
+///
+/// # Returns
+/// * `Result<(), String>` - Returns Ok if the target is safe, or an Error message if invalid.
 pub fn validate_target(target: &str) -> Result<(), String> {
     if target.is_empty() {
         return Err("Hedef boş!".into());
     }
     // Basic IP/Hostname validation
-    if std::net::IpAddr::from_str(target).is_err() && !target.chars().all(|c| c.is_alphanumeric() || c == '.' || c == '-') {
-         for ch in [';', '&', '|', '`', '$', '(', ')'] {
+    if std::net::IpAddr::from_str(target).is_err()
+        && !target
+            .chars()
+            .all(|c| c.is_alphanumeric() || c == '.' || c == '-')
+    {
+        for ch in [';', '&', '|', '`', '$', '(', ')'] {
             if target.contains(ch) {
                 return Err(format!("Güvenlik İhlali: Geçersiz karakter '{}'", ch));
             }
@@ -521,8 +609,8 @@ pub fn validate_target(target: &str) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::str::FromStr;
     use std::net::IpAddr;
+    use std::str::FromStr;
 
     #[test]
     fn test_target_validation() {
@@ -537,8 +625,12 @@ mod tests {
 
         // Test 3: Komut Enjeksiyonu Koruması (assert_ne)
         let malicious = "8.8.8.8; ls -la";
-        assert_ne!(validate_target(malicious), Ok(()), "Zararlı karakterler engellenmeli!");
-        
+        assert_ne!(
+            validate_target(malicious),
+            Ok(()),
+            "Zararlı karakterler engellenmeli!"
+        );
+
         // Test 4: Boş hedef kontrolü (assert_eq)
         assert_eq!(validate_target(""), Err("Hedef boş!".into()));
     }
@@ -548,7 +640,7 @@ mod tests {
         // Nmap argümanlarının kurgulanma mantığını test eder
         let target = "192.168.1.1";
         let timing = "T4";
-        
+
         // Dinamik argüman kurgusu simülasyonu
         let timing_arg = format!("-{}", timing);
         let args = vec!["-sV", "-Pn", &timing_arg, target];

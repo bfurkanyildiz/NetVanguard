@@ -63,13 +63,28 @@ for pkg in "${DEPENDENCIES[@]}"; do
 done
 echo -e "${GREEN}[+] Tüm bağımlılıklar hazır.${NC}\n"
 
-# 3. Rust/Cargo Check
+# 3. Rust/Cargo Check & Auto-Install
 echo -e "${BLUE}[*] Rust geliştirme ortamı kontrol ediliyor...${NC}"
 if ! command -v cargo &> /dev/null; then
-    echo -e "${RED}[!] HATA: Cargo (Rust) bulunamadı.${NC}"
-    echo -e "${YELLOW}[*] Lütfen şu adresten Rust kurun: ${CYAN}https://rustup.rs${NC}"
-    echo -e "${YELLOW}[*] Kurulumdan sonra terminali kapatıp açın ve betiği tekrar çalıştırın.${NC}"
-    exit 1
+    echo -e "${YELLOW}[!] Cargo (Rust) bulunamadı. Kurulum başlatılıyor...${NC}"
+    
+    # Ensure curl is installed for rustup
+    if ! command -v curl &> /dev/null; then
+        sudo apt-get install -y curl
+    fi
+
+    # Install Rust via rustup (Non-interactive)
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    
+    # Source environment
+    source "$HOME/.cargo/env"
+    
+    if ! command -v cargo &> /dev/null; then
+        echo -e "${RED}[!] HATA: Rust kurulumu başarısız oldu.${NC}"
+        echo -e "${YELLOW}[*] Lütfen manuel kurun: ${CYAN}https://rustup.rs${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}[+] Rust başarıyla kuruldu.${NC}"
 else
     echo -e "${GREEN}[+] Rust/Cargo zaten yüklü.${NC}"
     echo -e "${CYAN}Rust Versiyon:${NC} $(rustc --version | awk '{print $2}')"

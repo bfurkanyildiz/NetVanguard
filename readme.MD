@@ -89,8 +89,20 @@ Projenin derlenebilmesi ve tüm modüllerin (özellikle Sniffer) çalışabilmes
 Aşağıdaki komutu terminale yapıştırarak projeyi klonlayabilir, bağımlılıkları kurabilir ve anında başlatabilirsiniz:
 
 ```bash
-git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard && chmod +x setup.sh && ./setup.sh && sudo cargo run
+git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard && chmod +x setup.sh && ./setup.sh && source $HOME/.cargo/env && sudo cargo run
 ```
+
+### ⚠️ Yetki Notu (Linux Permissions)
+
+Linux sistemlerde ağ paketlerini yakalamak (Sniffer) ve ham soketlere (Raw Sockets) erişmek için yüksek yetki gerekir. Ancak tüm projeyi `sudo` ile çalıştırmak Rust kütüphane yollarını bozabilir. En güvenli ve profesyonel yöntem, sadece derlenen binary dosyasına ilgili yetkiyi (Capabilities) vermektir:
+
+```bash
+# Projeyi derledikten sonra bu komutu çalıştırın:
+sudo setcap cap_net_raw,cap_net_admin=eip ./target/debug/netvanguard
+```
+
+#### 🔧 Hata Giderme (Troubleshooting)
+Eğer Sniffer modülünde **"Permission Denied"** veya **"Operation not permitted"** hatası alıyorsanız, bunun sebebi uygulamanın ağ kartına doğrudan erişim yetkisinin olmamasıdır. Yukarıdaki `setcap` komutu, uygulamaya root yetkisi vermeden sadece ihtiyacı olan ağ yetkilerini tanımlar.
 
 ### ⚖️ Yasal Uyarı
 
@@ -158,8 +170,20 @@ To ensure successful compilation and full modular functionality (especially the 
 Copy and paste the command below into your terminal to clone, setup, and launch the application instantly:
 
 ```bash
-git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard && chmod +x setup.sh && ./setup.sh && sudo cargo run
+git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard && chmod +x setup.sh && ./setup.sh && source $HOME/.cargo/env && sudo cargo run
 ```
+
+### ⚠️ Permission Note (Linux Permissions)
+
+On Linux systems, capturing network packets (Sniffing) and accessing raw sockets requires elevated privileges. However, running the entire project with `sudo` can interfere with Rust library paths. The most professional and secure approach is to grant specific **Capabilities** to the compiled binary:
+
+```bash
+# Run this command after compiling the project:
+sudo setcap cap_net_raw,cap_net_admin=eip ./target/debug/netvanguard
+```
+
+#### 🔧 Troubleshooting
+If you encounter **"Permission Denied"** or **"Operation not permitted"** errors in the Sniffer module, it is because the application lacks direct access to the network interface. The `setcap` command above provides the necessary network privileges without requiring full root access for the entire runtime.
 
 ### ⚖️ Legal Disclaimer
 
