@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/bfurkanyildiz/NetVanguard/main/docs/banner.png" alt="NetVanguard Banner" width="100%">
+  <img src="static/img/banner.png" width="100%">
 </p>
 
 <p align="center">
@@ -16,32 +16,46 @@
 
 **NetVanguard**, modern siber güvenlik ihtiyaçları için geliştirilmiş, yüksek performanslı bir **Hibrit İstihbarat ve Saldırı Yüzeyi Analizörüdür**. Sadece bir ağ tarayıcısı değil, aynı zamanda pasif istihbarat (OSINT), aktif trafik analizi (Sniffing) ve yetki yükseltme (PrivEsc) vektörlerini tek bir çatı altında toplayan endüstriyel bir güvenlik paketidir.
 
-> [!IMPORTANT]
-> **NetVanguard**, Rust (Axum) tabanlı milisaniyelik tepki süresine sahip bir arka uç ve Vite + Neon-Glassmorphism estetiğiyle donatılmış profesyonel bir ön uç ile güçlendirilmiştir.
-
 ---
 
-## 🚀 Ana Modüller
+## 🚀 Ana Modüller ve Kabiliyetler
 
-| Modül | Açıklama | Teknoloji |
-| :--- | :--- | :--- |
-| **🔍 Sniffer (DPI)** | TLS SNI analizi ve paket koklama ile gerçek zamanlı trafik izleme. | `libpcap`, `Axum` |
-| **🌐 Global OSINT** | Shodan API entegrasyonu ile hedef IP'lerin dünya çapındaki sabıka kaydı ve coğrafi konumu. | `Shodan`, `Reqwest` |
-| **🛡️ #L10 Analizörü** | SUID dosyaları ve Kernel bazlı yetki yükseltme açıklarını tespit eden tarama motoru. | `Linux Kernel API` |
-| **📡 Network Radar** | Çevredeki Wi-Fi ağlarını ve aktif servisleri milisaniyeler içinde haritalandırır. | `Nmap`, `nmcli` |
-| **📑 Smart Reporting** | Tüm bulguları profesyonel formatta dışa aktarabilen raporlama sistemi. | `Standard I/O` |
+### 1. 🔍 Gelişmiş Ağ Tarama (Nmap Engine)
+NetVanguard, Nmap'in gücünü modern bir arayüzle birleştirir.
+- **Hız Seçenekleri (Timing):** Gizlilik odaklı `T0` (Paranoid) modundan, agresif `T5` (Insane) moduna kadar tam kontrol.
+- **Servis & Versiyon Tespiti:** Açık portların arkasındaki servislerin gerçek sürümlerini tespit eder.
+- **İşletim Sistemi Analizi:** Hedef cihazın OS parmak izini çıkarır.
+- **Vulnerability (Zafiyet) Taraması:** Nmap Scripting Engine (NSE) kullanarak bilinen açıkları otomatik tarar.
+
+### 2. 🌐 Global Intelligence (OSINT & Geo)
+Hedefi sadece IP olarak değil, bir kimlik olarak analiz eder.
+- **Shodan Entegrasyonu:** Hedef IP'nin internet üzerindeki geçmişi, açık portları ve bilinen zaafları (CVE).
+- **Coğrafi Konum:** IP tabanlı konum tespiti (Şehir, ISP, ASN bilgileri).
+- **DNS & TLS Analizi:** Pasif DNS sorguları ve HTTPS sertifikalarından SNI ayrıştırma.
+
+### 3. 📂 Metadata & Sızıntı Analizi (Advanced Intel)
+- **Metadata (EXIF) Analizörü:** Görsel ve döküman dosyalarındaki gizli meta verileri (GPS, cihaz bilgisi, yazılım sürümü) milisaniyeler içinde ortaya çıkarır.
+- **Sızıntı Tespiti (Breach Detection):** *XposedOrNot* API entegrasyonu ile e-posta adreslerinin geçmiş veri sızıntılarında yer alıp almadığını kontrol eder.
+
+### 4. ⚔️ #L10 Yetki Yükseltme Analizörü (PrivEsc)
+Sistem sızma sonrası aşamalar için özel olarak tasarlanmıştır.
+- **SUID/GUID Kontrolü:** Yanlış yapılandırılmış kritik sistem dosyalarını tespit eder.
+- **Kernel Exploit Suggester:** İşletim sistemi çekirdek sürümüne göre potansiyel exploitleri raporlar.
+- **Capability Analizi:** Linux yeteneklerini (capabilities) tarayarak yetki yükseltme yollarını bulur.
+
+### 5. 📡 Network Radar & Sniffer
+- **Real-Time Sniffer:** L2/L3 seviyesinde paket yakalama ve TLS SNI üzerinden alan adı tespiti.
+- **Wi-Fi Radar:** Çevredeki tüm kablosuz ağları ve sinyal güçlerini haritalandırır.
 
 ---
 
 ## 📸 Demo
 ![NetVanguard Demo](demo.gif)
-*Not: Demo GIF placeholder'ıdır. Gerçek kullanım videoları için dokümantasyonu inceleyin.*
+*Not: Demo GIF placeholder'ıdır.*
 
 ---
 
 ## 🏛️ Mimari Yapı (Modular Refactor)
-
-Proje, sürdürülebilirlik ve performans için endüstriyel standartlarda modülerleştirilmiştir:
 
 ```mermaid
 graph TD
@@ -51,21 +65,10 @@ graph TD
     A --> E[sniffer.rs]
     A --> F[privesc.rs]
     
-    subgraph "Core Intelligence"
-    C --> C1(Shodan API)
-    C --> C2(DNS/TLS Parsers)
-    C --> C3(Geo-Location)
-    end
-    
-    subgraph "Attack Surface"
-    D --> D1(Nmap Engine)
-    D --> D2(WiFi Radar)
-    F --> F1(L10 Engine)
-    end
-    
-    subgraph "Traffic Analysis"
-    E --> E1(Pcap Sniffer)
-    E --> E2(DPI Monitoring)
+    subgraph "Intel Module"
+    C --> C1(Shodan / Geo)
+    C --> C2(Metadata / EXIF)
+    C --> C3(Breach Check)
     end
 ```
 
@@ -73,21 +76,12 @@ graph TD
 
 ## 🛠️ Kurulum (Installation)
 
-### Prerequisites (Gereksinimler)
-- **Rust Compiler** (Cargo)
-- **Nmap** (Network Mapping)
-- **libpcap-dev** (Traffic Sniffing)
-- **libssl-dev** (Secure Connections)
-
-### Hızlı Başlatma
-Projenizi saniyeler içinde ayağa kaldırmak için:
-
 ```bash
-# Bağımlılıkları kur ve ortamı hazırla
+# Kurulum ve Hazırlık
 chmod +x setup.sh
 ./setup.sh
 
-# Uygulamayı yönetici yetkileriyle çalıştır (Sniffer için gereklidir)
+# Çalıştırma
 sudo cargo run
 ```
 
@@ -96,10 +90,10 @@ sudo cargo run
 ## ⚖️ Yasal Uyarı (Legal Disclaimer)
 
 > [!CAUTION]
-> **DİKKAT:** NetVanguard, yalnızca **eğitim**, **etik sızma testi** ve **yetkili güvenlik analizleri** amaçlı geliştirilmiştir. Bu aracın yetkisiz sistemlerde kullanılması yasal sonuçlar doğurabilir. Kullanıcı, aracın kullanımından doğacak her türlü hukuki sorumluluğu kabul eder.
+> NetVanguard, yalnızca **eğitim** ve **etik sızma testi** amaçlıdır. Yetkisiz kullanım yasal sorumluluk doğurur.
 
 ---
 
 <p align="center">
-  Developed with ❤️ by <b>Baha Furkan Yıldız</b> | NetVanguard Team v1.0.1
+  Developed with ❤️ by <b>Baha Furkan Yıldız</b> | v1.0.1
 </p>
