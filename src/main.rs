@@ -19,7 +19,7 @@ use tokio_util::sync::CancellationToken;
 use tower_http::services::ServeDir;
 use trust_dns_resolver::config::*;
 use trust_dns_resolver::TokioAsyncResolver;
-use exif;
+use kamadak_exif as exif;
 use std::fs::File;
 use std::io::BufReader;
 
@@ -950,8 +950,8 @@ async fn main() {
         .route("/api/check_env", get(handle_check_env))
         .route("/api/v1/geolocation", get(handle_geolocation))
         .route("/api/metadata", post(handle_metadata))
-        .route("/api/sniffer", get(handle_sniffer))
-        .route("/api/breach", post(handle_breach))
+        .route("/api/sniff", get(handle_sniffer))
+        .route("/api/breach_mock", post(handle_breach))
         .fallback_service(ServeDir::new("static"));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -1100,7 +1100,7 @@ async fn handle_metadata(Json(body): Json<MetadataRequest>) -> Json<MetadataResp
 
     let mut reader = BufReader::new(file);
     let exifreader = exif::Reader::new();
-    let exif_data: exif::Exif = match exifreader.read_from_container(&mut reader) {
+    let exif_data = match exifreader.read_from_container(&mut reader) {
         Ok(exif) => exif,
         Err(e) => return Json(MetadataResponse {
             success: false,
@@ -1140,9 +1140,10 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
 
     let mut packets = Vec::new();
     let mut count = 0;
+    let start_time = std::time::Instant::now();
     
-    // Capture up to 20 packets or timeout
-    while count < 20 {
+    // Capture for approximately 5 seconds
+    while start_time.elapsed().as_secs() < 5 && count < 50 {
         match cap.next_packet() {
             Ok(packet) => {
                 let data = packet.data;

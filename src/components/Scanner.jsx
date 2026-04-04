@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const Scanner = () => {
     const [activeTab, setActiveTab] = useState('scanner');
     const [email, setEmail] = useState('');
     const [filePath, setFilePath] = useState('');
+    const [metadataResults, setMetadataResults] = useState(null);
+    const [breachResults, setBreachResults] = useState(null);
+    const [snifferLogs, setSnifferLogs] = useState([]);
+    const [isSniffing, setIsSniffing] = useState(false);
+    const [error, setError] = useState(null);
 
     // CSS variables matching index.html EXACTLY
     const btnBase = "flex-1 min-w-[190px] aspect-square flex flex-col items-center justify-center gap-5 p-8 text-[1.15rem] font-extrabold tracking-tight rounded-xl border-2 transition-all duration-500 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] cursor-pointer group";
@@ -13,6 +18,74 @@ const Scanner = () => {
     
     // Active: Glowing cyan/indigo theme from index.html
     const btnActive = "bg-gradient-to-br from-[#00f2fe]/20 to-[#4f46e5]/20 border-[#00f2fe] text-white shadow-[0_0_30px_rgba(0,242,254,0.3),inset_0_0_15px_rgba(79,70,229,0.2)] scale-[1.05] z-10";
+
+    const extractMetadata = async () => {
+        setError(null);
+        setMetadataResults(null);
+        try {
+            const res = await fetch('/api/metadata', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path: filePath })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setMetadataResults(data.data);
+            } else {
+                setError("HATA: İşlem başarısız!");
+            }
+        } catch (err) {
+            setError("HATA: İşlem başarısız!");
+        }
+    };
+
+    const checkBreach = async () => {
+        setError(null);
+        setBreachResults(null);
+        try {
+            const res = await fetch('/api/breach_mock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setBreachResults(data);
+            } else {
+                setError("HATA: İşlem başarısız!");
+            }
+        } catch (err) {
+            setError("HATA: İşlem başarısız!");
+        }
+    };
+
+    const startSniff = async () => {
+        if (isSniffing) {
+            setIsSniffing(false);
+            return;
+        }
+        
+        setIsSniffing(true);
+        setError(null);
+        setSnifferLogs(prev => [`[${new Date().toLocaleTimeString()}] Sniffer initialized. Capturing for 5s...`, ...prev]);
+        
+        try {
+            const res = await fetch('/api/sniff');
+            const data = await res.json();
+            if (data.success) {
+                const newLogs = data.packets.map(p => `[${p.proto}] ${p.src} -> ${p.dest} (${p.len}B)`);
+                setSnifferLogs(prev => [...newLogs, ...prev]);
+            } else {
+                setError("HATA: İşlem başarısız!");
+                setSnifferLogs(prev => [`[! HATA] ${data.error || 'Capture failed'}`, ...prev]);
+            }
+        } catch (err) {
+            setError("HATA: İşlem başarısız!");
+            setSnifferLogs(prev => [`[! HATA] Connection error`, ...prev]);
+        } finally {
+            setIsSniffing(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#030303] text-[#e0ffe6] font-mono p-12 selection:bg-[#00ff41]/30">
@@ -79,9 +152,22 @@ const Scanner = () => {
                                         placeholder="/path/to/image.jpg"
                                         className="w-full bg-[#050608] border border-[#00ff41]/10 rounded-lg p-4 text-white placeholder:text-white/20 focus:border-[#00ff41] focus:ring-1 focus:ring-[#00ff41] outline-none transition-all"
                                     />
-                                    <button className="w-full py-3 bg-[#00ff41]/10 border border-[#00ff41]/40 text-[#00ff41] font-bold rounded-lg hover:bg-[#00ff41]/20 transition-all">
+                                    <button 
+                                        onClick={extractMetadata}
+                                        className="w-full py-3 bg-[#00ff41]/10 border border-[#00ff41]/40 text-[#00ff41] font-bold rounded-lg hover:bg-[#00ff41]/20 transition-all">
                                         METADATA AYRIŞTIR
                                     </button>
+                                    
+                                    {metadataResults && (
+                                        <div className="mt-4 p-4 bg-black/40 border border-[#00ff41]/20 rounded-lg max-h-60 overflow-y-auto text-xs">
+                                            {Object.entries(metadataResults).map(([k, v]) => (
+                                                <div key={k} className="flex justify-between py-1 border-b border-white/5">
+                                                    <span className="text-[#8abf96]">{k}:</span>
+                                                    <span className="text-white">{v}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Breach Scanner */}
@@ -94,9 +180,20 @@ const Scanner = () => {
                                         placeholder="operator@netvanguard.io"
                                         className="w-full bg-[#050608] border border-[#00ff41]/10 rounded-lg p-4 text-white placeholder:text-white/20 focus:border-[#00ff41] focus:ring-1 focus:ring-[#00ff41] outline-none transition-all"
                                     />
-                                    <button className="w-full py-3 bg-[#00ff41]/10 border border-[#00ff41]/40 text-[#00ff41] font-bold rounded-lg hover:bg-[#00ff41]/20 transition-all">
+                                    <button 
+                                        onClick={checkBreach}
+                                        className="w-full py-3 bg-[#00ff41]/10 border border-[#00ff41]/40 text-[#00ff41] font-bold rounded-lg hover:bg-[#00ff41]/20 transition-all">
                                         BREACH SORGULA
                                     </button>
+
+                                    {breachResults && (
+                                        <div className={`mt-4 p-4 rounded-lg border ${breachResults.found ? 'bg-red-900/20 border-red-500/40' : 'bg-green-900/20 border-green-500/40'}`}>
+                                            <div className="font-bold mb-2">{breachResults.found ? '⚠️ SIZINTI BULUNDU!' : '✅ TEMİZ'}</div>
+                                            <ul className="text-xs space-y-1">
+                                                {breachResults.sources.map((src, i) => <li key={i}>• {src}</li>)}
+                                            </ul>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </section>
@@ -108,21 +205,36 @@ const Scanner = () => {
                         <section className="bg-[#0a0b10] border border-[#ff0055]/20 rounded-2xl p-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
                             <div className="flex justify-between items-center mb-8">
                                 <h2 className="text-2xl font-black text-[#ff0055] flex items-center gap-3">
-                                    <span className="w-3 h-3 bg-[#ff0055] rounded-full animate-ping"></span> CANLI TRAFİK ANALİZİ
+                                    <span className={`w-3 h-3 bg-[#ff0055] rounded-full ${isSniffing ? 'animate-ping' : ''}`}></span> CANLI TRAFİK ANALİZİ
                                 </h2>
-                                <button className="px-8 py-3 bg-[#ff0055]/10 border border-[#ff0055]/40 text-[#ff0055] font-black rounded-lg hover:bg-[#ff0055]/30 transition-all uppercase tracking-tighter">
-                                    Trafik Dinlemeyi Başlat
+                                <button 
+                                    onClick={startSniff}
+                                    disabled={isSniffing}
+                                    className={`px-8 py-3 rounded-lg font-black transition-all uppercase tracking-tighter border ${isSniffing ? 'bg-gray-800 text-gray-500 border-gray-700' : 'bg-[#ff0055]/10 border-[#ff0055]/40 text-[#ff0055] hover:bg-[#ff0055]/30'}`}>
+                                    {isSniffing ? 'Analiz Yapılıyor...' : 'Trafik Dinlemeyi Başlat'}
                                 </button>
                             </div>
 
                             {/* Terminal Box */}
                             <div className="relative group">
                                 <div className="absolute -inset-1 bg-gradient-to-r from-[#ff0055]/20 to-transparent rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-                                <div className="relative bg-black rounded-lg p-6 h-80 overflow-y-auto border border-white/5 font-mono text-sm">
-                                    <div className="text-[#ff0055]/60 mb-2">[SYSTEM] PCAP Interface initialized...</div>
-                                    <div className="text-[#00ff41]/40">[INFO] Waiting for packet stream (5s chunks)...</div>
-                                    <div className="mt-4 space-y-1">
-                                        <div className="text-white/80 animate-pulse">_</div>
+                                <div className="relative bg-black rounded-lg p-6 h-80 overflow-y-auto border border-white/5 font-mono text-sm scrollbar-thin scrollbar-thumb-[#ff0055]/20">
+                                    {error ? (
+                                        <div className="text-red-500 font-bold mb-4 animate-pulse">{error}</div>
+                                    ) : (
+                                        <>
+                                            <div className="text-[#ff0055]/60 mb-2">[SYSTEM] PCAP Interface initialized...</div>
+                                            <div className="text-[#00ff41]/40 mb-4">[INFO] Waiting for packet stream (5s chunks)...</div>
+                                        </>
+                                    )}
+                                    
+                                    <div className="space-y-1">
+                                        {snifferLogs.map((log, i) => (
+                                            <div key={i} className={`${log.startsWith('[!') ? 'text-red-400' : 'text-white/80'} border-l-2 border-white/5 pl-2`}>
+                                                {log}
+                                            </div>
+                                        ))}
+                                        {isSniffing && <div className="text-white/80 animate-pulse">_</div>}
                                     </div>
                                     {/* Scanlines Effect */}
                                     <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.02),rgba(0,255,0,0.01),rgba(0,0,255,0.02))] bg-[length:100%_4px,3px_100%]"></div>
