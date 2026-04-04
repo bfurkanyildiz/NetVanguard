@@ -5,7 +5,7 @@
   <a href="#-english-version">
     <img src="https://img.shields.io/badge/ENGLISH-blue?style=for-the-badge" alt="English">
   </a>
-  <a href="#🛠️-tek-satırda-kurulum-ve-çalıştırma">
+  <a href="#setup-link">
     <img src="https://img.shields.io/badge/⚡-SETUP-yellow?style=for-the-badge" alt="Setup">
   </a>
 </p>
@@ -21,6 +21,8 @@
 </p>
 
 ---
+
+<div id="turkish-version"></div>
 
 ## 🇹🇷 Türkçe Versiyon
 
@@ -71,6 +73,8 @@ graph TD
     end
 ```
 
+<div id="setup-link"></div>
+
 ### 🛠️ Tek Satırda Kurulum ve Çalıştırma
 
 Aşağıdaki komutu terminale yapıştırarak projeyi klonlayabilir, bağımlılıkları kurabilir ve anında başlatabilirsiniz:
@@ -85,6 +89,8 @@ git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard && 
 > NetVanguard, yalnızca **eğitim** ve **etik sızma testi** amaçlıdır. Yetkisiz kullanım yasal sorumluluk doğurur.
 
 ---
+
+<div id="english-version"></div>
 
 ## 🇺🇸 English Version
 
