@@ -124,6 +124,8 @@ struct SnifferResponse {
     packets: Vec<PacketInfo>,
     active_threats: i32,
     top_domain: Option<String>,
+    active_interface: Option<String>,
+    is_simulated: bool,
     error: Option<String>,
 }
 
@@ -166,7 +168,7 @@ fn parse_dns_answer(payload: &[u8]) -> Option<(String, String)> {
     while pos < payload.len() {
         let len = payload[pos] as usize;
         if len == 0 { 
-            pos += 1;
+            pos += 1; 
             break; 
         }
         if len > 63 || pos + 1 + len > payload.len() { break; }
@@ -206,6 +208,66 @@ fn parse_dns_answer(payload: &[u8]) -> Option<(String, String)> {
         pos += rd_len;
     }
 
+    None
+}
+
+fn parse_tls_sni(payload: &[u8]) -> Option<String> {
+    if payload.len() < 11 { return None; }
+    
+    // TLS Record Header: [Type (1), Version (2), Length (2)]
+    // Handshake Type: 0x16 (22) is Handshake
+    if payload[0] != 0x16 { return None; }
+    
+    // Handshake starts after Record Header (5 bytes)
+    // Handshake Type: 0x01 (1) is Client Hello
+    if payload[5] != 0x01 { return None; }
+
+    // Skip Handshake Header (4) + Version (2) + Random (32)
+    let mut pos = 5 + 4 + 2 + 32;
+    
+    // Session ID
+    if pos >= payload.len() { return None; }
+    let session_id_len = payload[pos] as usize;
+    pos += 1 + session_id_len;
+    
+    // Cipher Suites
+    if pos + 2 > payload.len() { return None; }
+    let cipher_suites_len = u16::from_be_bytes([payload[pos], payload[pos+1]]) as usize;
+    pos += 2 + cipher_suites_len;
+    
+    // Compression Methods
+    if pos >= payload.len() { return None; }
+    let comp_methods_len = payload[pos] as usize;
+    pos += 1 + comp_methods_len;
+    
+    // Extensions
+    if pos + 2 > payload.len() { return None; }
+    let extensions_len = u16::from_be_bytes([payload[pos], payload[pos+1]]) as usize;
+    pos += 2;
+    let extensions_end = pos + extensions_len;
+    
+    while pos + 4 <= extensions_end && pos + 4 <= payload.len() {
+        let ext_type = u16::from_be_bytes([payload[pos], payload[pos+1]]);
+        let ext_len = u16::from_be_bytes([payload[pos+2], payload[pos+3]]) as usize;
+        pos += 4;
+        
+        if ext_type == 0 { // Server Name Extension
+            if pos + 2 > payload.len() { break; }
+            let _list_len = u16::from_be_bytes([payload[pos], payload[pos+1]]) as usize;
+            pos += 2;
+            
+            if pos + 3 > payload.len() { break; }
+            let name_type = payload[pos]; // 0 is hostname
+            let name_len = u16::from_be_bytes([payload[pos+1], payload[pos+2]]) as usize;
+            pos += 3;
+            
+            if name_type == 0 && pos + name_len <= payload.len() {
+                return Some(String::from_utf8_lossy(&payload[pos..pos+name_len]).to_string());
+            }
+        }
+        pos += ext_len;
+    }
+    
     None
 }
 
@@ -1296,8 +1358,11 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
     let mut ip_counts: HashMap<String, usize> = HashMap::new();
     let mut domain_counts: HashMap<String, usize> = HashMap::new();
     let mut active_threats = 0;
+    let mut active_interface = None;
+    let mut is_simulated = false;
 
     if let Some(d) = device {
+        active_interface = Some(d.name.clone());
         if let Ok(mut cap) = pcap::Capture::from_device(d)
             .and_then(|c| c.promisc(true).snaplen(65535).timeout(100).open())
         {
@@ -1307,7 +1372,8 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
                     let data = packet.data;
                     if data.len() < 34 { continue; }
                     
-                    let proto = match data[23] {
+                    let proto_num = data[23];
+                    let proto = match proto_num {
                         1 => "ICMP",
                         6 => "TCP",
                         17 => "UDP",
@@ -1367,8 +1433,8 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
                         let s_port = u16::from_be_bytes([data[34], data[35]]);
                         let d_port = u16::from_be_bytes([data[36], data[37]]);
                         
-                        // DNS Analysis & Cache Update
-                        if proto == "UDP" && (d_port == 53 || s_port == 53) {
+                        // 1. DNS Analysis & Cache Update
+                        if proto_num == 17 && (d_port == 53 || s_port == 53) {
                             if s_port == 53 {
                                 // DNS Response - Learn IP->Domain
                                 if let Some((ip, domain)) = parse_dns_answer(&data[42..]) {
@@ -1386,7 +1452,29 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
                             }
                         }
 
-                        // Threat Detection: Backdoor Ports
+                        // 2. HTTPS (TLS SNI) Analysis
+                        if proto_num == 6 && d_port == 443 {
+                            // Find TCP payload start (usually 14 + 20 + 20 = 54)
+                            // But IP header can be variable length
+                            let ip_len = (data[14] & 0x0F) as usize * 4;
+                            let tcp_len = ((data[14 + ip_len + 12] >> 4) & 0x0F) as usize * 4;
+                            let payload_offset = 14 + ip_len + tcp_len;
+                            
+                            if data.len() > payload_offset + 10 {
+                                if let Some(sni) = parse_tls_sni(&data[payload_offset..]) {
+                                    p_info.domain = Some(sni.clone());
+                                    p_info.dest = format!("{} [HTTPS]", sni);
+                                    p_info.threat_level = "SAFE".to_string();
+                                    
+                                    // Also update cache for future packets to this IP
+                                    if let Ok(mut cache) = DNS_CACHE.lock() {
+                                        cache.insert(dest.clone(), sni);
+                                    }
+                                }
+                            }
+                        }
+
+                        // 3. Threat Detection: Backdoor Ports
                         if d_port == 4444 || d_port == 31337 {
                             p_info.risk_score = 10;
                             p_info.threat_level = "CRITICAL".to_string();
@@ -1415,11 +1503,12 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
 
     // Simulation Fallback
     if packets.is_empty() {
+        is_simulated = true;
         let mut rng = rand::thread_rng();
         for _ in 0..15 {
             let src = format!("192.168.1.{}", rng.gen_range(2..254));
             let (dest, level, domain) = if rng.gen_bool(0.2) {
-                ("INSTAGRAM (Meta)".to_string(), "SAFE", Some("instagram.com".to_string()))
+                ("INSTAGRAM.COM [HTTPS]".to_string(), "SAFE", Some("instagram.com".to_string()))
             } else if rng.gen_bool(0.2) {
                 ("239.255.255.250".to_string(), "SAFE", None)
             } else {
@@ -1449,6 +1538,8 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
         packets,
         active_threats,
         top_domain,
+        active_interface,
+        is_simulated,
         error: None,
     })
 }

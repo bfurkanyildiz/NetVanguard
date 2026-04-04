@@ -2677,8 +2677,14 @@
                 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.8rem;">
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <div class="pulse-dot emerald" id="sniffer-status-dot"></div>
-                    <h3 style="color: var(--emerald-400); font-family: 'JetBrains Mono'; font-weight: 800; letter-spacing: 1px;"
-                        data-i18n="sniffer_live_title">INTEL: AKILLI TEHDİT ANALİZÖRÜ</h3>
+                    <div style="display: flex; flex-direction: column;">
+                        <h3 style="color: var(--emerald-400); font-family: 'JetBrains Mono'; font-weight: 800; letter-spacing: 1px; margin: 0;"
+                            data-i18n="sniffer_live_title">INTEL: AKILLI TEHDİT ANALİZÖRÜ</h3>
+                        <div style="font-size: 0.65rem; display: flex; gap: 0.8rem; margin-top: 2px;">
+                            <span style="color: #666;">ARAYÜZ: <span id="sniffer-interface-name" style="color: var(--amber-400); font-weight: bold;">---</span></span>
+                            <span id="sniffer-mode-status" style="color: #666; font-weight: bold; border-left: 1px solid #333; padding-left: 0.8rem;">HAZIR</span>
+                        </div>
+                    </div>
                 </div>
                 <div style="display: flex; gap: 1rem;">
                     <div class="intel-stat-box" style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); padding: 0.5rem 1rem; border-radius: 4px; display: flex; flex-direction: column; align-items: center; min-width: 120px;">
@@ -3226,6 +3232,15 @@
                 if (data.success) {
                     const log = document.getElementById('sniffer-log');
                     
+                    // Update Interface & Mode
+                    const ifaceEl = document.getElementById('sniffer-interface-name');
+                    const modeEl = document.getElementById('sniffer-mode-status');
+                    if (ifaceEl) ifaceEl.textContent = data.active_interface || "---";
+                    if (modeEl) {
+                        modeEl.textContent = data.is_simulated ? "🔴 SİMLÜASYON" : "🟢 CANLI VERİ";
+                        modeEl.style.color = data.is_simulated ? "var(--rose-400)" : "var(--emerald-400)";
+                    }
+
                     // Update Stats
                     document.getElementById('intel-threat-count').textContent = data.active_threats;
                     document.getElementById('intel-top-domain').textContent = data.top_domain || "---";
@@ -3235,8 +3250,9 @@
                         row.className = 'packet-row';
                         if (p.risk_score >= 7) row.classList.add('threat');
                         
-                        // Intel Highlight: Check if destination is a resolved name or multicast
+                        // Intel Highlight: Check if destination is a resolved name, HTTPS or multicast
                         const isResolved = p.dest.match(/[a-z]/i) && !p.dest.includes('QUERY');
+                        const isHTTPS = p.dest.includes('[HTTPS]');
                         const isMulticast = p.dest.startsWith('239.255.') || p.dest.startsWith('224.0.');
                         
                         // Protocol Based Color Mapping
@@ -3251,6 +3267,10 @@
                             'color: var(--emerald-400); font-weight: 900; text-transform: uppercase; text-shadow: 0 0 5px rgba(16, 185, 129, 0.5);' : 
                             'color: #666;';
                         
+                        if (isHTTPS) {
+                            destStyle = 'color: var(--cyan-400); font-weight: 900; text-transform: uppercase; text-shadow: 0 0 8px rgba(34, 211, 238, 0.6);';
+                        }
+
                         if (isMulticast) {
                             row.style.opacity = '0.3';
                             destStyle = 'color: #444; font-size: 0.75rem;';
