@@ -85,9 +85,9 @@ Projenin derlenebilmesi ve tüm modüllerin (özellikle Sniffer) çalışabilmes
 <div id="setup-link"></div>
 
 ### 🛠️ Kurulum ve Çalıştırma (Kali Linux)
-Projyey tek adımda kurmak ve başlatmak için terminale şu komutu yapıştırın:
+Projeyi tek adımda kurmak ve başlatmak için terminale şu komutu yapıştırın:
 ```bash
-git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard && chmod +x setup.sh && ./setup.sh && source $HOME/.cargo/env && cargo run
+git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard && chmod +x setup.sh run.sh && ./setup.sh && ./run.sh
 ```
 
 ### ⛵ Hızlı Başlatma (Quick Run)
@@ -174,7 +174,7 @@ To ensure successful compilation and full modular functionality (especially the 
 ### 🛠️ Rapid Deployment (One-Liner)
 Run the following command on a Kali Linux machine to clone, setup, and launch NetVanguard:
 ```bash
-git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard && chmod +x setup.sh && ./setup.sh && source $HOME/.cargo/env && cargo run
+git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard && chmod +x setup.sh run.sh && ./setup.sh && ./run.sh
 ```
 
 ### ⛵ Quick Start (Recommended)
