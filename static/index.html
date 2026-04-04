@@ -3235,18 +3235,26 @@
                         row.className = 'packet-row';
                         if (p.risk_score >= 7) row.classList.add('threat');
                         
+                        // Intel Highlight: Check if destination is a resolved name or multicast
+                        const isResolved = p.dest.match(/[a-z]/i) && !p.dest.includes('QUERY');
+                        const isMulticast = p.dest.startsWith('239.255.') || p.dest.startsWith('224.0.');
+                        
                         // Protocol Based Color Mapping
                         let color = '#fff';
-                        let rowStyle = '';
                         if (p.threat_level === 'SAFE') color = 'var(--cyan-400)';
                         else if (p.threat_level === 'SUSPICIOUS') color = 'var(--amber-400)';
                         else if (p.threat_level === 'CRITICAL') color = 'var(--rose-400)';
                         else if (p.proto === 'TCP') color = '#999';
                         else if (p.proto === 'UDP') color = 'var(--violet-400)';
 
-                        const destLabel = p.domain ? 
-                            `<span style="color: var(--emerald-400); font-weight: bold;">🌍 ${p.domain}</span>` : 
-                            `<span style="color: #666;">${p.dest}</span>`;
+                        let destStyle = isResolved ? 
+                            'color: var(--emerald-400); font-weight: 900; text-transform: uppercase; text-shadow: 0 0 5px rgba(16, 185, 129, 0.5);' : 
+                            'color: #666;';
+                        
+                        if (isMulticast) {
+                            row.style.opacity = '0.3';
+                            destStyle = 'color: #444; font-size: 0.75rem;';
+                        }
 
                         const riskLabel = p.risk_score > 0 ? 
                             `<span style="color: ${color}; font-weight: bold;">[${p.risk_score}/10] ${p.threat_level}</span>` :
@@ -3259,7 +3267,7 @@
                             <span style="color: #444; font-size: 0.75rem;">${p.timestamp}</span>
                             <span class="p-proto" style="color: ${color}; font-weight: bold;">[${p.proto}]</span>
                             <span class="p-src" style="color: #ccc;">${p.src}</span>
-                            <span class="p-dest">${destLabel}</span>
+                            <span class="p-dest" style="${destStyle}">${p.dest}</span>
                             <div style="display: flex; align-items: center;">
                                 ${riskLabel}
                                 ${reasonLabel}

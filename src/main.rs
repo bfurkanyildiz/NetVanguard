@@ -27,6 +27,24 @@ use trust_dns_resolver::TokioAsyncResolver;
 static LAST_INTERFACE: Lazy<StdMutex<Option<String>>> = Lazy::new(|| StdMutex::new(None));
 
 // ═══════════════════════════════════════════════════════════
+//  INTELLIGENCE & CACHE STORAGE
+// ═══════════════════════════════════════════════════════════
+
+static DNS_CACHE: Lazy<StdMutex<std::collections::HashMap<String, String>>> = Lazy::new(|| {
+    StdMutex::new(std::collections::HashMap::new())
+});
+
+const META_GOOGLE_IPS: &[(&str, &str)] = &[
+    ("31.13.", "META / INSTAGRAM"),
+    ("157.240.", "META / FACEBOOK"),
+    ("173.252.", "META / SERVICE"),
+    ("142.250.", "GOOGLE SERVICE"),
+    ("172.217.", "GOOGLE SERVICE"),
+    ("8.8.8.8", "GOOGLE DNS"),
+    ("1.1.1.1", "CLOUDFLARE DNS"),
+];
+
+// ═══════════════════════════════════════════════════════════
 //  İŞLEM YÖNETİCİSİ (PROCESS MANAGER)
 // ═══════════════════════════════════════════════════════════
 
@@ -131,6 +149,64 @@ fn parse_dns_name(payload: &[u8]) -> Option<String> {
     }
     
     if domain.is_empty() { None } else { Some(domain) }
+}
+
+fn parse_dns_answer(payload: &[u8]) -> Option<(String, String)> {
+    if payload.len() < 12 { return None; }
+    
+    // 1. Skip Header (12 bytes)
+    let mut pos = 12;
+    
+    // 2. Skip Question Section
+    let q_count = u16::from_be_bytes([payload[4], payload[5]]);
+    if q_count == 0 { return None; }
+    
+    let mut domain = String::new();
+    // Parse name in question
+    while pos < payload.len() {
+        let len = payload[pos] as usize;
+        if len == 0 { 
+            pos += 1;
+            break; 
+        }
+        if len > 63 || pos + 1 + len > payload.len() { break; }
+        if !domain.is_empty() { domain.push('.'); }
+        domain.push_str(&String::from_utf8_lossy(&payload[pos+1..pos+1+len]));
+        pos += 1 + len;
+    }
+    pos += 4; // Skip QType and QClass
+
+    // 3. Parse Answer Section
+    let ans_count = u16::from_be_bytes([payload[6], payload[7]]);
+    if ans_count == 0 || pos >= payload.len() { return None; }
+
+    for _ in 0..ans_count {
+        if pos >= payload.len() { break; }
+        // Name (usually a pointer 0xC0xx)
+        if payload[pos] & 0xC0 == 0xC0 {
+            pos += 2;
+        } else {
+            // Skip variable name
+            while pos < payload.len() && payload[pos] != 0 {
+                pos += 1;
+            }
+            pos += 1;
+        }
+
+        if pos + 10 > payload.len() { break; }
+        let a_type = u16::from_be_bytes([payload[pos], payload[pos+1]]);
+        let rd_len = u16::from_be_bytes([payload[pos+8], payload[pos+9]]) as usize;
+        pos += 10;
+
+        if a_type == 1 && rd_len == 4 && pos + 4 <= payload.len() {
+            // A Record (IPv4)
+            let ip = format!("{}.{}.{}.{}", payload[pos], payload[pos+1], payload[pos+2], payload[pos+3]);
+            return Some((ip, domain));
+        }
+        pos += rd_len;
+    }
+
+    None
 }
 
 #[derive(Deserialize)]
@@ -1239,15 +1315,20 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
                     };
 
                     let src = format!("{}.{}.{}.{}", data[26], data[27], data[28], data[29]);
-                    let dest = format!("{}.{}.{}.{}", data[30], data[31], data[32], data[33]);
+                    let mut dest = format!("{}.{}.{}.{}", data[30], data[31], data[32], data[33]);
                     
-                    // Track IP frequency
-                    *ip_counts.entry(src.clone()).or_insert(0) += 1;
+                    // Track IP frequency (Only for Non-Local / Non-Multicast)
+                    let is_multicast = dest.starts_with("239.255.") || dest.starts_with("224.0.");
+                    let is_local = src.starts_with("192.168.");
+                    
+                    if !is_multicast && !is_local {
+                        *ip_counts.entry(src.clone()).or_insert(0) += 1;
+                    }
 
                     let mut p_info = PacketInfo {
                         timestamp: chrono::Local::now().format("%H:%M:%S").to_string(),
-                        src,
-                        dest,
+                        src: src.clone(),
+                        dest: dest.clone(),
                         proto: proto.to_string(),
                         len: data.len(),
                         domain: None,
@@ -1256,18 +1337,51 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
                         reason: None,
                     };
 
+                    // Intel Layer: Check for Multicast
+                    if is_multicast {
+                        p_info.threat_level = "SAFE".to_string();
+                        p_info.risk_score = 0;
+                        p_info.reason = Some("Local Discovery (SSDP/mDNS)".to_string());
+                    }
+
+                    // Intel Layer: ASN Identification (Meta/Google)
+                    for (prefix, label) in META_GOOGLE_IPS {
+                        if dest.starts_with(prefix) {
+                            p_info.threat_level = "SAFE".to_string();
+                            p_info.dest = format!("{} ({})", dest, label);
+                            break;
+                        }
+                    }
+
+                    // Intel Layer: DNS Cache Lookup
+                    if let Ok(cache) = DNS_CACHE.lock() {
+                        if let Some(domain) = cache.get(&dest) {
+                            p_info.domain = Some(domain.clone());
+                            p_info.dest = domain.clone();
+                            p_info.threat_level = "SAFE".to_string();
+                        }
+                    }
+
                     // Deep Analysis
                     if data.len() >= 42 {
+                        let s_port = u16::from_be_bytes([data[34], data[35]]);
                         let d_port = u16::from_be_bytes([data[36], data[37]]);
                         
-                        // DNS Analysis
-                        if proto == "UDP" && (d_port == 53 || u16::from_be_bytes([data[34], data[35]]) == 53) {
-                            if let Some(domain) = parse_dns_name(&data[42..]) {
-                                *domain_counts.entry(domain.clone()).or_insert(0) += 1;
-                                p_info.domain = Some(domain.clone());
-                                if domain.contains("google") || domain.contains("cloudflare") || domain.contains("netflix") {
-                                    p_info.threat_level = "SAFE".to_string();
-                                    p_info.risk_score = 0;
+                        // DNS Analysis & Cache Update
+                        if proto == "UDP" && (d_port == 53 || s_port == 53) {
+                            if s_port == 53 {
+                                // DNS Response - Learn IP->Domain
+                                if let Some((ip, domain)) = parse_dns_answer(&data[42..]) {
+                                    if let Ok(mut cache) = DNS_CACHE.lock() {
+                                        cache.insert(ip, domain.clone());
+                                    }
+                                }
+                            } else {
+                                // DNS Query
+                                if let Some(domain) = parse_dns_name(&data[42..]) {
+                                    *domain_counts.entry(domain.clone()).or_insert(0) += 1;
+                                    p_info.domain = Some(domain.clone());
+                                    p_info.dest = format!("QUERY: {}", domain);
                                 }
                             }
                         }
@@ -1281,13 +1395,15 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
                         }
                     }
 
-                    // Threat Detection: High Frequency (Burst) - Check local window
-                    if let Some(&count) = ip_counts.get(&p_info.src) {
-                        if count > 15 && p_info.risk_score < 7 {
-                            p_info.risk_score = 7;
-                            p_info.threat_level = "SUSPICIOUS".to_string();
-                            p_info.reason = Some("TRAFFIC BURST (SCAN/DDOS)".to_string());
-                            active_threats += 1;
+                    // Threat Detection: High Frequency (Burst) - Only for WAN
+                    if !is_multicast && !is_local {
+                        if let Some(&count) = ip_counts.get(&p_info.src) {
+                            if count > 15 && p_info.risk_score < 7 {
+                                p_info.risk_score = 7;
+                                p_info.threat_level = "SUSPICIOUS".to_string();
+                                p_info.reason = Some("TRAFFIC BURST (SCAN/DDOS)".to_string());
+                                active_threats += 1;
+                            }
                         }
                     }
 
@@ -1300,38 +1416,26 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
     // Simulation Fallback
     if packets.is_empty() {
         let mut rng = rand::thread_rng();
-        for _ in 0..rng.gen_range(10..20) {
-            let protos = ["TCP", "UDP", "ICMP", "DNS", "TLS"];
-            let proto = protos[rng.gen_range(0..protos.len())];
+        for _ in 0..15 {
             let src = format!("192.168.1.{}", rng.gen_range(2..254));
-            let dest = ["8.8.8.8", "1.1.1.1", "20.112.52.29", "44.22.11.55"][rng.gen_range(0..4)];
-            
-            let mut risk = 0;
-            let mut level = "UNKNOWN";
-            let mut reason = None;
-            let mut domain = None;
-
-            if rng.gen_bool(0.1) {
-                risk = 10;
-                level = "CRITICAL";
-                reason = Some("BACKDOOR PORT 4444 ACCESS".to_string());
-                active_threats += 1;
+            let (dest, level, domain) = if rng.gen_bool(0.2) {
+                ("INSTAGRAM (Meta)".to_string(), "SAFE", Some("instagram.com".to_string()))
             } else if rng.gen_bool(0.2) {
-                risk = 0;
-                level = "SAFE";
-                domain = Some("google.com".to_string());
-            }
+                ("239.255.255.250".to_string(), "SAFE", None)
+            } else {
+                ("8.8.8.8".to_string(), "SAFE", Some("google.com".to_string()))
+            };
 
             packets.push(PacketInfo {
                 timestamp: chrono::Local::now().format("%H:%M:%S").to_string(),
                 src,
-                dest: dest.to_string(),
-                proto: proto.to_string(),
+                dest,
+                proto: "TCP".to_string(),
                 len: rng.gen_range(64..1500),
                 domain,
-                risk_score: risk,
+                risk_score: 0,
                 threat_level: level.to_string(),
-                reason: reason.map(|s| s.to_string()),
+                reason: if level == "SAFE" { None } else { Some("Simulated Traffic".to_string()) },
             });
         }
     }
