@@ -2273,6 +2273,16 @@
                         </span>
                         <span class="option-label" data-i18n="opt_net">Ağdaki Cihazları Bul</span>
                     </label>
+                    <label class="option-chip">
+                        <input type="checkbox" id="opt-shodan">
+                        <span class="checkmark">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </span>
+                        <span class="option-label" data-i18n="opt_shodan">Shodan Global İstihbarat</span>
+                    </label>
                 </div>
 
                 <!-- Progress Bar -->
@@ -2776,6 +2786,14 @@
                 .p-len {
                     color: #888;
                 }
+                @keyframes animate-pulse {
+                    0% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                    100% { opacity: 1; }
+                }
+                .animate-pulse {
+                    animation: animate-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+                }
             </style>
         </div>
 
@@ -2894,6 +2912,7 @@
                 opt_sv: "Servis Versiyon Tespiti",
                 opt_a: "Kapsamlı Agresif Tarama",
                 opt_net: "Ağdaki Cihazları Bul",
+                opt_shodan: "Shodan Global İstihbarat",
                 progress_init: "Tarama başlatılıyor...",
                 results_title: "Tarama Sonuçları",
                 risk_score_prefix: "RİSK:",
@@ -4240,9 +4259,10 @@
                 aggressive_scan: document.getElementById('opt-a').checked,
                 net_discover: isNetDiscover,
                 priv_esc: document.getElementById('opt-priv-esc').checked,
+                shodan_enabled: document.getElementById('opt-shodan').checked,
             };
 
-            const anyChecked = opts.port_scan || opts.vuln_scan || opts.os_detect || opts.dns_query || opts.version_detect || opts.aggressive_scan || opts.net_discover;
+            const anyChecked = opts.port_scan || opts.vuln_scan || opts.os_detect || opts.dns_query || opts.version_detect || opts.aggressive_scan || opts.net_discover || opts.shodan_enabled || opts.priv_esc;
             if (!anyChecked) {
                 alert('Hata: Lütfen en az bir tarama modülü seçin!');
                 return;
@@ -4336,6 +4356,11 @@
                 });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 data = await res.json();
+                
+                if (opts.shodan_enabled) {
+                    addLog('📡 <strong>GLOBAL DATABASE SORGULANIYOR...</strong>', 'info animate-pulse');
+                    await sleep(1500);
+                }
             } catch (err) {
                 if (err.name === 'AbortError') return;
                 setProgress(100, 'Hata!');
@@ -4356,6 +4381,38 @@
             addLog('════════════════════════════════════', '');
             addLog(`📡 <strong>[SCANNING...] ${getScanLabel(data)} Başlatıldı</strong>`, 'highlight');
             addLog('════════════════════════════════════', '');
+            
+            // ── SHODAN GLOBAL INTELLIGENCE RENDERER ──
+            if (data.shodan_data) {
+                const s = data.shodan_data;
+                const intelBox = `
+                    <div class="shodan-intel-box" style="border: 1px solid var(--cyan-500); background: rgba(0,242,254,0.05); padding: 1.2rem; margin: 1rem 0; border-radius: 12px; position: relative; overflow: hidden; border-left: 5px solid var(--cyan-400); box-shadow: 0 0 20px rgba(0,242,254,0.1);">
+                        <div style="position:absolute; top:0; right:0; background: var(--cyan-500); color:#000; padding: 2px 10px; font-size: 0.75rem; font-weight: 900; letter-spacing: 1px;">GLOBAL INTEL</div>
+                        <div style="display: grid; grid-template-columns: 120px 1fr; gap: 0.6rem; font-size: 0.95rem;">
+                            <span style="color: #666; font-weight: bold;">LOKASYON:</span> <span style="color: #fff;">${s.city}</span>
+                            <span style="color: #666; font-weight: bold;">ISP / ASN:</span> <span style="color: var(--emerald-400); font-weight: bold;">${s.isp} <span style="color:#444; font-weight:normal;">(${s.asn})</span></span>
+                            <span style="color: #666; font-weight: bold;">AÇIK PORTLAR:</span> <span style="color: var(--violet-400); font-family: 'JetBrains Mono';">${s.ports.join(', ')}</span>
+                            <div style="grid-column: span 2; margin-top: 0.8rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.8rem;">
+                                <span style="color: #888; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Bilinen Zafiyetler (CVE Analysis):</span>
+                                <div style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                                    ${s.vulns.map(v => {
+                                        const isCritical = v.toLowerCase().includes('kritik') || v.toLowerCase().includes('critical');
+                                        const color = isCritical ? 'var(--rose-400)' : 'var(--amber-400)';
+                                        return `
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                ${isCritical ? '<span style="background: var(--rose-600); color: #fff; padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 900; box-shadow: 0 0 10px rgba(225,29,72,0.4);">KRİTİK</span>' : '<span style="background: var(--amber-600); color: #fff; padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 900;">UYARI</span>'}
+                                                <span style="color: ${color}; font-weight: bold; font-family: 'JetBrains Mono';">${v}</span>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                addLog(intelBox, '');
+                await sleep(1000);
+            }
 
             const lines = data.output.split('\n');
             const total = lines.length;

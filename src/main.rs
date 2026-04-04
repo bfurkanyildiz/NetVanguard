@@ -9,6 +9,7 @@ use exif;
 use rand::Rng;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::fs;
 use std::io::{Cursor, Write};
 use std::net::SocketAddr;
@@ -82,9 +83,87 @@ struct ScanRequest {
     #[serde(default)]
     aggressive_scan: bool,
     #[serde(default)]
-    net_discover: bool,
+    pub net_discover: bool,
     #[serde(default)]
-    priv_esc: bool,
+    pub priv_esc: bool,
+    #[serde(default)]
+    pub shodan_enabled: bool,
+}
+
+#[derive(Serialize, Clone)]
+pub struct ShodanData {
+    pub city: String,
+    pub isp: String,
+    pub asn: String,
+    pub ports: Vec<u16>,
+    pub vulns: Vec<String>,
+}
+
+async fn get_shodan_intel(ip: &str) -> Option<ShodanData> {
+    // 1. API Key Control
+    let api_key = std::env::var("SHODAN_API_KEY").ok();
+    
+    if let Some(key) = api_key {
+        // REAL SHODAN CALL
+        let client = reqwest::Client::new();
+        let url = format!("https://api.shodan.io/shodan/host/{}?key={}", ip, key);
+        
+        if let Ok(resp) = client.get(&url).send().await {
+            if let Ok(json) = resp.json::<Value>().await {
+                let city = json["city"].as_str().unwrap_or("Unknown").to_string();
+                let isp = json["isp"].as_str().unwrap_or("Unknown").to_string();
+                let asn = json["asn"].as_str().unwrap_or("Unknown").to_string();
+                
+                let mut ports = Vec::new();
+                if let Some(ports_arr) = json["ports"].as_array() {
+                    for p in ports_arr {
+                        if let Some(p_u64) = p.as_u64() {
+                            ports.push(p_u64 as u16);
+                        }
+                    }
+                }
+                
+                let mut vulns = Vec::new();
+                if let Some(vulns_arr) = json["vulns"].as_array() {
+                    for v in vulns_arr {
+                        if let Some(v_str) = v.as_str() {
+                            vulns.push(v_str.to_string());
+                        }
+                    }
+                }
+                
+                return Some(ShodanData { city, isp, asn, ports, vulns });
+            }
+        }
+    }
+
+    // 2. FALLBACK: IP-API (For real City/ISP/ASN even without key)
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(3))
+        .build()
+        .ok()?;
+        
+    let url = format!("http://ip-api.com/json/{}?fields=status,city,isp,as,query", ip);
+    
+    if let Ok(resp) = client.get(&url).send().await {
+        if let Ok(json) = resp.json::<Value>().await {
+            if json["status"] == "success" {
+                let city = json["city"].as_str().unwrap_or("Unknown").to_string();
+                let isp = json["isp"].as_str().unwrap_or("Unknown").to_string();
+                let asn = json["as"].as_str().unwrap_or("Unknown").to_string();
+                
+                return Some(ShodanData {
+                    city,
+                    isp,
+                    asn,
+                    ports: vec![80, 443], // Placeholder if no Shodan key
+                    vulns: vec!["SHODAN API KEY GEREKLİ (Zafiyet Tespiti İçin)".to_string()],
+                });
+            }
+        }
+    }
+
+    None
 }
 
 // Removed MetadataRequest/MetadataResponse as they are replaced by multipart and inline json!
@@ -95,6 +174,7 @@ struct ScanResponse {
     target: String,
     scan_type: String,
     output: String,
+    shodan_data: Option<ShodanData>,
 }
 
 #[derive(Serialize)]
@@ -547,6 +627,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
             target,
             scan_type: "error".into(),
             output: msg,
+            shodan_data: None,
         });
     }
 
@@ -594,6 +675,7 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
                 target: target.clone(),
                 scan_type: "cancelled".into(),
                 output: "İptal edildi.".into(),
+                shodan_data: None,
             });
         }
         scan_types.push("net_discover");
@@ -784,11 +866,28 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         all_output.push_str(&dns_out);
     }
 
+    // ── Shodan Global Intelligence (Intel Box) ──
+    let mut shodan_data = None;
+    if body.shodan_enabled {
+        // Private IP Check (Shodan doesn't scan local networks)
+        let is_private = target.starts_with("192.168.") 
+            || target.starts_with("10.") 
+            || target.starts_with("172.16.") 
+            || target.starts_with("127.") 
+            || target == "localhost";
+
+        if !is_private {
+            // REAL INTEL FETCH
+            shodan_data = get_shodan_intel(&target).await;
+        }
+    }
+
     Json(ScanResponse {
         success: overall_success,
-        target,
+        target: target.clone(),
         scan_type: scan_types.join(","),
         output: all_output,
+        shodan_data,
     })
 }
 
@@ -827,6 +926,7 @@ async fn handle_stop() -> Json<ScanResponse> {
         target: "".into(),
         scan_type: "stop".into(),
         output: "İşlemler başarıyla durduruldu ve kaynaklar serbest bırakıldı.".into(),
+        shodan_data: None,
     })
 }
 
@@ -1381,7 +1481,7 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
                     };
 
                     let src = format!("{}.{}.{}.{}", data[26], data[27], data[28], data[29]);
-                    let mut dest = format!("{}.{}.{}.{}", data[30], data[31], data[32], data[33]);
+                    let dest = format!("{}.{}.{}.{}", data[30], data[31], data[32], data[33]);
                     
                     // Track IP frequency (Only for Non-Local / Non-Multicast)
                     let is_multicast = dest.starts_with("239.255.") || dest.starts_with("224.0.");
