@@ -5,6 +5,9 @@
   <a href="#-english-version">
     <img src="https://img.shields.io/badge/ENGLISH-blue?style=for-the-badge" alt="English">
   </a>
+  <a href="#setup-link">
+    <img src="https://img.shields.io/badge/⚡-SETUP-yellow?style=for-the-badge" alt="Setup">
+  </a>
 </p>
 
 # 🛡️ NetVanguard v1.0.1
@@ -42,6 +45,8 @@
 #### 4. ⚔️ Yetki Yükseltme Analizörü (PrivEsc)
 - **SUID/GUID Kontrolü:** Yanlış yapılandırılmış kritik sistem dosyalarını tespit eder.
 - **Kernel Exploit Suggester:** Çekirdek sürümüne göre potansiyel exploitleri raporlar.
+
+<div id="setup-link"></div>
 
 ### ⚡ Akıllı Kurulum (Smart Setup)
 Kali Linux üzerinde projeyi tek komutla kurmak ve başlatmak için (Docker veya Yerel otomatik seçilir):
