@@ -50,6 +50,13 @@ git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard
 chmod +x setup.sh && sudo ./setup.sh
 ```
 
+### ⛵ Hızlı Başlatma (Quick Start)
+Eğer sistemi daha önce kurduysanız:
+1. **En Kolay Yol:** `./setup.sh` komutunu tekrar çalıştırın. Script sistemde her şeyin kurulu olduğunu anlayıp uygulamayı otomatik başlatacaktır.
+2. **Manuel Başlatma (Yerel):** `sudo ./target/release/netvanguard`
+3. **Docker Kullanıcıları:** `docker compose up`
+4. **DASHBOARD ERİŞİMİ:** **http://localhost:8080**
+
 ### 📸 Demo
 ![NetVanguard Demo](demo.gif)
 
@@ -99,6 +106,13 @@ Run the following command on a Kali Linux machine to clone, setup, and launch (A
 git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard
 chmod +x setup.sh && sudo ./setup.sh
 ```
+
+### ⛵ Quick Start
+If you have already installed the system:
+1. **Simplest Way:** Run `./setup.sh`. It will detect existing components and launch the hub automatically.
+2. **Manual Launch (Local):** `sudo ./target/release/netvanguard`
+3. **Docker Users:** `docker compose up`
+4. **DASHBOARD ACCESS:** **http://localhost:8080**
 
 ### 🏛️ Architecture
 ```mermaid
