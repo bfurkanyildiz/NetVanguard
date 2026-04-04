@@ -22,7 +22,7 @@ use tower_http::cors::{Any, CorsLayer};
 use tower_http::services::ServeDir;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let nmap_ver = Command::new("nmap")
         .arg("-V")
         .output()
@@ -90,9 +90,7 @@ async fn main() {
         .layer(cors);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
-    let listener = tokio::net::TcpListener::bind(addr)
-        .await
-        .expect("Port 8080 bağlanamadı!");
+    let listener = tokio::net::TcpListener::bind(addr).await?;
 
     println!(
         "\n    {}  {}",
@@ -117,7 +115,6 @@ async fn main() {
         let _ = open::that(&url);
     });
 
-    axum::serve(listener, app)
-        .await
-        .expect("Sunucu başlatılamadı!");
+    axum::serve(listener, app).await?;
+    Ok(())
 }

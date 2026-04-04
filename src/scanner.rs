@@ -124,7 +124,7 @@ pub async fn handle_check_env() -> Json<EnvCheckResponse> {
 
 /// # Summary
 /// A secure wrapper for executing asynchronous shell commands with logic for process cancellation and timeout.
-/// 
+///
 /// # Arguments
 /// * `program` - The executable name (e.g., "nmap", "sudo").
 /// * `args` - A slice of string arguments to pass to the program.
@@ -196,7 +196,7 @@ pub async fn run_command(program: &str, args: &[&str]) -> (bool, String) {
 }
 
 /// # Summary
-/// The core orchestration function for multi-stage network reconnaissance. 
+/// The core orchestration function for multi-stage network reconnaissance.
 /// Handles Nmap scanning, OS detection, DNS queries, and Shodan intelligence integration.
 ///
 /// # Arguments

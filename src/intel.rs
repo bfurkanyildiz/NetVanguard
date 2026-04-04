@@ -188,10 +188,20 @@ pub async fn handle_breach(Json(body): Json<BreachRequest>) -> Json<BreachRespon
             error: Some("Geçersiz e-posta".into()),
         });
     }
-    let client = reqwest::Client::builder()
+    let client = match reqwest::Client::builder()
         .timeout(Duration::from_secs(10))
         .build()
-        .unwrap_or_default();
+    {
+        Ok(c) => c,
+        Err(_) => {
+            return Json(BreachResponse {
+                success: false,
+                found: false,
+                sources: vec![],
+                error: Some("HTTP Client oluşturulamadı".into()),
+            })
+        }
+    };
     let url = format!("https://api.xposedornot.com/v1/check-email/{}", email);
     let response = match client.get(&url).send().await {
         Ok(resp) => resp,
@@ -212,7 +222,17 @@ pub async fn handle_breach(Json(body): Json<BreachRequest>) -> Json<BreachRespon
             error: None,
         });
     }
-    let data: Value = response.json().await.unwrap_or_default();
+    let data: Value = match response.json().await {
+        Ok(d) => d,
+        Err(_) => {
+            return Json(BreachResponse {
+                success: false,
+                found: false,
+                sources: vec![],
+                error: Some("JSON parse hatası".into()),
+            })
+        }
+    };
     let mut sources = Vec::new();
     if let Some(breach_list) = data.get("breaches").and_then(|b| b.as_array()) {
         for b in breach_list {
@@ -241,8 +261,9 @@ pub async fn handle_breach(Json(body): Json<BreachRequest>) -> Json<BreachRespon
 pub async fn handle_metadata(mut multipart: Multipart) -> impl IntoResponse {
     let mut metadata = HashMap::new();
     while let Ok(Some(field)) = multipart.next_field().await {
-        if field.name().unwrap_or_default() != "file" {
-            continue;
+        match field.name() {
+            Some("file") => (),
+            _ => continue,
         }
         let file_name = field.file_name().unwrap_or("unknown").to_string();
         let data = match field.bytes().await {

@@ -104,6 +104,7 @@ sudo setcap cap_net_raw,cap_net_admin=eip ./target/debug/netvanguard
 #### 🔧 Hata Giderme (Troubleshooting)
 Eğer Sniffer modülünde **"Permission Denied"** veya **"Operation not permitted"** hatası alıyorsanız, bunun sebebi uygulamanın ağ kartına doğrudan erişim yetkisinin olmamasıdır. Yukarıdaki `setcap` komutu, uygulamaya root yetkisi vermeden sadece ihtiyacı olan ağ yetkilerini tanımlar.
 
+
 ### ⚖️ Yasal Uyarı
 
 > [!CAUTION]
