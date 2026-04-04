@@ -1,11 +1,13 @@
-mod models;
 mod intel;
+mod models;
+mod privesc;
 mod scanner;
 mod sniffer;
-mod privesc;
 
-use crate::scanner::{handle_scan, handle_stop, handle_wifi_scan, handle_wifi_status, handle_check_env};
-use crate::intel::{handle_geolocation, handle_breach, handle_metadata};
+use crate::intel::{handle_breach, handle_geolocation, handle_metadata};
+use crate::scanner::{
+    handle_check_env, handle_scan, handle_stop, handle_wifi_scan, handle_wifi_status,
+};
 use crate::sniffer::handle_sniffer;
 
 use axum::{
@@ -39,14 +41,39 @@ async fn main() {
     "#;
 
     println!("{}", banner.bright_cyan());
-    println!("    {}", "═══════════════════════════════════════════════════════════════════════════".dimmed());
-    println!("    {}  {}", "🛡️  Versiyon :".bright_white().bold(), "v1.0.1".bright_green().bold());
-    println!("    {}  {}", "👨‍💻 Geliştirici:".bright_white().bold(), "Baha Furkan Yıldız".bright_magenta());
-    println!("    {}  {}", "⚙️  Nmap Vers :".bright_white().bold(), nmap_ver.yellow());
-    println!("    {}  {}", "📊 Durum    :".bright_white().bold(), "█ ONLINE".bright_green().bold());
-    println!("    {}", "═══════════════════════════════════════════════════════════════════════════".dimmed());
+    println!(
+        "    {}",
+        "═══════════════════════════════════════════════════════════════════════════".dimmed()
+    );
+    println!(
+        "    {}  {}",
+        "🛡️  Versiyon :".bright_white().bold(),
+        "v1.0.1".bright_green().bold()
+    );
+    println!(
+        "    {}  {}",
+        "👨‍💻 Geliştirici:".bright_white().bold(),
+        "Baha Furkan Yıldız".bright_magenta()
+    );
+    println!(
+        "    {}  {}",
+        "⚙️  Nmap Vers :".bright_white().bold(),
+        nmap_ver.yellow()
+    );
+    println!(
+        "    {}  {}",
+        "📊 Durum    :".bright_white().bold(),
+        "█ ONLINE".bright_green().bold()
+    );
+    println!(
+        "    {}",
+        "═══════════════════════════════════════════════════════════════════════════".dimmed()
+    );
 
-    let cors = CorsLayer::new().allow_origin(Any).allow_methods(Any).allow_headers(Any);
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_methods(Any)
+        .allow_headers(Any);
 
     let app = Router::new()
         .route("/api/scan", post(handle_scan))
@@ -63,11 +90,26 @@ async fn main() {
         .layer(cors);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
-    let listener = tokio::net::TcpListener::bind(addr).await.expect("Port 8080 bağlanamadı!");
+    let listener = tokio::net::TcpListener::bind(addr)
+        .await
+        .expect("Port 8080 bağlanamadı!");
 
-    println!("\n    {}  {}", "🌐 Web Panel :".bright_white().bold(), format!("http://{}", addr).bright_cyan().bold().underline());
-    println!("    {}  {}", "📡 API       :".bright_white().bold(), format!("http://{}/api/scan", addr).bright_blue());
-    println!("\n    {}\n", "🚀 Dashboard hazırlanıyor ve tarayıcıda açılıyor...".bright_yellow().bold());
+    println!(
+        "\n    {}  {}",
+        "🌐 Web Panel :".bright_white().bold(),
+        format!("http://{}", addr).bright_cyan().bold().underline()
+    );
+    println!(
+        "    {}  {}",
+        "📡 API       :".bright_white().bold(),
+        format!("http://{}/api/scan", addr).bright_blue()
+    );
+    println!(
+        "\n    {}\n",
+        "🚀 Dashboard hazırlanıyor ve tarayıcıda açılıyor..."
+            .bright_yellow()
+            .bold()
+    );
 
     let url = format!("http://{}", addr);
     tokio::spawn(async move {
@@ -75,5 +117,7 @@ async fn main() {
         let _ = open::that(&url);
     });
 
-    axum::serve(listener, app).await.expect("Sunucu başlatılamadı!");
+    axum::serve(listener, app)
+        .await
+        .expect("Sunucu başlatılamadı!");
 }

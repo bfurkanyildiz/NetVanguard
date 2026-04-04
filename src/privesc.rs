@@ -10,7 +10,8 @@ pub async fn perform_priv_esc_analysis(target: &str) -> String {
         report.push_str("> Yerel Sistem Analizi (SUID/GUID & Kernel)...\n");
 
         // 1. SUID Check
-        let (_, suid_out) = run_command("find", &["/", "-perm", "-4000", "-type", "f", "-ls"]).await;
+        let (_, suid_out) =
+            run_command("find", &["/", "-perm", "-4000", "-type", "f", "-ls"]).await;
         let suid_count = suid_out.lines().count();
         report.push_str(&format!("- Tespit Edilen SUID Dosyası: {}\n", suid_count));
 

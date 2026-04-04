@@ -73,6 +73,15 @@ graph TD
     end
 ```
 
+### 📦 Sistem Bağımlılıkları
+
+Projenin derlenebilmesi ve tüm modüllerin (özellikle Sniffer) çalışabilmesi için aşağıdaki paketlerin sisteme kurulu olması gerekir:
+
+- **Linux (Debian/Ubuntu/Kali):** `pkg-config`, `libssl-dev`, `libpcap-dev`, `nmap`.
+- **Windows:** 
+  - Testleri ve sniffer modülünü çalıştırmak için **[Npcap SDK](https://nmap.org/npcap/)** yüklü olmalıdır.
+  - `wpcap.lib` dosyasının bulunduğu dizin sistem `LIB` ortam değişkenine eklenmelidir.
+
 <div id="setup-link"></div>
 
 ### 🛠️ Tek Satırda Kurulum ve Çalıştırma
@@ -134,6 +143,15 @@ graph TD
     A --> E[sniffer.rs]
     A --> F[privesc.rs]
 ```
+
+### 📦 System Dependencies
+
+To ensure successful compilation and full modular functionality (especially the Sniffer), the following dependencies must be present:
+
+- **Linux (Debian/Ubuntu/Kali):** `pkg-config`, `libssl-dev`, `libpcap-dev`, `nmap`.
+- **Windows:** 
+  - **[Npcap SDK](https://nmap.org/npcap/)** is required to run unit tests and the Sniffer module.
+  - The directory containing `wpcap.lib` must be added to the system `LIB` environment variable.
 
 ### 🛠️ One-Line Installation & Launch
 

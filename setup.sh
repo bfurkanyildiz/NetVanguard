@@ -39,7 +39,7 @@ echo -e "${GREEN}[+] Sistem uygun.${NC}\n"
 
 # 2. Smart Dependency Check & Installation
 echo -e "${BLUE}[*] Paket listesi tazeleniyor...${NC}"
-sudo apt update -y
+sudo apt-get update -y
 
 DEPENDENCIES=("build-essential" "pkg-config" "libssl-dev" "libpcap-dev" "nmap")
 
