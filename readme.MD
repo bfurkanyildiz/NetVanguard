@@ -48,6 +48,36 @@
 - **Real-Time Sniffer:** L2/L3 seviyesinde paket yakalama ve sniffing.
 - **Wi-Fi Radar:** Çevredeki kablosuz ağları ve sinyal güçlerini haritalandırır.
 
+### 📸 Demo
+![NetVanguard Demo](demo.gif)
+
+### 🏛️ Mimari Yapı (Modüler Refaktör)
+
+```mermaid
+graph TD
+    A[main.rs] --> B[models.rs]
+    A --> C[intel.rs]
+    A --> D[scanner.rs]
+    A --> E[sniffer.rs]
+    A --> F[privesc.rs]
+```
+
+### 🛠️ Kurulum
+
+```bash
+# Kurulum ve Hazırlık
+chmod +x setup.sh
+./setup.sh
+
+# Çalıştırma (Sniffer için Root yetkisi gereklidir)
+sudo cargo run
+```
+
+### ⚖️ Yasal Uyarı
+
+> [!CAUTION]
+> NetVanguard, yalnızca **eğitim** ve **etik sızma testi** amaçlıdır. Yetkisiz kullanım yasal sorumluluk doğurur.
+
 ---
 
 ## 🇺🇸 English Version
@@ -80,12 +110,10 @@
 - **Real-Time Sniffer:** L2/L3 packet capture and domain identification via TLS SNI.
 - **Wi-Fi Radar:** Maps all surrounding wireless networks and their signal strengths in real-time.
 
----
-
-## 📸 Demo
+### 📸 Demo
 ![NetVanguard Demo](demo.gif)
 
-## 🏛️ Architecture (Modular Refactor)
+### 🏛️ Architecture (Modular Refactor)
 
 ```mermaid
 graph TD
@@ -96,7 +124,7 @@ graph TD
     A --> F[privesc.rs]
 ```
 
-## 🛠️ Installation
+### 🛠️ Installation
 
 ```bash
 # Setup Environment
@@ -107,7 +135,7 @@ chmod +x setup.sh
 sudo cargo run
 ```
 
-## ⚖️ Legal Disclaimer
+### ⚖️ Legal Disclaimer
 
 > [!CAUTION]
 > NetVanguard is intended for **educational** and **ethical penetration testing** purposes only. Unauthorized use on systems without prior consent is strictly prohibited and may lead to legal consequences.
