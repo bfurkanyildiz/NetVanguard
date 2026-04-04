@@ -1,14 +1,15 @@
 use axum::{
-    extract::Query,
+    extract::{DefaultBodyLimit, Multipart, Query},
     response::IntoResponse,
     routing::{get, post},
     Json, Router,
 };
 use colored::Colorize;
+use exif;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::io::Write;
+use std::io::{Cursor, Write};
 use std::net::SocketAddr;
 use std::process::Command;
 use std::sync::{Arc, Mutex as StdMutex};
@@ -16,12 +17,10 @@ use std::time::Duration;
 use tokio::process::Child;
 use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::services::ServeDir;
 use trust_dns_resolver::config::*;
 use trust_dns_resolver::TokioAsyncResolver;
-use exif;
-use std::fs::File;
-use std::io::BufReader;
 
 // Log Throttling for Interface Selector
 static LAST_INTERFACE: Lazy<StdMutex<Option<String>>> = Lazy::new(|| StdMutex::new(None));
@@ -69,17 +68,7 @@ struct ScanRequest {
     priv_esc: bool,
 }
 
-#[derive(Deserialize)]
-struct MetadataRequest {
-    path: String,
-}
-
-#[derive(Serialize)]
-struct MetadataResponse {
-    success: bool,
-    data: std::collections::HashMap<String, String>,
-    error: Option<String>,
-}
+// Removed MetadataRequest/MetadataResponse as they are replaced by multipart and inline json!
 
 #[derive(Serialize)]
 struct ScanResponse {
@@ -942,6 +931,11 @@ async fn main() {
         "═══════════════════════════════════════════════════════════════════════════".dimmed()
     );
 
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_methods(Any)
+        .allow_headers(Any);
+
     let app = Router::new()
         .route("/api/scan", post(handle_scan))
         .route("/api/stop", post(handle_stop))
@@ -950,11 +944,13 @@ async fn main() {
         .route("/api/check_env", get(handle_check_env))
         .route("/api/v1/geolocation", get(handle_geolocation))
         .route("/api/metadata", post(handle_metadata))
+        .layer(DefaultBodyLimit::max(20 * 1024 * 1024))
         .route("/api/sniff", get(handle_sniffer))
         .route("/api/breach_mock", post(handle_breach))
-        .fallback_service(ServeDir::new("static"));
+        .fallback_service(ServeDir::new("static"))
+        .layer(cors);
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
 
     let listener = tokio::net::TcpListener::bind(addr)
         .await
@@ -1087,84 +1083,130 @@ fn write_report_to_file(target: &str, content: &str) -> std::io::Result<()> {
     Ok(())
 }
 
-async fn handle_metadata(Json(body): Json<MetadataRequest>) -> Json<MetadataResponse> {
-    let file_path = body.path.trim();
-    let file = match File::open(file_path) {
-        Ok(f) => f,
-        Err(e) => return Json(MetadataResponse {
-            success: false,
-            data: std::collections::HashMap::new(),
-            error: Some(format!("Dosya açılamadı: {}", e)),
-        }),
-    };
+async fn handle_metadata(mut multipart: Multipart) -> impl IntoResponse {
+    let mut metadata = std::collections::HashMap::new();
 
-    let mut reader = BufReader::new(file);
-    let exifreader = exif::Reader::new();
-    let exif_data: exif::Exif = match exifreader.read_from_container(&mut reader) {
-        Ok(exif) => exif,
-        Err(e) => return Json(MetadataResponse {
-            success: false,
-            data: std::collections::HashMap::new(),
-            error: Some(format!("EXIF verisi okunamadı: {}", e)),
-        }),
-    };
+    while let Ok(Some(field)) = multipart.next_field().await {
+        let name = field.name().unwrap_or_default().to_string();
+        if name != "file" {
+            continue;
+        }
 
-    let mut data = std::collections::HashMap::new();
-    for field in exif_data.fields() {
-        let tag_name = format!("{:?}", field.tag);
-        let value = field.display_value().with_unit(&exif_data).to_string();
-        data.insert(tag_name, value);
+        let file_name = field.file_name().unwrap_or("unknown").to_string();
+        let data = match field.bytes().await {
+            Ok(b) => b,
+            Err(_) => continue,
+        };
+
+        let file_size = data.len();
+        metadata.insert("Dosya Adı".to_string(), file_name);
+        metadata.insert("Boyut".to_string(), format!("{:.2} MB", file_size as f64 / 1_048_576.0));
+
+        let mut cursor = Cursor::new(data);
+        let exifreader = exif::Reader::new();
+
+        match exifreader.read_from_container(&mut cursor) {
+            Ok(exif_data) => {
+                for field in exif_data.fields() {
+                    let tag = field.tag.to_string();
+                    let val = field.display_value().with_unit(&exif_data).to_string();
+
+                    // Filter for interesting tags
+                    if tag.contains("GPS")
+                        || tag.contains("Date")
+                        || tag.contains("Make")
+                        || tag.contains("Model")
+                        || tag.contains("Software")
+                        || tag.contains("ImageWidth")
+                        || tag.contains("ImageLength")
+                    {
+                        metadata.insert(tag, val);
+                    }
+                }
+            }
+            Err(e) => {
+                // If it's not a hard error (like missing EXIF), we still return the file info
+                metadata.insert("Status".to_string(), format!("TEMİZ (Metadata Bulunamadı: {})", e));
+            }
+        }
     }
 
-    Json(MetadataResponse {
-        success: true,
-        data,
-        error: None,
-    })
+    if metadata.is_empty() {
+        return Json(serde_json::json!({
+            "success": false,
+            "error": "Dosya okunamadı veya geçersiz format."
+        }));
+    }
+
+    Json(serde_json::json!({
+        "success": true,
+        "data": metadata
+    }))
 }
 
 async fn handle_sniffer() -> Json<SnifferResponse> {
     let device = match pcap::Device::lookup() {
         Ok(d_opt) => match d_opt {
             Some(d) => d,
-            None => return Json(SnifferResponse { success: false, packets: vec![], error: Some("Ağ cihazı bulunamadı.".to_string()) }),
+            None => {
+                return Json(SnifferResponse {
+                    success: false,
+                    packets: vec![],
+                    error: Some("Ağ cihazı bulunamadı.".to_string()),
+                })
+            }
         },
-        Err(e) => return Json(SnifferResponse { success: false, packets: vec![], error: Some(format!("Cihaz arama hatası: {}", e)) }),
+        Err(e) => {
+            return Json(SnifferResponse {
+                success: false,
+                packets: vec![],
+                error: Some(format!("Cihaz arama hatası: {}", e)),
+            })
+        }
     };
 
     let mut cap = match pcap::Capture::from_device(device)
-        .and_then(|c| c.promisc(true).snaplen(65535).timeout(1000).open()) {
-            Ok(c) => c,
-            Err(e) => return Json(SnifferResponse { success: false, packets: vec![], error: Some(format!("Capture başlatılamadı: {}", e)) }),
-        };
+        .and_then(|c| c.promisc(true).snaplen(65535).timeout(1000).open())
+    {
+        Ok(c) => c,
+        Err(e) => {
+            return Json(SnifferResponse {
+                success: false,
+                packets: vec![],
+                error: Some(format!("Capture başlatılamadı: {}", e)),
+            })
+        }
+    };
 
     let mut packets = Vec::new();
     let mut count = 0;
     let start_time = std::time::Instant::now();
-    
+
     // Capture for approximately 5 seconds
     while start_time.elapsed().as_secs() < 5 && count < 50 {
         match cap.next_packet() {
             Ok(packet) => {
                 let data = packet.data;
-                if data.len() < 34 { continue; } // Basic Ethernet + IP header check
-                
+                if data.len() < 34 {
+                    continue;
+                } // Basic Ethernet + IP header check
+
                 // Extremely simple IPv4 extraction (assuming Ethernet II)
                 // Eth: 14 bytes, IP: starts at 14
                 // Prototol at 14 + 9
                 // Src IP at 14 + 12
                 // Dest IP at 14 + 16
-                
+
                 let proto = match data[23] {
                     1 => "ICMP",
                     6 => "TCP",
                     17 => "UDP",
                     _ => "OTHER",
                 };
-                
+
                 let src = format!("{}.{}.{}.{}", data[26], data[27], data[28], data[29]);
                 let dest = format!("{}.{}.{}.{}", data[30], data[31], data[32], data[33]);
-                
+
                 packets.push(PacketInfo {
                     src,
                     dest,
@@ -1187,7 +1229,7 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
 
 async fn handle_breach(Json(body): Json<BreachRequest>) -> Json<BreachResponse> {
     let email = body.email.trim().to_lowercase();
-    
+
     // Simple validation
     if !email.contains('@') {
         return Json(BreachResponse {
@@ -1205,15 +1247,17 @@ async fn handle_breach(Json(body): Json<BreachRequest>) -> Json<BreachResponse> 
         .unwrap_or_default();
 
     let url = format!("https://api.xposedornot.com/v1/check-email/{}", email);
-    
+
     let response = match client.get(&url).send().await {
         Ok(resp) => resp,
-        Err(_) => return Json(BreachResponse {
-            success: false,
-            found: false,
-            sources: vec![],
-            error: Some("İstihbarat sunucularına ulaşılamıyor!".to_string()),
-        }),
+        Err(_) => {
+            return Json(BreachResponse {
+                success: false,
+                found: false,
+                sources: vec![],
+                error: Some("İstihbarat sunucularına ulaşılamıyor!".to_string()),
+            })
+        }
     };
 
     if response.status() == 404 {

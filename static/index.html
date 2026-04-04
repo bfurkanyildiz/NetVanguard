@@ -1849,25 +1849,64 @@
     </div>
     <style>
         @keyframes offlinePulse {
-            0% { box-shadow: 0 0 15px rgba(255, 0, 60, 0.4); border-color: rgba(255, 0, 60, 0.5); }
-            50% { box-shadow: 0 0 40px rgba(255, 0, 60, 1); border-color: #ff003c; }
-            100% { box-shadow: 0 0 15px rgba(255, 0, 60, 0.4); border-color: rgba(255, 0, 60, 0.5); }
+            0% {
+                box-shadow: 0 0 15px rgba(255, 0, 60, 0.4);
+                border-color: rgba(255, 0, 60, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(255, 0, 60, 1);
+                border-color: #ff003c;
+            }
+
+            100% {
+                box-shadow: 0 0 15px rgba(255, 0, 60, 0.4);
+                border-color: rgba(255, 0, 60, 0.5);
+            }
         }
+
         #offline-banner {
             animation: offlinePulse 1.5s infinite;
         }
+
         @keyframes lockShake {
-            0% { transform: translateX(0); }
-            20% { transform: translateX(-10px) rotate(-2deg); background: var(--rose-600) !important; color: white !important; }
-            40% { transform: translateX(10px) rotate(2deg); background: var(--rose-600) !important; color: white !important; }
-            60% { transform: translateX(-10px) rotate(-2deg); background: var(--rose-600) !important; color: white !important; }
-            80% { transform: translateX(10px) rotate(2deg); background: var(--rose-600) !important; color: white !important; }
-            100% { transform: translateX(0); }
+            0% {
+                transform: translateX(0);
+            }
+
+            20% {
+                transform: translateX(-10px) rotate(-2deg);
+                background: var(--rose-600) !important;
+                color: white !important;
+            }
+
+            40% {
+                transform: translateX(10px) rotate(2deg);
+                background: var(--rose-600) !important;
+                color: white !important;
+            }
+
+            60% {
+                transform: translateX(-10px) rotate(-2deg);
+                background: var(--rose-600) !important;
+                color: white !important;
+            }
+
+            80% {
+                transform: translateX(10px) rotate(2deg);
+                background: var(--rose-600) !important;
+                color: white !important;
+            }
+
+            100% {
+                transform: translateX(0);
+            }
         }
+
         .lock-shake {
-            animation: lockShake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+            animation: lockShake 0.4s cubic-bezier(.36, .07, .19, .97) both;
             border-color: var(--rose-500) !important;
-            box-shadow: 0 0 20px rgba(244,63,94,0.8) !important;
+            box-shadow: 0 0 20px rgba(244, 63, 94, 0.8) !important;
         }
     </style>
     <div class="lang-switcher">
@@ -1896,8 +1935,14 @@
 
     <div class="app-container" id="app-container">
         <!-- OFFLINE BANNER -->
-        <div id="offline-banner" style="display:none; position:fixed; top:2rem; left:50%; transform:translateX(-50%); width:max-content; min-width:300px; padding:1.2rem 3rem; background:rgba(225, 29, 72, 0.95); color:#fff; text-align:center; font-weight:900; font-size:1.2rem; letter-spacing:2px; z-index:99999; border-radius:12px; border: 2px solid #ff003c; box-shadow: 0 0 20px rgba(255, 0, 60, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.2); text-shadow: 0 0 10px rgba(255,255,255,0.8); pointer-events:none;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:text-bottom; margin-right:8px; display:inline-block;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div id="offline-banner"
+            style="display:none; position:fixed; top:2rem; left:50%; transform:translateX(-50%); width:max-content; min-width:300px; padding:1.2rem 3rem; background:rgba(225, 29, 72, 0.95); color:#fff; text-align:center; font-weight:900; font-size:1.2rem; letter-spacing:2px; z-index:99999; border-radius:12px; border: 2px solid #ff003c; box-shadow: 0 0 20px rgba(255, 0, 60, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.2); text-shadow: 0 0 10px rgba(255,255,255,0.8); pointer-events:none;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                style="vertical-align:text-bottom; margin-right:8px; display:inline-block;">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
             <span>!! İNTERNET BAĞLANTISI KESİLDİ !!</span>
         </div>
         <!-- ═══ HEADER ═══ -->
@@ -2494,38 +2539,38 @@
         <!-- ═══ VUE: INTELLIGENCE PANEL ═══ -->
         <div class="terminal" id="vue-intel" style="display:none; padding: 2rem; background:#08080b; min-height:500px;">
             <h2 class="panel-title" style="margin-bottom: 0.5rem; color: var(--emerald-400);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px; height:24px; vertical-align:middle; margin-right:8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" style="width:24px; height:24px; vertical-align:middle; margin-right:8px;">
                     <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 4h.01" />
                 </svg>
                 <span data-i18n="intel_panel_title">🕵️ GİZLİ VERİ AVCISI (Metadata Hunter)</span>
             </h2>
-            <p style="color: #888; margin-bottom: 2rem;" data-i18n="intel_panel_desc">Yerel sistemdeki medya dosyalarının (JPG/PNG) derinlemesine EXIF ve Metadata analizini gerçekleştirin.</p>
+            <p style="color: #888; margin-bottom: 2rem;" data-i18n="intel_panel_desc">Yerel sistemdeki medya
+                dosyalarının (JPG/PNG) derinlemesine EXIF ve Metadata analizini gerçekleştirin.</p>
 
-            <div class="input-group" style="max-width: 800px; margin-bottom: 2rem;">
-                <div class="input-wrapper" style="flex: 1;">
-                    <input type="text" id="intel-path" class="ip-input" placeholder="Dosya yolu: C:\Users\Admin\Documents\target.jpg" data-i18n="placeholder_intel_path" autocomplete="off" spellcheck="false" />
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
-                        <polyline points="13 2 13 9 20 9" />
-                    </svg>
-                </div>
-                <button class="scan-btn" onclick="extractMetadata()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                    </svg>
-                    <span data-i18n="btn_analyze">Analiz Et</span>
-                </button>
+            <div class="input-group" style="max-width: 800px; margin-bottom: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+                <input type="file" id="intel-file" style="display: none;" accept="image/*" onchange="extractMetadata()" />
+                <label for="intel-file" id="intel-upload-label" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 2.5rem; border: 2px dashed rgba(0, 255, 65, 0.2); border-radius: 12px; background: rgba(0, 255, 65, 0.03); cursor: pointer; transition: all 0.3s ease; width: 100%;">
+                    <div id="intel-upload-icon" style="font-size: 2.5rem; opacity: 0.6;">📸</div>
+                    <div id="intel-upload-text" style="color: var(--emerald-400); font-weight: 800; font-size: 0.9rem; letter-spacing: 1px;" data-i18n="btn_select_file">ANALİZ İÇİN GÖRSEL SEÇ</div>
+                    <div style="color: #666; font-size: 0.75rem;">JPG, PNG (MAX 20MB)</div>
+                </label>
             </div>
 
             <div id="intel-results" style="display: none;">
-                <div style="background: rgba(16, 25, 40, 0.4); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem;">
-                    <h3 style="color: var(--cyan-400); margin-bottom: 1rem; font-size: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;" data-i18n="intel_results_header">📊 EKSTRE EDİLEN VERİLER</h3>
+                <div
+                    style="background: rgba(16, 25, 40, 0.4); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem;">
+                    <h3 style="color: var(--cyan-400); margin-bottom: 1rem; font-size: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;"
+                        data-i18n="intel_results_header">📊 EKSTRE EDİLEN VERİLER</h3>
                     <div id="intel-table-container" style="max-height: 400px; overflow-y: auto;">
-                        <table style="width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">
+                        <table
+                            style="width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">
                             <thead style="text-align: left; color: #888;">
                                 <tr>
-                                    <th style="padding: 0.5rem; border-bottom: 1px solid var(--border-subtle);" data-i18n="th_tag">Etiket (Tag)</th>
-                                    <th style="padding: 0.5rem; border-bottom: 1px solid var(--border-subtle);" data-i18n="th_val">Değer (Value)</th>
+                                    <th style="padding: 0.5rem; border-bottom: 1px solid var(--border-subtle);"
+                                        data-i18n="th_tag">Etiket (Tag)</th>
+                                    <th style="padding: 0.5rem; border-bottom: 1px solid var(--border-subtle);"
+                                        data-i18n="th_val">Değer (Value)</th>
                                 </tr>
                             </thead>
                             <tbody id="intel-table-body">
@@ -2536,81 +2581,113 @@
                 </div>
             </div>
 
-            <div id="intel-error" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(225, 29, 72, 0.1); border: 1px solid var(--rose-500); border-radius: 8px; color: var(--rose-400); font-family: 'JetBrains Mono', monospace;"></div>
+            <div id="intel-error"
+                style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(225, 29, 72, 0.1); border: 1px solid var(--rose-500); border-radius: 8px; color: var(--rose-400); font-family: 'JetBrains Mono', monospace;">
+            </div>
 
             <!-- DATA BREACH SCANNER SECTION -->
             <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-subtle);">
                 <h2 class="panel-title" style="margin-bottom: 0.5rem; color: var(--rose-400);">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px; height:24px; vertical-align:middle; margin-right:8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round"
+                        style="width:24px; height:24px; vertical-align:middle; margin-right:8px;">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                         <path d="M12 8v4M12 16h.01" />
                     </svg>
                     <span data-i18n="breach_panel_title">🔐 VERİ SIZINTISI KONTROLÜ (Data Breach)</span>
                 </h2>
-                <p style="color: #888; margin-bottom: 2rem;" data-i18n="breach_panel_desc">E-posta adresinizin bilinen büyük veri sızıntılarında yer alıp almadığını simüle edilmiş istihbarat ağımızda sorgulayın.</p>
+                <p style="color: #888; margin-bottom: 2rem;" data-i18n="breach_panel_desc">E-posta adresinizin bilinen
+                    büyük veri sızıntılarında yer alıp almadığını simüle edilmiş istihbarat ağımızda sorgulayın.</p>
 
                 <div class="input-group" style="max-width: 800px; margin-bottom: 2rem;">
                     <div class="input-wrapper" style="flex: 1;">
-                        <input type="email" id="breach-email" class="ip-input" placeholder="E-posta: target@example.com" data-i18n="placeholder_breach_email" autocomplete="off" />
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <input type="email" id="breach-email" class="ip-input" placeholder="E-posta: target@example.com"
+                            data-i18n="placeholder_breach_email" autocomplete="off" />
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
                             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                             <polyline points="22,6 12,13 2,6" />
                         </svg>
                     </div>
-                    <button class="scan-btn" onclick="checkBreach()" style="background: rgba(225, 29, 72, 0.2); border-color: var(--rose-500);">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    <button class="scan-btn" onclick="checkBreach()"
+                        style="background: rgba(225, 29, 72, 0.2); border-color: var(--rose-500);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
                         </svg>
                         <span data-i18n="btn_check_breach">Sorgula</span>
                     </button>
                 </div>
 
-                <div id="breach-results" style="display: none; padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--rose-500); background: rgba(225, 29, 72, 0.05);">
+                <div id="breach-results"
+                    style="display: none; padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--rose-500); background: rgba(225, 29, 72, 0.05);">
                     <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:24px; height:24px; color: var(--rose-500);">
-                            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01" />
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                            style="width:24px; height:24px; color: var(--rose-500);">
+                            <path
+                                d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01" />
                         </svg>
-                        <h4 style="color: var(--rose-400); margin: 0; font-size: 1.1rem;" data-i18n="breach_found_header">DİKKAT: SIZINTI TESPİT EDİLDİ!</h4>
+                        <h4 style="color: var(--rose-400); margin: 0; font-size: 1.1rem;"
+                            data-i18n="breach_found_header">DİKKAT: SIZINTI TESPİT EDİLDİ!</h4>
                     </div>
-                    <p style="color: #ccc; margin-bottom: 0.5rem;" data-i18n="breach_found_body">Bu e-posta adresi aşağıdaki veri sızıntılarında tespit edilmiştir:</p>
-                    <ul id="breach-list" style="color: var(--rose-300); list-style-type: '⚠ '; padding-left: 1.5rem; margin: 0; font-family: 'JetBrains Mono';"></ul>
+                    <p style="color: #ccc; margin-bottom: 0.5rem;" data-i18n="breach_found_body">Bu e-posta adresi
+                        aşağıdaki veri sızıntılarında tespit edilmiştir:</p>
+                    <ul id="breach-list"
+                        style="color: var(--rose-300); list-style-type: '⚠ '; padding-left: 1.5rem; margin: 0; font-family: 'JetBrains Mono';">
+                    </ul>
                 </div>
 
-                <div id="breach-safe" style="display: none; padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--emerald-500); background: rgba(16, 185, 129, 0.05);">
+                <div id="breach-safe"
+                    style="display: none; padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--emerald-500); background: rgba(16, 185, 129, 0.05);">
                     <div style="display: flex; align-items: center; gap: 1rem;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:24px; height:24px; color: var(--emerald-500);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                            style="width:24px; height:24px; color: var(--emerald-500);">
                             <polyline points="20 6 9 17 4 12" />
                         </svg>
-                        <h4 style="color: var(--emerald-400); margin: 0; font-size: 1.1rem;" data-i18n="breach_not_found">GÜVENLİ: SIZINTI BULUNAMADI</h4>
+                        <h4 style="color: var(--emerald-400); margin: 0; font-size: 1.1rem;"
+                            data-i18n="breach_not_found">GÜVENLİ: SIZINTI BULUNAMADI</h4>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- ═══ VUE: NETSNIFFER (LIVE TRAFFIC) ═══ -->
-        <div class="terminal" id="vue-sniffer" style="display:none; padding: 1.5rem; background:#08080b; min-height:500px; position: relative; overflow: hidden;">
-            <div class="sniffer-overlay" id="sniffer-overlay" style="position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-                <div class="matrix-bg" style="position: absolute; top:0; left:0; width:100%; height:100%; opacity: 0.1; pointer-events: none; background: linear-gradient(180deg, transparent 0%, var(--emerald-500) 50%, transparent 100%); background-size: 100% 4px; animation: matrix-scroll 20s linear infinite;"></div>
-                <h2 style="color: var(--emerald-400); margin-bottom: 2rem; z-index: 11;" data-i18n="sniffer_ready_title">NETSNIFFER: TRAFİK İZLEME HAZIR</h2>
-                <button class="scan-btn" onclick="toggleSniffer()" style="padding: 1.5rem 3rem; font-size: 1.2rem; z-index: 11;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px; height:24px;">
-                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+        <div class="terminal" id="vue-sniffer"
+            style="display:none; padding: 1.5rem; background:#08080b; min-height:500px; position: relative; overflow: hidden;">
+            <div class="sniffer-overlay" id="sniffer-overlay"
+                style="position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+                <div class="matrix-bg"
+                    style="position: absolute; top:0; left:0; width:100%; height:100%; opacity: 0.1; pointer-events: none; background: linear-gradient(180deg, transparent 0%, var(--emerald-500) 50%, transparent 100%); background-size: 100% 4px; animation: matrix-scroll 20s linear infinite;">
+                </div>
+                <h2 style="color: var(--emerald-400); margin-bottom: 2rem; z-index: 11;"
+                    data-i18n="sniffer_ready_title">NETSNIFFER: TRAFİK İZLEME HAZIR</h2>
+                <button class="scan-btn" onclick="toggleSniffer()"
+                    style="padding: 1.5rem 3rem; font-size: 1.2rem; z-index: 11;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        style="width:24px; height:24px;">
+                        <path
+                            d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
                     </svg>
                     <span id="sniffer-btn-text" data-i18n="btn_start_sniff">İZLEMEYİ BAŞLAT</span>
                 </button>
             </div>
 
-            <div class="sniffer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+            <div class="sniffer-header"
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <span class="pulse-dot emerald"></span>
-                    <h3 style="color: var(--emerald-400); font-family: 'JetBrains Mono';" data-i18n="sniffer_live_title">LIVE NETWORK TRAFFIC</h3>
+                    <h3 style="color: var(--emerald-400); font-family: 'JetBrains Mono';"
+                        data-i18n="sniffer_live_title">LIVE NETWORK TRAFFIC</h3>
                 </div>
-                <button class="report-btn" onclick="toggleSniffer()" style="background: rgba(225, 29, 72, 0.1); border-color: var(--rose-500); color: var(--rose-400); padding: 0.4rem 1rem;">
+                <button class="report-btn" onclick="toggleSniffer()"
+                    style="background: rgba(225, 29, 72, 0.1); border-color: var(--rose-500); color: var(--rose-400); padding: 0.4rem 1rem;">
                     <span data-i18n="btn_stop">DURDUR</span>
                 </button>
             </div>
 
-            <div id="sniffer-container" style="height: 400px; overflow-y: auto; background: #050505; border: 1px solid var(--border); border-radius: 4px; padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.4;">
+            <div id="sniffer-container"
+                style="height: 400px; overflow-y: auto; background: #050505; border: 1px solid var(--border); border-radius: 4px; padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.4;">
                 <div id="sniffer-log" style="color: var(--emerald-500);">
                     <!-- Live packet rows injected here -->
                 </div>
@@ -2618,9 +2695,15 @@
 
             <style>
                 @keyframes matrix-scroll {
-                    from { background-position: 0 0; }
-                    to { background-position: 0 1000px; }
+                    from {
+                        background-position: 0 0;
+                    }
+
+                    to {
+                        background-position: 0 1000px;
+                    }
                 }
+
                 .packet-row {
                     display: grid;
                     grid-template-columns: 80px 140px 10px 140px 100px 1fr;
@@ -2629,12 +2712,31 @@
                     border-bottom: 1px solid rgba(16, 185, 129, 0.05);
                     animation: fadeIn 0.3s ease;
                 }
-                .packet-row:hover { background: rgba(16, 185, 129, 0.05); }
-                .p-proto { color: var(--cyan-400); font-weight: bold; }
-                .p-src { color: var(--emerald-400); }
-                .p-arrow { color: #666; }
-                .p-dest { color: var(--violet-400); }
-                .p-len { color: #888; }
+
+                .packet-row:hover {
+                    background: rgba(16, 185, 129, 0.05);
+                }
+
+                .p-proto {
+                    color: var(--cyan-400);
+                    font-weight: bold;
+                }
+
+                .p-src {
+                    color: var(--emerald-400);
+                }
+
+                .p-arrow {
+                    color: #666;
+                }
+
+                .p-dest {
+                    color: var(--violet-400);
+                }
+
+                .p-len {
+                    color: #888;
+                }
             </style>
         </div>
 
@@ -2777,7 +2879,7 @@
                 intel_panel_desc: "Yerel sistemdeki medya dosyalarının (JPG/PNG) derinlemesine EXIF ve Metadata analizini gerçekleştirin.",
                 placeholder_intel_path: "Dosya yolu: C:\\Users\\Admin\\Documents\\target.jpg",
                 btn_analyze: "Analiz Et",
-                intel_results_header: "EKSTRE EDİLEN VERİLER",
+                intel_results_header: "📊 EKSTRE EDİLEN VERİLER",
                 th_tag: "Etiket (Tag)",
                 th_val: "Değer (Value)",
                 breach_panel_title: "🔐 VERİ SIZINTISI KONTROLÜ (Data Breach)",
@@ -2907,7 +3009,7 @@
         function switchVue(vueName) {
             activeTab = vueName;
             const vues = ['dashboard', 'scanner', 'wifi', 'intel', 'sniffer'];
-            
+
             // Clear Wi-Fi interval if switching away
             if (vueName !== 'wifi' && typeof wifiInterval !== 'undefined' && wifiInterval) {
                 clearInterval(wifiInterval);
@@ -2917,11 +3019,11 @@
             vues.forEach(v => {
                 const el = document.getElementById('vue-' + v);
                 if (el) el.style.display = (v === vueName) ? 'block' : 'none';
-                
+
                 const nav = document.getElementById('nav-' + v);
                 if (nav) nav.classList.toggle('active', v === vueName);
             });
-            
+
             console.log(`[NetVanguard] Transition to: ${vueName}`);
 
             // Side Effects
@@ -2939,31 +3041,43 @@
                 }
             }
             if (vueName !== 'sniffer' && typeof snifferActive !== 'undefined' && snifferActive) {
-                if (typeof toggleSniffer === 'function') toggleSniffer(); 
+                if (typeof toggleSniffer === 'function') toggleSniffer();
             }
         }
 
         async function extractMetadata() {
-            const path = document.getElementById('intel-path').value.trim();
+            const fileInput = document.getElementById('intel-file');
+            const file = fileInput.files[0];
             const resultsDiv = document.getElementById('intel-results');
             const errorDiv = document.getElementById('intel-error');
             const tableBody = document.getElementById('intel-table-body');
-            
-            if (!path) return;
-            
+            const label = document.getElementById('intel-upload-label');
+            const uploadText = document.getElementById('intel-upload-text');
+            const uploadIcon = document.getElementById('intel-upload-icon');
+
+            if (!file) return;
+
+            // Loading State
             resultsDiv.style.display = 'none';
             errorDiv.style.display = 'none';
             tableBody.innerHTML = '';
-            
+            label.style.pointerEvents = 'none';
+            label.style.opacity = '0.5';
+            uploadText.textContent = "VERİLER AYIKLANIYOR...";
+            uploadText.classList.add('animate-pulse');
+            uploadIcon.textContent = "📡";
+
+            const formData = new FormData();
+            formData.append('file', file);
+
             try {
                 const response = await fetch('/api/metadata', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ path })
+                    body: formData
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (data.success) {
                     resultsDiv.style.display = 'block';
                     for (const [tag, val] of Object.entries(data.data)) {
@@ -2980,6 +3094,13 @@
             } catch (err) {
                 errorDiv.style.display = 'block';
                 errorDiv.textContent = "Bağlantı hatası: " + err.message;
+            } finally {
+                label.style.pointerEvents = 'auto';
+                label.style.opacity = '1';
+                uploadText.textContent = "ANALİZ İÇİN GÖRSEL SEÇ";
+                uploadText.classList.remove('animate-pulse');
+                uploadIcon.textContent = "📸";
+                fileInput.value = ''; // Reset for next selection
             }
         }
 
@@ -2991,19 +3112,19 @@
             const resultsDiv = document.getElementById('breach-results');
             const safeDiv = document.getElementById('breach-safe');
             const list = document.getElementById('breach-list');
-            
+
             if (!email) return;
-            
+
             // Set loading state
             btn.disabled = true;
             const originalBtnContent = btn.innerHTML;
             btnText.textContent = "Sorgulanıyor...";
             btn.style.opacity = "0.5";
-            
+
             resultsDiv.style.display = 'none';
             safeDiv.style.display = 'none';
             list.innerHTML = '';
-            
+
             try {
                 console.log("Checking REAL breach for:", email);
                 const response = await fetch('/api/breach_mock', {
@@ -3011,10 +3132,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email })
                 });
-                
+
                 const data = await response.json();
                 console.log("Breach response:", data);
-                
+
                 if (data.success) {
                     if (data.found) {
                         resultsDiv.style.display = 'block';
@@ -3045,7 +3166,7 @@
             snifferActive = !snifferActive;
             const overlay = document.getElementById('sniffer-overlay');
             const log = document.getElementById('sniffer-log');
-            
+
             if (snifferActive) {
                 overlay.style.display = 'none';
                 log.innerHTML = `<div style="color: #666; margin-bottom: 0.5rem;">[${new Date().toLocaleTimeString()}] Sniffer initialized. Capturing packets...</div>`;
@@ -3058,15 +3179,15 @@
 
         async function pollSniffer() {
             if (!snifferActive) return;
-            
+
             try {
                 const res = await fetch('/api/sniff');
                 const data = await res.json();
-                
+
                 if (data.success) {
                     const log = document.getElementById('sniffer-log');
                     const container = document.getElementById('sniffer-container');
-                    
+
                     data.packets.forEach(p => {
                         const row = document.createElement('div');
                         row.className = 'packet-row';
@@ -3080,7 +3201,7 @@
                         `;
                         log.prepend(row);
                     });
-                    
+
                     // Keep log clean
                     while (log.children.length > 50) {
                         log.removeChild(log.lastChild);
