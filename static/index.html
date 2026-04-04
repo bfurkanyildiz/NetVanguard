@@ -3598,8 +3598,8 @@
             }
         }
 
-        // Professional Risk Assessment Logic - PORT BASED SCORING v2.0
-        function updateRiskAnalysis(portsFound) {
+        // Professional Risk Assessment Logic - PORT & SHODAN BASED SCORING v3.0
+        function updateRiskAnalysis(portsFound, shodanData = null) {
             const riskBar = document.getElementById('risk-bar-fill');
             const riskText = document.getElementById('risk-status-text');
 
@@ -3609,6 +3609,7 @@
             const criticalPorts = [21, 23, 445]; // FTP, Telnet, SMB (+40 pts)
             const safePorts = [80, 443];        // HTTP, HTTPS (0 pts)
 
+            // 1. Port Based Scoring
             portsFound.forEach(p => {
                 const portNum = parseInt(p);
                 if (safePorts.includes(portNum)) {
@@ -3619,6 +3620,18 @@
                     score += 5; // Diğer tüm portlar (+5 pts)
                 }
             });
+
+            // 2. Shodan Based Scoring
+            if (shodanData && shodanData.vulns) {
+                shodanData.vulns.forEach(v => {
+                    const isCritical = v.toLowerCase().includes('kritik') || v.toLowerCase().includes('critical');
+                    if (isCritical) {
+                        score += 30; // Kritik zafiyet başına +30
+                    } else if (v.includes('CVE-')) {
+                        score += 15; // Normal CVE başına +15
+                    }
+                });
+            }
 
             // Normalize score to max 100 for bar display
             const displayWidth = Math.min(score, 100);
@@ -4694,10 +4707,11 @@
 
             // Trigger Risk Analysis for Dashboard
             const foundPortsArr = lines.map(l => {
-                const m = l.match(/(\d+)\/(tcp|udp)/i);
+                // Support both "80/tcp" (nmap) and "Port 445" (PrivEsc) formats
+                const m = l.match(/(\d+)\/(tcp|udp)/i) || l.match(/Port\s+(\d+)/i);
                 return m ? m[1] : null;
             }).filter(p => p !== null);
-            updateRiskAnalysis(foundPortsArr);
+            updateRiskAnalysis(foundPortsArr, data.shodan_data);
 
             // Archive to history
             const scanEntry = {

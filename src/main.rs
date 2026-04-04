@@ -166,6 +166,52 @@ async fn get_shodan_intel(ip: &str) -> Option<ShodanData> {
     None
 }
 
+async fn perform_priv_esc_analysis(target: &str) -> String {
+    let mut report = String::from("\n[!] YETKİ YÜKSELTME (PRIVILEGE ESCALATION) ANALİZİ BAŞLATILDI\n");
+    report.push_str("------------------------------------------------------------\n");
+    
+    let critical_ports = vec![
+        (21, "FTP", "Anonymous Login / Plaintext Credentials"),
+        (22, "SSH", "Brute Force / Old Version Exploits"),
+        (23, "Telnet", "CLEAR TEXT PROTOCOL (High Risk)"),
+        (25, "SMTP", "Email Spoofing / User Enumeration"),
+        (445, "SMB/Microsoft-DS", "WannaCry / EternalBlue / Guest Access"),
+        (3389, "RDP", "Remote Desktop Exposure (Brute Force)"),
+        (5900, "VNC", "Unauthenticated Remote Access Risk"),
+        (8080, "HTTP-Proxy/Alt", "Exposed Admin Panels / Unprotected Apps"),
+    ];
+
+    let mut findings = 0;
+    
+    for (port, name, risk) in &critical_ports {
+        let addr = format!("{}:{}", target, port);
+        let timeout_dur = Duration::from_millis(800);
+        
+        if let Ok(Ok(_stream)) = tokio::time::timeout(timeout_dur, tokio::net::TcpStream::connect(&addr)).await {
+            findings += 1;
+            report.push_str(&format!("[+] TESPİT EDİLDİ: Port {} ({})\n", port, name));
+            report.push_str(&format!("    [-] RİSK: {}\n", risk));
+            
+            // Add specific mitigation advice
+            match port {
+                445 => report.push_str("    [!] ÖNERİ: SMB v1'i kapatın, Guest erişimini engelleyin.\n"),
+                23 => report.push_str("    [!] ÖNERİ: Telnet yerine SSH kullanın (Kritik).\n"),
+                3389 => report.push_str("    [!] ÖNERİ: RDP'yi sadece VPN üzerinden erişilebilir yapın.\n"),
+                _ => report.push_str("    [!] ÖNERİ: Bu portun dış dünyaya açık olması gerekmiyorsa kapatın.\n"),
+            }
+            report.push_str("------------------------------------------------------------\n");
+        }
+    }
+
+    if findings == 0 {
+        report.push_str("[*] Analiz tamamlandı: Kritik yapılandırma hatası tespit edilmedi.\n");
+    } else {
+        report.push_str(&format!("[!] Toplam {} kritik bulgu tespit edildi. Lütfen yukarıdaki önerileri inceleyin.\n", findings));
+    }
+    
+    report
+}
+
 // Removed MetadataRequest/MetadataResponse as they are replaced by multipart and inline json!
 
 #[derive(Serialize)]
@@ -864,6 +910,12 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
 
         overall_success = overall_success && dns_success;
         all_output.push_str(&dns_out);
+    }
+
+    // ── Privilege Escalation Analysis ──
+    if body.priv_esc {
+        let priv_esc_out = perform_priv_esc_analysis(&target).await;
+        all_output.push_str(&priv_esc_out);
     }
 
     // ── Shodan Global Intelligence (Intel Box) ──
