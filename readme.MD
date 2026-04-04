@@ -1,15 +1,14 @@
 <p align="center">
   <a href="#-türkçe-versiyon">
-    <img src="https://img.shields.io/badge/DİL-TÜRKÇE-red?style=for-the-badge&logo=turkiye&logoColor=white" alt="Türkçe">
+    <img src="https://img.shields.io/badge/TÜRKÇE-red?style=for-the-badge" alt="Türkçe">
   </a>
   <a href="#-english-version">
-    <img src="https://img.shields.io/badge/LANGUAGE-ENGLISH-blue?style=for-the-badge&logo=american-express&logoColor=white" alt="English">
+    <img src="https://img.shields.io/badge/ENGLISH-blue?style=for-the-badge" alt="English">
   </a>
 </p>
 
-<p align="center">
-  <img src="static/img/banner.png" width="100%">
-</p>
+# 🛡️ NetVanguard v1.0.1
+### *Hybrid Intelligence & Attack Surface Analyzer*
 
 <p align="center">
   <img src="https://img.shields.io/badge/Version-v1.0.1-cyan?style=for-the-badge&logo=github" alt="Version">
@@ -22,9 +21,6 @@
 
 ## 🇹🇷 Türkçe Versiyon
 
-# 🛡️ NetVanguard v1.0.1
-### *Hibrit İstihbarat ve Saldırı Yüzeyi Analizörü*
-
 **NetVanguard**, modern siber güvenlik ihtiyaçları için geliştirilmiş, yüksek performanslı bir **Hibrit İstihbarat ve Saldırı Yüzeyi Analizörüdür**. Sadece bir ağ tarayıcısı değil, aynı zamanda pasif istihbarat (OSINT), aktif trafik analizi (Sniffing) ve yetki yükseltme (PrivEsc) vektörlerini tek bir çatı altında toplayan endüstriyel bir güvenlik paketidir.
 
 ### 🚀 Ana Modüller ve Kabiliyetler
@@ -32,7 +28,7 @@
 #### 1. 🔍 Gelişmiş Ağ Tarama (Nmap Engine)
 - **Hız Seçenekleri (Timing):** Gizlilik odaklı `T0` modundan, agresif `T5` moduna kadar tam kontrol.
 - **Servis & Versiyon Tespiti:** Açık portların arkasındaki servislerin gerçek sürümlerini tespit eder.
-- **İşletim Sistemi Analizi:** Hedef cihazın OS parmak birini çıkarır.
+- **İşletim Sistemi Analizi:** Hedef cihazın OS parmak izini çıkarır.
 - **Vulnerability Taraması:** NSE kullanarak bilinen açıkları otomatik tarar.
 
 #### 2. 🌐 Global Intelligence (OSINT & Geo)
@@ -55,9 +51,6 @@
 ---
 
 ## 🇺🇸 English Version
-
-# 🛡️ NetVanguard v1.0.1
-### *Hybrid Intelligence & Attack Surface Analyzer*
 
 **NetVanguard** is a high-performance **Hybrid Intelligence and Attack Surface Analyzer** engineered for modern cybersecurity requirements. More than just a network scanner, it is an industrial-grade security suite that consolidates passive intelligence (OSINT), active traffic analysis (Sniffing), and privilege escalation (PrivEsc) vectors into a single unified platform.
 
