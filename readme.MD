@@ -84,12 +84,17 @@ Projenin derlenebilmesi ve tüm modüllerin (özellikle Sniffer) çalışabilmes
 
 <div id="setup-link"></div>
 
-### 🛠️ Tek Satırda Kurulum ve Çalıştırma
-
-Aşağıdaki komutu terminale yapıştırarak projeyi klonlayabilir, bağımlılıkları kurabilir ve anında başlatabilirsiniz:
-
+### 🛠️ Kurulum ve Çalıştırma (Kali Linux)
+Projyey tek adımda kurmak ve başlatmak için terminale şu komutu yapıştırın:
 ```bash
-git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard && chmod +x setup.sh && ./setup.sh && source $HOME/.cargo/env && sudo cargo run
+git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard && chmod +x setup.sh && ./setup.sh && source $HOME/.cargo/env && cargo run
+```
+
+### ⛵ Hızlı Başlatma (Quick Run)
+Kurulum yapıldıktan sonra, uygulamayı her zaman en güvenli ve hızlı şekilde başlatmak için yeni eklenen `run.sh` scriptini kullanabilirsiniz. Bu script otomatik olarak ROOT yetkisi ister ve ortam değişkenlerini ayarlar:
+```bash
+chmod +x run.sh
+./run.sh
 ```
 
 ### ⚠️ Yetki Notu (Linux Permissions)
@@ -166,12 +171,17 @@ To ensure successful compilation and full modular functionality (especially the 
   - **[Npcap SDK](https://nmap.org/npcap/)** is required to run unit tests and the Sniffer module.
   - The directory containing `wpcap.lib` must be added to the system `LIB` environment variable.
 
-### 🛠️ One-Line Installation & Launch
-
-Copy and paste the command below into your terminal to clone, setup, and launch the application instantly:
-
+### 🛠️ Rapid Deployment (One-Liner)
+Run the following command on a Kali Linux machine to clone, setup, and launch NetVanguard:
 ```bash
-git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard && chmod +x setup.sh && ./setup.sh && source $HOME/.cargo/env && sudo cargo run
+git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard && chmod +x setup.sh && ./setup.sh && source $HOME/.cargo/env && cargo run
+```
+
+### ⛵ Quick Start (Recommended)
+After installation, you can use the `run.sh` script to launch the application. It automatically handles ROOT privileges and environment variables:
+```bash
+chmod +x run.sh
+./run.sh
 ```
 
 ### ⚠️ Permission Note (Linux Permissions)
