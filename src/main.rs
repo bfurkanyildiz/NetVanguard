@@ -1198,24 +1198,57 @@ async fn handle_breach(Json(body): Json<BreachRequest>) -> Json<BreachResponse> 
         });
     }
 
-    // MOCK BREACH ENGINE: Simulating a check against known leaks
-    // For demonstration, some domains are "flagged"
-    let leaked_domains = vec!["test.com", "leak.net", "old-service.org", "pwned.me"];
-    let mut found = false;
+    // REAL OSINT BREACH ENGINE: Querying XposedOrNot API
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(10))
+        .build()
+        .unwrap_or_default();
+
+    let url = format!("https://api.xposedornot.com/v1/check-email/{}", email);
+    
+    let response = match client.get(&url).send().await {
+        Ok(resp) => resp,
+        Err(_) => return Json(BreachResponse {
+            success: false,
+            found: false,
+            sources: vec![],
+            error: Some("İstihbarat sunucularına ulaşılamıyor!".to_string()),
+        }),
+    };
+
+    if response.status() == 404 {
+        return Json(BreachResponse {
+            success: true,
+            found: false,
+            sources: vec![],
+            error: None,
+        });
+    }
+
+    if !response.status().is_success() {
+        return Json(BreachResponse {
+            success: false,
+            found: false,
+            sources: vec![],
+            error: Some(format!("API Hatası: {}", response.status())),
+        });
+    }
+
+    // Parse the response
+    // XposedOrNot returns a JSON with "breaches" array
+    let data: serde_json::Value = response.json().await.unwrap_or_default();
     let mut sources = Vec::new();
 
-    for domain in leaked_domains {
-        if email.ends_with(domain) {
-            found = true;
-            sources.push(format!("{}_DATA_LEAK_2023", domain.to_uppercase().replace(".", "_")));
+    if let Some(breach_list) = data.get("breaches").and_then(|b| b.as_array()) {
+        for b in breach_list {
+            if let Some(name) = b.get(0).and_then(|n| n.as_str()) {
+                let date = b.get(1).and_then(|d| d.as_str()).unwrap_or("Unknown");
+                sources.push(format!("{} ({})", name, date));
+            }
         }
     }
 
-    // Random chance for any email to simulate a "deep web" hit if it's longer than 10 chars
-    if email.len() > 15 && !found {
-        found = true;
-        sources.push("GLOBAL_COMBO_LIST_V4".to_string());
-    }
+    let found = !sources.is_empty();
 
     Json(BreachResponse {
         success: true,

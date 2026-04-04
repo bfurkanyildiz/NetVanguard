@@ -8,6 +8,7 @@ const Scanner = () => {
     const [breachResults, setBreachResults] = useState(null);
     const [snifferLogs, setSnifferLogs] = useState([]);
     const [isSniffing, setIsSniffing] = useState(false);
+    const [isBreachLoading, setIsBreachLoading] = useState(false);
     const [error, setError] = useState(null);
 
     // CSS variables matching index.html EXACTLY
@@ -40,8 +41,10 @@ const Scanner = () => {
     };
 
     const checkBreach = async () => {
+        if (!email) return;
         setError(null);
         setBreachResults(null);
+        setIsBreachLoading(true);
         try {
             const res = await fetch('/api/breach_mock', {
                 method: 'POST',
@@ -52,10 +55,12 @@ const Scanner = () => {
             if (data.success) {
                 setBreachResults(data);
             } else {
-                setError("HATA: İşlem başarısız!");
+                setError(data.error || "HATA: İşlem başarısız!");
             }
         } catch (err) {
-            setError("HATA: İşlem başarısız!");
+            setError("İstihbarat sunucularına ulaşılamıyor!");
+        } finally {
+            setIsBreachLoading(false);
         }
     };
 
@@ -182,8 +187,9 @@ const Scanner = () => {
                                     />
                                     <button 
                                         onClick={checkBreach}
-                                        className="w-full py-3 bg-[#00ff41]/10 border border-[#00ff41]/40 text-[#00ff41] font-bold rounded-lg hover:bg-[#00ff41]/20 transition-all">
-                                        BREACH SORGULA
+                                        disabled={isBreachLoading}
+                                        className={`w-full py-3 font-bold rounded-lg transition-all border ${isBreachLoading ? 'bg-gray-800 text-gray-500 border-gray-700' : 'bg-[#00ff41]/10 border-[#00ff41]/40 text-[#00ff41] hover:bg-[#00ff41]/20'}`}>
+                                        {isBreachLoading ? 'SORGULANIYOR...' : 'BREACH SORGULA'}
                                     </button>
 
                                     {breachResults && (

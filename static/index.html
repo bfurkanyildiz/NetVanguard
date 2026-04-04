@@ -2984,42 +2984,60 @@
         }
 
         async function checkBreach() {
-            const email = document.getElementById('breach-email').value.trim();
+            const emailInput = document.getElementById('breach-email');
+            const email = emailInput.value.trim();
+            const btn = document.querySelector('button[onclick="checkBreach()"]');
+            const btnText = btn.querySelector('span');
             const resultsDiv = document.getElementById('breach-results');
             const safeDiv = document.getElementById('breach-safe');
             const list = document.getElementById('breach-list');
             
             if (!email) return;
             
+            // Set loading state
+            btn.disabled = true;
+            const originalBtnContent = btn.innerHTML;
+            btnText.textContent = "Sorgulanıyor...";
+            btn.style.opacity = "0.5";
+            
             resultsDiv.style.display = 'none';
             safeDiv.style.display = 'none';
             list.innerHTML = '';
             
             try {
-                const response = await fetch('/api/breach', {
+                console.log("Checking REAL breach for:", email);
+                const response = await fetch('/api/breach_mock', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email })
                 });
                 
                 const data = await response.json();
+                console.log("Breach response:", data);
                 
                 if (data.success) {
                     if (data.found) {
                         resultsDiv.style.display = 'block';
                         data.sources.forEach(src => {
                             const li = document.createElement('li');
-                            li.textContent = src;
+                            li.style.color = '#fff';
+                            li.style.marginBottom = '0.3rem';
+                            li.textContent = `• ${src}`;
                             list.appendChild(li);
                         });
                     } else {
                         safeDiv.style.display = 'block';
                     }
                 } else {
-                    alert(data.error);
+                    alert(data.error || "İstihbarat sunucularına ulaşılamıyor!");
                 }
             } catch (err) {
                 console.error("Breach check error:", err);
+                alert("İstihbarat sunucularına ulaşılamıyor!");
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = "1";
+                btnText.textContent = "Sorgula";
             }
         }
 
@@ -3042,7 +3060,7 @@
             if (!snifferActive) return;
             
             try {
-                const res = await fetch('/api/sniffer');
+                const res = await fetch('/api/sniff');
                 const data = await res.json();
                 
                 if (data.success) {
