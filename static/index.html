@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="NetVanguard - Gelişmiş Ağ Güvenliği Tarama Paneli">
-    <title>NetVanguard v1.0 - Ağ Güvenliği Tarama Paneli</title>
+    <title>NetVanguard v1.0.1 - Ağ Güvenliği Tarama Paneli</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
         rel="stylesheet">
@@ -14,7 +14,7 @@
     <script src="https://bernii.github.io/gauge.js/dist/gauge.min.js"></script>
     <style>
         /* ═══════════════════════════════════════════════════
-           DESIGN SYSTEM - NetVanguard v1.0
+           DESIGN SYSTEM - NetVanguard v1.0.1
            ═══════════════════════════════════════════════════ */
         :root {
             /* Core Palette - Cyberpunk */
@@ -1956,7 +1956,7 @@
                 </div>
                 <h1>
                     <span class="logo-text">NetVanguard</span>
-                    <span class="logo-version">v1.0</span>
+                    <span class="logo-version">v1.0.1</span>
                 </h1>
             </div>
             <p class="header-subtitle" data-i18n="header_subtitle">Gelişmiş Ağ Güvenliği Tarama &amp; Analiz Paneli</p>
@@ -2194,7 +2194,7 @@
                 <!-- Scan Options -->
                 <div class="scan-options">
                     <label class="option-chip">
-                        <input type="checkbox" id="opt-ports" checked>
+                        <input type="checkbox" id="opt-ports" checked onchange="updateSpeedRestrictions()">
                         <span class="checkmark">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
                                 stroke-linecap="round" stroke-linejoin="round">
@@ -2214,7 +2214,7 @@
                         <span class="option-label" data-i18n="opt_vuln">Zafiyet Analizi</span>
                     </label>
                     <label class="option-chip">
-                        <input type="checkbox" id="opt-priv-esc">
+                        <input type="checkbox" id="opt-priv-esc" onchange="updateSpeedRestrictions()">
                         <span class="checkmark">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
                                 stroke-linecap="round" stroke-linejoin="round">
@@ -2224,7 +2224,7 @@
                         <span class="option-label" data-i18n="opt_priv_esc">Yetki Yükseltme (#L10)</span>
                     </label>
                     <label class="option-chip">
-                        <input type="checkbox" id="opt-os">
+                        <input type="checkbox" id="opt-os" onchange="updateSpeedRestrictions()">
                         <span class="checkmark">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
                                 stroke-linecap="round" stroke-linejoin="round">
@@ -2234,7 +2234,7 @@
                         <span class="option-label" data-i18n="opt_os">İşletim Sistemi Tespiti</span>
                     </label>
                     <label class="option-chip">
-                        <input type="checkbox" id="opt-dns">
+                        <input type="checkbox" id="opt-dns" onchange="updateSpeedRestrictions()">
                         <span class="checkmark">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
                                 stroke-linecap="round" stroke-linejoin="round">
@@ -2244,7 +2244,7 @@
                         <span class="option-label" data-i18n="opt_dns">DNS Sorgulama</span>
                     </label>
                     <label class="option-chip">
-                        <input type="checkbox" id="opt-sv">
+                        <input type="checkbox" id="opt-sv" onchange="updateSpeedRestrictions()">
                         <span class="checkmark">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
                                 stroke-linecap="round" stroke-linejoin="round">
@@ -2254,7 +2254,7 @@
                         <span class="option-label" data-i18n="opt_sv">Servis Versiyon Tespiti</span>
                     </label>
                     <label class="option-chip">
-                        <input type="checkbox" id="opt-a">
+                        <input type="checkbox" id="opt-a" onchange="updateSpeedRestrictions()">
                         <span class="checkmark">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
                                 stroke-linecap="round" stroke-linejoin="round">
@@ -2274,7 +2274,7 @@
                         <span class="option-label" data-i18n="opt_net">Ağdaki Cihazları Bul</span>
                     </label>
                     <label class="option-chip">
-                        <input type="checkbox" id="opt-shodan">
+                        <input type="checkbox" id="opt-shodan" onchange="updateSpeedRestrictions()">
                         <span class="checkmark">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
                                 stroke-linecap="round" stroke-linejoin="round">
@@ -2800,7 +2800,7 @@
         <!-- ═══ FOOTER ═══ -->
         <footer class="footer">
             <p class="footer-text">
-                <span data-i18n="footer_text">NetVanguard v1.0 · Rust + Axum ile güçlendirilmiştir · 2026</span>
+                <span data-i18n="footer_text">NetVanguard v1.0.1 · Rust + Axum ile güçlendirilmiştir · 2026</span>
             </p>
         </footer>
 
@@ -2927,7 +2927,7 @@
                 wifi_waiting: "Veri bekleniyor... Taramayı başlatmak için yenileyin.",
                 wifi_wlan_warn_body: "Kablolu ağ bağlantısı algılandı. Radar modülü için harici bir Wi-Fi adaptörü gereklidir.",
                 geo_title: "Hedef Coğrafi Konumu (IP Geolocation)",
-                footer_text: "NetVanguard v1.0 · Rust + Axum ile güçlendirilmiştir · 2026",
+                footer_text: "NetVanguard v1.0.1 · Rust + Axum ile güçlendirilmiştir · 2026",
                 nav_intel: "İstihbarat",
                 nav_sniffer: "Canlı Trafik",
                 sniffer_ready_title: "NETSNIFFER: TRAFİK İZLEME HAZIR",
@@ -3000,7 +3000,7 @@
                 wifi_waiting: "Awaiting data... Refresh to start scanning.",
                 wifi_wlan_warn_body: "Wired network connection detected. External Wi-Fi adapter required for Radar.",
                 geo_title: "Target Geolocation (IP Geolocation)",
-                footer_text: "NetVanguard v1.0 · Powered by Rust + Axum · 2026",
+                footer_text: "NetVanguard v1.0.1 · Powered by Rust + Axum · 2026",
                 nav_intel: "🕵️ Intel",
                 nav_sniffer: "📡 Live Traffic",
                 sniffer_ready_title: "NETSNIFFER: TRAFFIC MONITOR READY",
@@ -3442,17 +3442,45 @@
         setInterval(updateConnectionStatus, 3000);
         updateConnectionStatus(); // initial check
 
-        // Speed Restriction for Vulnerability Scans
-        const optVulnCheckbox = document.getElementById('opt-vuln');
-
+        // Speed Restriction & Module Synchronization v2.0
         function updateSpeedRestrictions() {
-            if (!optVulnCheckbox) return;
             const speedSelect = document.getElementById('scan-speed');
             if (!speedSelect) return;
+
+            const optVuln = document.getElementById('opt-vuln');
+            const optShodan = document.getElementById('opt-shodan');
+            const optPrivEsc = document.getElementById('opt-priv-esc');
+            
+            // Nmap-based modules
+            const nmapModules = [
+                'opt-ports', 'opt-vuln', 'opt-os', 'opt-dns', 
+                'opt-sv', 'opt-a', 'opt-net'
+            ];
+            const isNmapEnabled = nmapModules.some(id => {
+                const el = document.getElementById(id);
+                return el && el.checked;
+            });
+
+            const isIntelligenceOnly = (optShodan?.checked || optPrivEsc?.checked) && !isNmapEnabled;
+
+            // 1. Handle Entire Selector State (Intelligence-only mode)
+            if (isIntelligenceOnly) {
+                speedSelect.disabled = true;
+                speedSelect.style.opacity = '0.5';
+                speedSelect.style.cursor = 'not-allowed';
+                speedSelect.title = "Shodan/Yetki Yükseltme seçiliyken hız ayarı yapılamaz.";
+            } else {
+                speedSelect.disabled = false;
+                speedSelect.style.opacity = '1';
+                speedSelect.style.cursor = 'pointer';
+                speedSelect.title = "";
+            }
+
+            // 2. Handle Specific Timing Restrictions (Nmap-specific)
             const t4 = speedSelect.querySelector('option[value="T4"]');
             const t5 = speedSelect.querySelector('option[value="T5"]');
 
-            if (optVulnCheckbox.checked) {
+            if (optVuln && optVuln.checked) {
                 if (t4) t4.disabled = true;
                 if (t5) t5.disabled = true;
                 if (speedSelect.value === 'T4' || speedSelect.value === 'T5') {
@@ -3464,11 +3492,18 @@
             }
         }
 
-        if (optVulnCheckbox) {
-            optVulnCheckbox.addEventListener('change', updateSpeedRestrictions);
-            // Run exactly once on load to catch default checked state
+        // Initialize listeners and run once
+        document.addEventListener('DOMContentLoaded', () => {
+            const allOptionIds = [
+                'opt-ports', 'opt-vuln', 'opt-priv-esc', 'opt-os', 
+                'opt-dns', 'opt-sv', 'opt-a', 'opt-net', 'opt-shodan'
+            ];
+            allOptionIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('change', updateSpeedRestrictions);
+            });
             updateSpeedRestrictions();
-        }
+        });
 
         // ═══════════════════════════════════════════════════
         //  EVOLUTION: TABS, GAUGE & CYTOSCAPE MAP
@@ -3700,7 +3735,7 @@
             report += lastScan.output + '\n\n';
 
             report += sep + '\n';
-            report += '  Generated by NetVanguard Security Suite v1.0\n';
+            report += '  Generated by NetVanguard Security Suite v1.0.1\n';
             report += '  System Node: KALI LINUX (CYBER OPS)\n';
             report += sep + '\n';
 
@@ -4851,7 +4886,7 @@
             }
 
             report += '\n' + sep + '\n';
-            report += '  Rapor Sonu — NetVanguard v1.0\n';
+            report += '  Rapor Sonu — NetVanguard v1.0.1\n';
             report += sep + '\n';
 
             const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });

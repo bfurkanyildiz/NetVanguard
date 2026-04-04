@@ -6,8 +6,8 @@ use axum::{
 };
 use colored::Colorize;
 use exif;
-use rand::Rng;
 use once_cell::sync::Lazy;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::fs;
@@ -31,9 +31,8 @@ static LAST_INTERFACE: Lazy<StdMutex<Option<String>>> = Lazy::new(|| StdMutex::n
 //  INTELLIGENCE & CACHE STORAGE
 // ═══════════════════════════════════════════════════════════
 
-static DNS_CACHE: Lazy<StdMutex<std::collections::HashMap<String, String>>> = Lazy::new(|| {
-    StdMutex::new(std::collections::HashMap::new())
-});
+static DNS_CACHE: Lazy<StdMutex<std::collections::HashMap<String, String>>> =
+    Lazy::new(|| StdMutex::new(std::collections::HashMap::new()));
 
 const META_GOOGLE_IPS: &[(&str, &str)] = &[
     ("31.13.", "META / INSTAGRAM"),
@@ -102,18 +101,18 @@ pub struct ShodanData {
 async fn get_shodan_intel(ip: &str) -> Option<ShodanData> {
     // 1. API Key Control
     let api_key = std::env::var("SHODAN_API_KEY").ok();
-    
+
     if let Some(key) = api_key {
         // REAL SHODAN CALL
         let client = reqwest::Client::new();
         let url = format!("https://api.shodan.io/shodan/host/{}?key={}", ip, key);
-        
+
         if let Ok(resp) = client.get(&url).send().await {
             if let Ok(json) = resp.json::<Value>().await {
                 let city = json["city"].as_str().unwrap_or("Unknown").to_string();
                 let isp = json["isp"].as_str().unwrap_or("Unknown").to_string();
                 let asn = json["asn"].as_str().unwrap_or("Unknown").to_string();
-                
+
                 let mut ports = Vec::new();
                 if let Some(ports_arr) = json["ports"].as_array() {
                     for p in ports_arr {
@@ -122,7 +121,7 @@ async fn get_shodan_intel(ip: &str) -> Option<ShodanData> {
                         }
                     }
                 }
-                
+
                 let mut vulns = Vec::new();
                 if let Some(vulns_arr) = json["vulns"].as_array() {
                     for v in vulns_arr {
@@ -131,8 +130,14 @@ async fn get_shodan_intel(ip: &str) -> Option<ShodanData> {
                         }
                     }
                 }
-                
-                return Some(ShodanData { city, isp, asn, ports, vulns });
+
+                return Some(ShodanData {
+                    city,
+                    isp,
+                    asn,
+                    ports,
+                    vulns,
+                });
             }
         }
     }
@@ -142,16 +147,19 @@ async fn get_shodan_intel(ip: &str) -> Option<ShodanData> {
         .timeout(Duration::from_secs(3))
         .build()
         .ok()?;
-        
-    let url = format!("http://ip-api.com/json/{}?fields=status,city,isp,as,query", ip);
-    
+
+    let url = format!(
+        "http://ip-api.com/json/{}?fields=status,city,isp,as,query",
+        ip
+    );
+
     if let Ok(resp) = client.get(&url).send().await {
         if let Ok(json) = resp.json::<Value>().await {
             if json["status"] == "success" {
                 let city = json["city"].as_str().unwrap_or("Unknown").to_string();
                 let isp = json["isp"].as_str().unwrap_or("Unknown").to_string();
                 let asn = json["as"].as_str().unwrap_or("Unknown").to_string();
-                
+
                 return Some(ShodanData {
                     city,
                     isp,
@@ -167,37 +175,52 @@ async fn get_shodan_intel(ip: &str) -> Option<ShodanData> {
 }
 
 async fn perform_priv_esc_analysis(target: &str) -> String {
-    let mut report = String::from("\n[!] YETKİ YÜKSELTME (PRIVILEGE ESCALATION) ANALİZİ BAŞLATILDI\n");
+    let mut report =
+        String::from("\n[!] YETKİ YÜKSELTME (PRIVILEGE ESCALATION) ANALİZİ BAŞLATILDI\n");
     report.push_str("------------------------------------------------------------\n");
-    
+
     let critical_ports = vec![
         (21, "FTP", "Anonymous Login / Plaintext Credentials"),
         (22, "SSH", "Brute Force / Old Version Exploits"),
         (23, "Telnet", "CLEAR TEXT PROTOCOL (High Risk)"),
         (25, "SMTP", "Email Spoofing / User Enumeration"),
-        (445, "SMB/Microsoft-DS", "WannaCry / EternalBlue / Guest Access"),
+        (
+            445,
+            "SMB/Microsoft-DS",
+            "WannaCry / EternalBlue / Guest Access",
+        ),
         (3389, "RDP", "Remote Desktop Exposure (Brute Force)"),
         (5900, "VNC", "Unauthenticated Remote Access Risk"),
-        (8080, "HTTP-Proxy/Alt", "Exposed Admin Panels / Unprotected Apps"),
+        (
+            8080,
+            "HTTP-Proxy/Alt",
+            "Exposed Admin Panels / Unprotected Apps",
+        ),
     ];
 
     let mut findings = 0;
-    
+
     for (port, name, risk) in &critical_ports {
         let addr = format!("{}:{}", target, port);
         let timeout_dur = Duration::from_millis(800);
-        
-        if let Ok(Ok(_stream)) = tokio::time::timeout(timeout_dur, tokio::net::TcpStream::connect(&addr)).await {
+
+        if let Ok(Ok(_stream)) =
+            tokio::time::timeout(timeout_dur, tokio::net::TcpStream::connect(&addr)).await
+        {
             findings += 1;
             report.push_str(&format!("[+] TESPİT EDİLDİ: Port {} ({})\n", port, name));
             report.push_str(&format!("    [-] RİSK: {}\n", risk));
-            
+
             // Add specific mitigation advice
             match port {
-                445 => report.push_str("    [!] ÖNERİ: SMB v1'i kapatın, Guest erişimini engelleyin.\n"),
+                445 => report
+                    .push_str("    [!] ÖNERİ: SMB v1'i kapatın, Guest erişimini engelleyin.\n"),
                 23 => report.push_str("    [!] ÖNERİ: Telnet yerine SSH kullanın (Kritik).\n"),
-                3389 => report.push_str("    [!] ÖNERİ: RDP'yi sadece VPN üzerinden erişilebilir yapın.\n"),
-                _ => report.push_str("    [!] ÖNERİ: Bu portun dış dünyaya açık olması gerekmiyorsa kapatın.\n"),
+                3389 => report
+                    .push_str("    [!] ÖNERİ: RDP'yi sadece VPN üzerinden erişilebilir yapın.\n"),
+                _ => report.push_str(
+                    "    [!] ÖNERİ: Bu portun dış dünyaya açık olması gerekmiyorsa kapatın.\n",
+                ),
             }
             report.push_str("------------------------------------------------------------\n");
         }
@@ -206,9 +229,12 @@ async fn perform_priv_esc_analysis(target: &str) -> String {
     if findings == 0 {
         report.push_str("[*] Analiz tamamlandı: Kritik yapılandırma hatası tespit edilmedi.\n");
     } else {
-        report.push_str(&format!("[!] Toplam {} kritik bulgu tespit edildi. Lütfen yukarıdaki önerileri inceleyin.\n", findings));
+        report.push_str(&format!(
+            "[!] Toplam {} kritik bulgu tespit edildi. Lütfen yukarıdaki önerileri inceleyin.\n",
+            findings
+        ));
     }
-    
+
     report
 }
 
@@ -258,58 +284,82 @@ struct SnifferResponse {
 fn parse_dns_name(payload: &[u8]) -> Option<String> {
     // Basic DNS Name Parser
     // DNS Header is 12 bytes
-    if payload.len() < 13 { return None; }
-    
+    if payload.len() < 13 {
+        return None;
+    }
+
     let mut pos = 12;
     let mut domain = String::new();
     let mut loop_protect = 0;
 
     while pos < payload.len() && loop_protect < 10 {
         let len = payload[pos] as usize;
-        if len == 0 { break; }
-        if len > 63 || pos + 1 + len > payload.len() { return None; }
-        
-        if !domain.is_empty() { domain.push('.'); }
-        let part = String::from_utf8_lossy(&payload[pos+1..pos+1+len]);
+        if len == 0 {
+            break;
+        }
+        if len > 63 || pos + 1 + len > payload.len() {
+            return None;
+        }
+
+        if !domain.is_empty() {
+            domain.push('.');
+        }
+        let part = String::from_utf8_lossy(&payload[pos + 1..pos + 1 + len]);
         domain.push_str(&part);
         pos += 1 + len;
         loop_protect += 1;
     }
-    
-    if domain.is_empty() { None } else { Some(domain) }
+
+    if domain.is_empty() {
+        None
+    } else {
+        Some(domain)
+    }
 }
 
 fn parse_dns_answer(payload: &[u8]) -> Option<(String, String)> {
-    if payload.len() < 12 { return None; }
-    
+    if payload.len() < 12 {
+        return None;
+    }
+
     // 1. Skip Header (12 bytes)
     let mut pos = 12;
-    
+
     // 2. Skip Question Section
     let q_count = u16::from_be_bytes([payload[4], payload[5]]);
-    if q_count == 0 { return None; }
-    
+    if q_count == 0 {
+        return None;
+    }
+
     let mut domain = String::new();
     // Parse name in question
     while pos < payload.len() {
         let len = payload[pos] as usize;
-        if len == 0 { 
-            pos += 1; 
-            break; 
+        if len == 0 {
+            pos += 1;
+            break;
         }
-        if len > 63 || pos + 1 + len > payload.len() { break; }
-        if !domain.is_empty() { domain.push('.'); }
-        domain.push_str(&String::from_utf8_lossy(&payload[pos+1..pos+1+len]));
+        if len > 63 || pos + 1 + len > payload.len() {
+            break;
+        }
+        if !domain.is_empty() {
+            domain.push('.');
+        }
+        domain.push_str(&String::from_utf8_lossy(&payload[pos + 1..pos + 1 + len]));
         pos += 1 + len;
     }
     pos += 4; // Skip QType and QClass
 
     // 3. Parse Answer Section
     let ans_count = u16::from_be_bytes([payload[6], payload[7]]);
-    if ans_count == 0 || pos >= payload.len() { return None; }
+    if ans_count == 0 || pos >= payload.len() {
+        return None;
+    }
 
     for _ in 0..ans_count {
-        if pos >= payload.len() { break; }
+        if pos >= payload.len() {
+            break;
+        }
         // Name (usually a pointer 0xC0xx)
         if payload[pos] & 0xC0 == 0xC0 {
             pos += 2;
@@ -321,14 +371,22 @@ fn parse_dns_answer(payload: &[u8]) -> Option<(String, String)> {
             pos += 1;
         }
 
-        if pos + 10 > payload.len() { break; }
-        let a_type = u16::from_be_bytes([payload[pos], payload[pos+1]]);
-        let rd_len = u16::from_be_bytes([payload[pos+8], payload[pos+9]]) as usize;
+        if pos + 10 > payload.len() {
+            break;
+        }
+        let a_type = u16::from_be_bytes([payload[pos], payload[pos + 1]]);
+        let rd_len = u16::from_be_bytes([payload[pos + 8], payload[pos + 9]]) as usize;
         pos += 10;
 
         if a_type == 1 && rd_len == 4 && pos + 4 <= payload.len() {
             // A Record (IPv4)
-            let ip = format!("{}.{}.{}.{}", payload[pos], payload[pos+1], payload[pos+2], payload[pos+3]);
+            let ip = format!(
+                "{}.{}.{}.{}",
+                payload[pos],
+                payload[pos + 1],
+                payload[pos + 2],
+                payload[pos + 3]
+            );
             return Some((ip, domain));
         }
         pos += rd_len;
@@ -338,62 +396,81 @@ fn parse_dns_answer(payload: &[u8]) -> Option<(String, String)> {
 }
 
 fn parse_tls_sni(payload: &[u8]) -> Option<String> {
-    if payload.len() < 11 { return None; }
-    
+    if payload.len() < 11 {
+        return None;
+    }
+
     // TLS Record Header: [Type (1), Version (2), Length (2)]
     // Handshake Type: 0x16 (22) is Handshake
-    if payload[0] != 0x16 { return None; }
-    
+    if payload[0] != 0x16 {
+        return None;
+    }
+
     // Handshake starts after Record Header (5 bytes)
     // Handshake Type: 0x01 (1) is Client Hello
-    if payload[5] != 0x01 { return None; }
+    if payload[5] != 0x01 {
+        return None;
+    }
 
     // Skip Handshake Header (4) + Version (2) + Random (32)
     let mut pos = 5 + 4 + 2 + 32;
-    
+
     // Session ID
-    if pos >= payload.len() { return None; }
+    if pos >= payload.len() {
+        return None;
+    }
     let session_id_len = payload[pos] as usize;
     pos += 1 + session_id_len;
-    
+
     // Cipher Suites
-    if pos + 2 > payload.len() { return None; }
-    let cipher_suites_len = u16::from_be_bytes([payload[pos], payload[pos+1]]) as usize;
+    if pos + 2 > payload.len() {
+        return None;
+    }
+    let cipher_suites_len = u16::from_be_bytes([payload[pos], payload[pos + 1]]) as usize;
     pos += 2 + cipher_suites_len;
-    
+
     // Compression Methods
-    if pos >= payload.len() { return None; }
+    if pos >= payload.len() {
+        return None;
+    }
     let comp_methods_len = payload[pos] as usize;
     pos += 1 + comp_methods_len;
-    
+
     // Extensions
-    if pos + 2 > payload.len() { return None; }
-    let extensions_len = u16::from_be_bytes([payload[pos], payload[pos+1]]) as usize;
+    if pos + 2 > payload.len() {
+        return None;
+    }
+    let extensions_len = u16::from_be_bytes([payload[pos], payload[pos + 1]]) as usize;
     pos += 2;
     let extensions_end = pos + extensions_len;
-    
+
     while pos + 4 <= extensions_end && pos + 4 <= payload.len() {
-        let ext_type = u16::from_be_bytes([payload[pos], payload[pos+1]]);
-        let ext_len = u16::from_be_bytes([payload[pos+2], payload[pos+3]]) as usize;
+        let ext_type = u16::from_be_bytes([payload[pos], payload[pos + 1]]);
+        let ext_len = u16::from_be_bytes([payload[pos + 2], payload[pos + 3]]) as usize;
         pos += 4;
-        
-        if ext_type == 0 { // Server Name Extension
-            if pos + 2 > payload.len() { break; }
-            let _list_len = u16::from_be_bytes([payload[pos], payload[pos+1]]) as usize;
+
+        if ext_type == 0 {
+            // Server Name Extension
+            if pos + 2 > payload.len() {
+                break;
+            }
+            let _list_len = u16::from_be_bytes([payload[pos], payload[pos + 1]]) as usize;
             pos += 2;
-            
-            if pos + 3 > payload.len() { break; }
+
+            if pos + 3 > payload.len() {
+                break;
+            }
             let name_type = payload[pos]; // 0 is hostname
-            let name_len = u16::from_be_bytes([payload[pos+1], payload[pos+2]]) as usize;
+            let name_len = u16::from_be_bytes([payload[pos + 1], payload[pos + 2]]) as usize;
             pos += 3;
-            
+
             if name_type == 0 && pos + name_len <= payload.len() {
-                return Some(String::from_utf8_lossy(&payload[pos..pos+name_len]).to_string());
+                return Some(String::from_utf8_lossy(&payload[pos..pos + name_len]).to_string());
             }
         }
         pos += ext_len;
     }
-    
+
     None
 }
 
@@ -922,10 +999,10 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     let mut shodan_data = None;
     if body.shodan_enabled {
         // Private IP Check (Shodan doesn't scan local networks)
-        let is_private = target.starts_with("192.168.") 
-            || target.starts_with("10.") 
-            || target.starts_with("172.16.") 
-            || target.starts_with("127.") 
+        let is_private = target.starts_with("192.168.")
+            || target.starts_with("10.")
+            || target.starts_with("172.16.")
+            || target.starts_with("127.")
             || target == "localhost";
 
         if !is_private {
@@ -1231,7 +1308,7 @@ async fn main() {
     println!(
         "    {}  {}",
         "🛡️  Versiyon :".bright_white().bold(),
-        "v1.0.0".bright_green().bold()
+        "v1.0.1".bright_green().bold()
     );
     println!(
         "    {}  {}",
@@ -1422,7 +1499,10 @@ async fn handle_metadata(mut multipart: Multipart) -> impl IntoResponse {
 
         let file_size = data.len();
         metadata.insert("Dosya Adı".to_string(), file_name);
-        metadata.insert("Boyut".to_string(), format!("{:.2} MB", file_size as f64 / 1_048_576.0));
+        metadata.insert(
+            "Boyut".to_string(),
+            format!("{:.2} MB", file_size as f64 / 1_048_576.0),
+        );
 
         let mut cursor = Cursor::new(data);
         let exifreader = exif::Reader::new();
@@ -1442,13 +1522,17 @@ async fn handle_metadata(mut multipart: Multipart) -> impl IntoResponse {
                     if tag == "GPSLatitude" {
                         if let exif::Value::Rational(r) = &field.value {
                             if r.len() >= 3 {
-                                lat = Some(r[0].to_f64() + r[1].to_f64()/60.0 + r[2].to_f64()/3600.0);
+                                lat = Some(
+                                    r[0].to_f64() + r[1].to_f64() / 60.0 + r[2].to_f64() / 3600.0,
+                                );
                             }
                         }
                     } else if tag == "GPSLongitude" {
                         if let exif::Value::Rational(r) = &field.value {
                             if r.len() >= 3 {
-                                lon = Some(r[0].to_f64() + r[1].to_f64()/60.0 + r[2].to_f64()/3600.0);
+                                lon = Some(
+                                    r[0].to_f64() + r[1].to_f64() / 60.0 + r[2].to_f64() / 3600.0,
+                                );
                             }
                         }
                     } else if tag == "GPSLatitudeRef" {
@@ -1472,15 +1556,22 @@ async fn handle_metadata(mut multipart: Multipart) -> impl IntoResponse {
 
                 // Generate Google Maps Link if both lat and lon are present
                 if let (Some(mut lt), Some(mut ln)) = (lat, lon) {
-                    if lat_ref == "S" { lt = -lt; }
-                    if lon_ref == "W" { ln = -ln; }
+                    if lat_ref == "S" {
+                        lt = -lt;
+                    }
+                    if lon_ref == "W" {
+                        ln = -ln;
+                    }
                     let map_url = format!("https://www.google.com/maps?q={},{}", lt, ln);
                     metadata.insert("🎯 HEDEF KONUMU (HARİTA)".to_string(), map_url);
                 }
             }
             Err(e) => {
                 // If it's not a hard error (like missing EXIF), we still return the file info
-                metadata.insert("Status".to_string(), format!("TEMİZ (Metadata Bulunamadı: {})", e));
+                metadata.insert(
+                    "Status".to_string(),
+                    format!("TEMİZ (Metadata Bulunamadı: {})", e),
+                );
             }
         }
     }
@@ -1502,9 +1593,10 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
     use std::collections::HashMap;
 
     let devices = pcap::Device::list().unwrap_or_default();
-    let device = devices.into_iter().find(|d| {
-        !d.flags.is_loopback() && !d.addresses.is_empty()
-    }).or_else(|| pcap::Device::lookup().ok().flatten());
+    let device = devices
+        .into_iter()
+        .find(|d| !d.flags.is_loopback() && !d.addresses.is_empty())
+        .or_else(|| pcap::Device::lookup().ok().flatten());
 
     let mut packets = Vec::new();
     let mut ip_counts: HashMap<String, usize> = HashMap::new();
@@ -1522,8 +1614,10 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
             while start_time.elapsed().as_millis() < 1500 && packets.len() < 50 {
                 if let Ok(packet) = cap.next_packet() {
                     let data = packet.data;
-                    if data.len() < 34 { continue; }
-                    
+                    if data.len() < 34 {
+                        continue;
+                    }
+
                     let proto_num = data[23];
                     let proto = match proto_num {
                         1 => "ICMP",
@@ -1534,11 +1628,11 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
 
                     let src = format!("{}.{}.{}.{}", data[26], data[27], data[28], data[29]);
                     let dest = format!("{}.{}.{}.{}", data[30], data[31], data[32], data[33]);
-                    
+
                     // Track IP frequency (Only for Non-Local / Non-Multicast)
                     let is_multicast = dest.starts_with("239.255.") || dest.starts_with("224.0.");
                     let is_local = src.starts_with("192.168.");
-                    
+
                     if !is_multicast && !is_local {
                         *ip_counts.entry(src.clone()).or_insert(0) += 1;
                     }
@@ -1584,7 +1678,7 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
                     if data.len() >= 42 {
                         let s_port = u16::from_be_bytes([data[34], data[35]]);
                         let d_port = u16::from_be_bytes([data[36], data[37]]);
-                        
+
                         // 1. DNS Analysis & Cache Update
                         if proto_num == 17 && (d_port == 53 || s_port == 53) {
                             if s_port == 53 {
@@ -1611,13 +1705,13 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
                             let ip_len = (data[14] & 0x0F) as usize * 4;
                             let tcp_len = ((data[14 + ip_len + 12] >> 4) & 0x0F) as usize * 4;
                             let payload_offset = 14 + ip_len + tcp_len;
-                            
+
                             if data.len() > payload_offset + 10 {
                                 if let Some(sni) = parse_tls_sni(&data[payload_offset..]) {
                                     p_info.domain = Some(sni.clone());
                                     p_info.dest = format!("{} [HTTPS]", sni);
                                     p_info.threat_level = "SAFE".to_string();
-                                    
+
                                     // Also update cache for future packets to this IP
                                     if let Ok(mut cache) = DNS_CACHE.lock() {
                                         cache.insert(dest.clone(), sni);
@@ -1660,11 +1754,19 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
         for _ in 0..15 {
             let src = format!("192.168.1.{}", rng.gen_range(2..254));
             let (dest, level, domain) = if rng.gen_bool(0.2) {
-                ("INSTAGRAM.COM [HTTPS]".to_string(), "SAFE", Some("instagram.com".to_string()))
+                (
+                    "INSTAGRAM.COM [HTTPS]".to_string(),
+                    "SAFE",
+                    Some("instagram.com".to_string()),
+                )
             } else if rng.gen_bool(0.2) {
                 ("239.255.255.250".to_string(), "SAFE", None)
             } else {
-                ("8.8.8.8".to_string(), "SAFE", Some("google.com".to_string()))
+                (
+                    "8.8.8.8".to_string(),
+                    "SAFE",
+                    Some("google.com".to_string()),
+                )
             };
 
             packets.push(PacketInfo {
@@ -1676,12 +1778,17 @@ async fn handle_sniffer() -> Json<SnifferResponse> {
                 domain,
                 risk_score: 0,
                 threat_level: level.to_string(),
-                reason: if level == "SAFE" { None } else { Some("Simulated Traffic".to_string()) },
+                reason: if level == "SAFE" {
+                    None
+                } else {
+                    Some("Simulated Traffic".to_string())
+                },
             });
         }
     }
 
-    let top_domain = domain_counts.iter()
+    let top_domain = domain_counts
+        .iter()
         .max_by_key(|entry| entry.1)
         .map(|(d, _)| d.clone());
 
