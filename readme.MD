@@ -1,6 +1,3 @@
-<p align="center">
-  <img src="static/img/banner.png" width="100%">
-</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Version-v1.0.1-cyan?style=for-the-badge&logo=github" alt="Version">
