@@ -73,13 +73,25 @@ graph TD
 
 ## 🇺🇸 English Version
 
-**NetVanguard** is an industrial-grade **Hybrid Intelligence and Attack Surface Analyzer**. It consolidates advanced Nmap orchestration, real-time sniffing, and OSINT capabilities into a unified platform.
+**NetVanguard** is an industrial-grade **Hybrid Intelligence and Attack Surface Analyzer** engineered for modern cybersecurity requirements. It consolidate passive intelligence (OSINT), active traffic analysis (Sniffing), and privilege escalation (PrivEsc) vectors into a single unified platform.
 
-### 🚀 Core Modules
-- **Scanning:** Advanced Nmap timing and script orchestration.
-- **OSINT:** Shodan, Geo-IP, and DNS/TLS profiling.
-- **Analysis:** Document metadata extraction and breach detection.
-- **Security:** Privilege escalation vectors and kernel auditing.
+### 🚀 Core Modules & Capabilities
+
+#### 1. 🔍 Advanced Network Scanning (Nmap Engine)
+- **Timing Profiles:** Full control from stealthy `T0` (Paranoid) to aggressive `T5` (Insane) modes.
+- **Vulnerability Scanning:** Automatically audits known exposures using the Nmap Scripting Engine (NSE).
+
+#### 2. 🌐 Global Intelligence (OSINT & Geo)
+- **Shodan Integration:** Access target IP history, open ports, and documented vulnerabilities (CVEs).
+- **DNS & TLS Analysis:** Passive DNS resolution and SNI extraction from HTTPS certificates.
+
+#### 3. 📂 Metadata & Breach Analysis
+- **Metadata (EXIF) Analyzer:** Instantly extracts hidden metadata (GPS, device info, software) from images and documents.
+- **Breach Detection:** *XposedOrNot* API integration to check if email addresses have been compromised in historical data leaks.
+
+#### 4. ⚔️ Privilege Escalation Analyzer (PrivEsc)
+- **SUID/GUID Audit:** Identifies misconfigured critical system files and permissions.
+- **Kernel Exploit Suggester:** Reports potential exploits optimized for the system's specific kernel version.
 
 ### ⚡ Rapid Deployment (One-Liner)
 Run the following command on a Kali Linux machine to clone, setup, and launch (Automated Docker/Local detection):
