@@ -60,16 +60,22 @@ graph TD
     A --> D[scanner.rs]
     A --> E[sniffer.rs]
     A --> F[privesc.rs]
+    
+    subgraph "İstihbarat Modülü"
+    C --> C1(Shodan / Geo)
+    C --> C2(Metadata / EXIF)
+    C --> C3(Sızıntı Kontrolü)
+    end
 ```
 
 ### 🛠️ Kurulum
 
 ```bash
-# Kurulum ve Hazırlık
+# Ortam Hazırlığı
 chmod +x setup.sh
 ./setup.sh
 
-# Çalıştırma (Sniffer için Root yetkisi gereklidir)
+# Uygulamayı Çalıştır (Sniffer için Root yetkisi gerekir)
 sudo cargo run
 ```
 
@@ -104,7 +110,6 @@ sudo cargo run
 #### 4. ⚔️ #L10 Privilege Escalation Analyzer (PrivEsc)
 - **SUID/GUID Auditor:** Identifies misconfigured critical system files that could lead to unauthorized access.
 - **Kernel Exploit Suggester:** Reports potential exploits based on the system's kernel version.
-- **Capability Analysis:** Scans Linux capabilities to discover privilege escalation pathways.
 
 #### 5. 📡 Network Radar & Sniffer
 - **Real-Time Sniffer:** L2/L3 packet capture and domain identification via TLS SNI.
