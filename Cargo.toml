@@ -16,5 +16,5 @@ trust-dns-resolver = { version = "0.23", features = ["tokio-runtime"] }
 chrono = "0.4.44"
 tokio-util = { version = "0.7.18", features = ["rt"] }
 once_cell = "1.21.4"
-kamadak-exif = "0.5"
-pcap = "2.0" # Preparing for Part 3
+exif = { package = "kamadak-exif", version = "0.5" }
+pcap = "2.0"

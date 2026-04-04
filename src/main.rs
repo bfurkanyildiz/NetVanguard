@@ -19,7 +19,7 @@ use tokio_util::sync::CancellationToken;
 use tower_http::services::ServeDir;
 use trust_dns_resolver::config::*;
 use trust_dns_resolver::TokioAsyncResolver;
-use kamadak_exif as exif;
+use exif;
 use std::fs::File;
 use std::io::BufReader;
 
@@ -1100,7 +1100,7 @@ async fn handle_metadata(Json(body): Json<MetadataRequest>) -> Json<MetadataResp
 
     let mut reader = BufReader::new(file);
     let exifreader = exif::Reader::new();
-    let exif_data = match exifreader.read_from_container(&mut reader) {
+    let exif_data: exif::Exif = match exifreader.read_from_container(&mut reader) {
         Ok(exif) => exif,
         Err(e) => return Json(MetadataResponse {
             success: false,
