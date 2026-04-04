@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ==============================================================================
-# NetVanguard v1.0.1 - Automated Setup Script (Intelligence Edition)
+# NetVanguard v1.0.1 - Smart Orchestration & Setup Script (Hybrid Edition)
 # ==============================================================================
 
 # Colors
@@ -21,78 +21,81 @@ echo "██║╚██╗██║██╔══╝     ██║   ╚██
 echo "██║ ╚████║███████╗   ██║    ╚████╔╝ ██║  ██║██║ ╚████║╚██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝"
 echo "╚═╝  ╚═══╝╚══════╝   ╚═╝     ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ "
 echo -e "${NC}"
-echo -e "${YELLOW}>>> NetVanguard v1.0.1 Kurulumu Başlatılıyor...${NC}\n"
+echo -e "${YELLOW}>>> NetVanguard v1.0.1 Akıllı Kurulum Sistemi Başlatılıyor...${NC}\n"
 
-# Root Control
+# 1. Root Control
 if [[ $EUID -ne 0 ]]; then
    echo -e "${RED}[!] HATA: Bu betik sudo yetkisi ile çalıştırılmalıdır.${NC}" 
    exit 1
 fi
 
-# 1. System Check
-echo -e "${BLUE}[*] İşletim sistemi kontrol ediliyor...${NC}"
-if ! grep -qiE 'debian|ubuntu|kali' /etc/os-release 2>/dev/null; then
-    echo -e "${RED}[!] Desteklenmeyen İşletim Sistemi. Bu araç Debian, Ubuntu veya Kali Linux gerektirir.${NC}"
-    exit 1
-fi
-echo -e "${GREEN}[+] Sistem uygun.${NC}\n"
+# 2. System Intelligence (Docker vs Native)
+echo -e "${BLUE}[*] Sistem Analizi Yapılıyor...${NC}"
 
-# 2. Smart Dependency Check & Installation
-echo -e "${BLUE}[*] Paket listesi tazeleniyor...${NC}"
-sudo apt-get update -y
-
-DEPENDENCIES=("build-essential" "pkg-config" "libssl-dev" "libpcap-dev" "nmap")
-
-check_and_install() {
-    local pkg=$1
-    if dpkg -s "$pkg" >/dev/null 2>&1; then
-        echo -e "${GREEN}[+] $pkg zaten yüklü.${NC}"
-    else
-        echo -e "${YELLOW}[!] $pkg kuruluyor...${NC}"
-        sudo apt install -y "$pkg"
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}[!] HATA: $pkg kurulamadı!${NC}"
-            exit 1
-        fi
-    fi
-}
-
-echo -e "${BLUE}[*] Gerekli bağımlılıklar kontrol ediliyor...${NC}"
-for pkg in "${DEPENDENCIES[@]}"; do
-    check_and_install "$pkg"
-done
-echo -e "${GREEN}[+] Tüm bağımlılıklar hazır.${NC}\n"
-
-# 3. Rust/Cargo Check & Auto-Install
-echo -e "${BLUE}[*] Rust geliştirme ortamı kontrol ediliyor...${NC}"
-if ! command -v cargo &> /dev/null; then
-    echo -e "${YELLOW}[!] Cargo (Rust) bulunamadı. Kurulum başlatılıyor...${NC}"
-    
-    # Ensure curl is installed for rustup
-    if ! command -v curl &> /dev/null; then
-        sudo apt-get install -y curl
-    fi
-
-    # Install Rust via rustup (Non-interactive)
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-    
-    # Source environment
-    source "$HOME/.cargo/env"
-    
-    if ! command -v cargo &> /dev/null; then
-        echo -e "${RED}[!] HATA: Rust kurulumu başarısız oldu.${NC}"
-        echo -e "${YELLOW}[*] Lütfen manuel kurun: ${CYAN}https://rustup.rs${NC}"
-        exit 1
-    fi
-    echo -e "${GREEN}[+] Rust başarıyla kuruldu.${NC}"
+# Check for Docker
+DOCKER_READY=false
+if command -v docker &> /dev/null && command -v docker-compose &> /dev/null || docker compose version &> /dev/null; then
+    echo -e "${GREEN}[+] Docker Tespit Edildi.${NC}"
+    DOCKER_READY=true
 else
-    echo -e "${GREEN}[+] Rust/Cargo zaten yüklü.${NC}"
-    echo -e "${CYAN}Rust Versiyon:${NC} $(rustc --version | awk '{print $2}')"
+    echo -e "${YELLOW}[!] Docker Bulunamadı. Otomatik Kurulum Deneniyor...${NC}"
+    apt-get update -y
+    apt-get install -y docker.io docker-compose-v2
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}[+] Docker Başarıyla Kuruldu.${NC}"
+        systemctl start docker
+        DOCKER_READY=true
+    else
+        echo -e "${RED}[!] Docker Kurulumu Başarısız. Yerel Kuruluma (Native) Dönülüyor...${NC}"
+    fi
 fi
 
-# 4. Outro
-echo -e "\n${CYAN}================================================================${NC}"
-echo -e "${GREEN}   ✅ NetVanguard v1.0.1 Kurulumu Tamamlandı!   ${NC}"
-echo -e "${CYAN}================================================================${NC}"
-echo -e "\nUygulamayı başlatmak için:"
-echo -e "${YELLOW}sudo cargo run${NC}\n"
+# ==============================================================================
+# PATH A: DOCKER DEPLOYMENT
+# ==============================================================================
+if [ "$DOCKER_READY" = true ]; then
+    echo -e "${CYAN}>>> Docker Üzerinden Yayına Geçiliyor (Host Mode)...${NC}"
+    docker compose up --build -d
+    if [ $? -eq 0 ]; then
+        echo -e "\n${GREEN}✅ NetVanguard Konteyner İçinde Başarıyla Başlatıldı!${NC}"
+        echo -e "${BLUE}Panel Adresi:${NC} ${YELLOW}http://localhost:8080${NC}"
+        echo -e "${BLUE}Durdurmak İçin:${NC} docker compose down"
+        exit 0
+    else
+        echo -e "${RED}[!] Docker Başlatma Hatası. Yerel Kuruluma Deneniyor...${NC}"
+    fi
+fi
+
+# ==============================================================================
+# PATH B: LOCAL (NATIVE) DEPLOYMENT
+# ==============================================================================
+echo -e "${CYAN}>>> Yerel (Native) Kurulum Hazırlanıyor...${NC}"
+
+# Dependencies
+DEPENDENCIES=("build-essential" "pkg-config" "libssl-dev" "libpcap-dev" "nmap" "curl")
+for pkg in "${DEPENDENCIES[@]}"; do
+    if ! dpkg -s "$pkg" >/dev/null 2>&1; then
+        echo -e "${YELLOW}[*] $pkg kuruluyor...${NC}"
+        apt-get install -y "$pkg"
+    fi
+done
+
+# Rust Check
+if ! command -v cargo &> /dev/null; then
+    echo -e "${YELLOW}[!] Rust bulunamadı, kuruluyor...${NC}"
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source "$HOME/.cargo/env"
+fi
+
+echo -e "${BLUE}[*] Proje Derleniyor (Cargo Build)...${NC}"
+cargo build --release
+
+if [ $? -eq 0 ]; then
+    echo -e "\n${GREEN}✅ NetVanguard Yerel Olarak Derlendi!${NC}"
+    echo -e "${YELLOW}Başlatmak İçin:${NC} sudo ./target/release/netvanguard veya ./run.sh"
+    echo -e "${BLUE}Panel Adresi:${NC} http://localhost:8080"
+else
+    echo -e "${RED}[!] Derleme Hatası. Lütfen logları kontrol edin.${NC}"
+fi
+
+exit 0

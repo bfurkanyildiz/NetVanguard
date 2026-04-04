@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  netvanguard:
+    build: .
+    container_name: netvanguard_v1
+    # network_mode host is critical for the sniffer to see the host's actual interfaces
+    network_mode: host
+    # Give the container administrative privileges for raw sockets and nmap
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    # Ensure reports and logs are persisted if needed
+    volumes:
+      - ./reports:/app/reports
+    environment:
+      - SHODAN_API_KEY=${SHODAN_API_KEY}
+    restart: unless-stopped
