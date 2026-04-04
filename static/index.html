@@ -1919,46 +1919,86 @@
 
         <!-- ═══ NAVIGATION BAR ═══ -->
         <nav class="top-nav"
-            style="display:flex; justify-content:center; gap:1.5rem; margin-top:2rem; margin-bottom:2rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 2rem;">
-            <button class="nav-button active" onclick="switchVue('dashboard')" id="nav-dashboard"
-                data-i18n="nav_dashboard">🏠 Dashboard</button>
-            <button class="nav-button" onclick="switchVue('scanner')" id="nav-scanner" data-i18n="nav_scanner">🔍
-                Network Scanner</button>
-            <button class="nav-button" onclick="switchVue('wifi')" id="nav-wifi" data-i18n="nav_wifi">🛰️ Wi-Fi
-                Radar</button>
+            style="display:flex; justify-content:center; gap:2rem; margin-top:2.5rem; margin-bottom:3.5rem; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 3rem;">
+            <button class="nav-button active" onclick="switchVue('dashboard')" id="nav-dashboard">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-text" data-i18n="nav_dashboard">Kontrol Paneli</span>
+            </button>
+            <button class="nav-button" onclick="switchVue('scanner')" id="nav-scanner">
+                <span class="nav-icon">🔍</span>
+                <span class="nav-text" data-i18n="nav_scanner">Ağ Tarayıcı</span>
+            </button>
+            <button class="nav-button" onclick="switchVue('wifi')" id="nav-wifi">
+                <span class="nav-icon">🛰️</span>
+                <span class="nav-text" data-i18n="nav_wifi">Wi-Fi Radarı</span>
+            </button>
+            <button class="nav-button" onclick="switchVue('intel')" id="nav-intel">
+                <span class="nav-icon">🕵️</span>
+                <span class="nav-text" data-i18n="nav_intel">İstihbarat</span>
+            </button>
+            <button class="nav-button" onclick="switchVue('sniffer')" id="nav-sniffer">
+                <span class="nav-icon">📡</span>
+                <span class="nav-text" data-i18n="nav_sniffer">Canlı Trafik</span>
+            </button>
         </nav>
 
         <style>
             .nav-button {
-                padding: 1.2rem 2.5rem;
+                flex: 1;
+                min-width: 190px;
+                aspect-ratio: 1 / 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 1.25rem;
+                padding: 2rem;
                 font-size: 1.15rem;
                 font-weight: 800;
-                color: var(--text-secondary);
-                background: rgba(16, 25, 40, 0.6);
-                border: 2px solid var(--border);
-                border-radius: 12px;
+                color: rgba(138, 191, 150, 0.4);
+                background: rgba(16, 25, 40, 0.9) !important;
+                border: 2px solid rgba(0, 255, 65, 0.1);
+                border-radius: 16px;
                 cursor: pointer;
-                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+                transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+                text-decoration: none;
+                outline: none;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .nav-button .nav-icon {
+                font-size: 3.5rem;
+                transition: all 0.3s ease;
+                filter: grayscale(1) opacity(0.3);
             }
 
             .nav-button:hover {
-                background: rgba(255, 255, 255, 0.05);
-                transform: translateY(-4px);
-                border-color: var(--cyan-500);
-                box-shadow: 0 10px 25px rgba(0, 242, 254, 0.15);
+                background: rgba(20, 30, 50, 1) !important;
+                transform: translateY(-8px);
+                border-color: rgba(0, 255, 255, 0.4);
                 color: #fff;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            }
+
+            .nav-button:hover .nav-icon {
+                filter: grayscale(0) opacity(1);
+                transform: scale(1.1);
             }
 
             .nav-button.active {
-                background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(79, 70, 229, 0.15));
-                border-color: var(--cyan-400);
-                color: #fff;
-                box-shadow: 0 0 25px rgba(0, 242, 254, 0.25), inset 0 0 15px rgba(79, 70, 229, 0.3);
-                transform: scale(1.02);
+                background: linear-gradient(135deg, rgba(0, 242, 254, 0.25), rgba(79, 70, 229, 0.25)) !important;
+                border-color: #00f2fe !important;
+                color: #fff !important;
+                box-shadow: 0 0 40px rgba(0, 242, 254, 0.4), inset 0 0 20px rgba(79, 70, 229, 0.3) !important;
+                transform: scale(1.05) !important;
+                z-index: 10;
+            }
+
+            .nav-button.active .nav-icon {
+                filter: grayscale(0) opacity(1) !important;
+                transform: scale(1.05);
             }
         </style>
 
@@ -2119,7 +2159,7 @@
                         <span class="option-label" data-i18n="opt_ports">Port Tarama</span>
                     </label>
                     <label class="option-chip">
-                        <input type="checkbox" id="opt-vuln" checked onchange="toggleVulnSpeedLock()">
+                        <input type="checkbox" id="opt-vuln" checked onchange="updateSpeedRestrictions()">
                         <span class="checkmark">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
                                 stroke-linecap="round" stroke-linejoin="round">
@@ -2127,6 +2167,16 @@
                             </svg>
                         </span>
                         <span class="option-label" data-i18n="opt_vuln">Zafiyet Analizi</span>
+                    </label>
+                    <label class="option-chip">
+                        <input type="checkbox" id="opt-priv-esc">
+                        <span class="checkmark">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        </span>
+                        <span class="option-label" data-i18n="opt_priv_esc">Yetki Yükseltme (#L10)</span>
                     </label>
                     <label class="option-chip">
                         <input type="checkbox" id="opt-os">
@@ -2441,6 +2491,153 @@
             </div>
         </div>
 
+        <!-- ═══ VUE: INTELLIGENCE PANEL ═══ -->
+        <div class="terminal" id="vue-intel" style="display:none; padding: 2rem; background:#08080b; min-height:500px;">
+            <h2 class="panel-title" style="margin-bottom: 0.5rem; color: var(--emerald-400);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px; height:24px; vertical-align:middle; margin-right:8px;">
+                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 4h.01" />
+                </svg>
+                <span data-i18n="intel_panel_title">🕵️ GİZLİ VERİ AVCISI (Metadata Hunter)</span>
+            </h2>
+            <p style="color: #888; margin-bottom: 2rem;" data-i18n="intel_panel_desc">Yerel sistemdeki medya dosyalarının (JPG/PNG) derinlemesine EXIF ve Metadata analizini gerçekleştirin.</p>
+
+            <div class="input-group" style="max-width: 800px; margin-bottom: 2rem;">
+                <div class="input-wrapper" style="flex: 1;">
+                    <input type="text" id="intel-path" class="ip-input" placeholder="Dosya yolu: C:\Users\Admin\Documents\target.jpg" data-i18n="placeholder_intel_path" autocomplete="off" spellcheck="false" />
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z" />
+                        <polyline points="13 2 13 9 20 9" />
+                    </svg>
+                </div>
+                <button class="scan-btn" onclick="extractMetadata()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                    </svg>
+                    <span data-i18n="btn_analyze">Analiz Et</span>
+                </button>
+            </div>
+
+            <div id="intel-results" style="display: none;">
+                <div style="background: rgba(16, 25, 40, 0.4); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem;">
+                    <h3 style="color: var(--cyan-400); margin-bottom: 1rem; font-size: 1rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.5rem;" data-i18n="intel_results_header">📊 EKSTRE EDİLEN VERİLER</h3>
+                    <div id="intel-table-container" style="max-height: 400px; overflow-y: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">
+                            <thead style="text-align: left; color: #888;">
+                                <tr>
+                                    <th style="padding: 0.5rem; border-bottom: 1px solid var(--border-subtle);" data-i18n="th_tag">Etiket (Tag)</th>
+                                    <th style="padding: 0.5rem; border-bottom: 1px solid var(--border-subtle);" data-i18n="th_val">Değer (Value)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="intel-table-body">
+                                <!-- Data rows injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="intel-error" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(225, 29, 72, 0.1); border: 1px solid var(--rose-500); border-radius: 8px; color: var(--rose-400); font-family: 'JetBrains Mono', monospace;"></div>
+
+            <!-- DATA BREACH SCANNER SECTION -->
+            <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-subtle);">
+                <h2 class="panel-title" style="margin-bottom: 0.5rem; color: var(--rose-400);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px; height:24px; vertical-align:middle; margin-right:8px;">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        <path d="M12 8v4M12 16h.01" />
+                    </svg>
+                    <span data-i18n="breach_panel_title">🔐 VERİ SIZINTISI KONTROLÜ (Data Breach)</span>
+                </h2>
+                <p style="color: #888; margin-bottom: 2rem;" data-i18n="breach_panel_desc">E-posta adresinizin bilinen büyük veri sızıntılarında yer alıp almadığını simüle edilmiş istihbarat ağımızda sorgulayın.</p>
+
+                <div class="input-group" style="max-width: 800px; margin-bottom: 2rem;">
+                    <div class="input-wrapper" style="flex: 1;">
+                        <input type="email" id="breach-email" class="ip-input" placeholder="E-posta: target@example.com" data-i18n="placeholder_breach_email" autocomplete="off" />
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                            <polyline points="22,6 12,13 2,6" />
+                        </svg>
+                    </div>
+                    <button class="scan-btn" onclick="checkBreach()" style="background: rgba(225, 29, 72, 0.2); border-color: var(--rose-500);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        <span data-i18n="btn_check_breach">Sorgula</span>
+                    </button>
+                </div>
+
+                <div id="breach-results" style="display: none; padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--rose-500); background: rgba(225, 29, 72, 0.05);">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:24px; height:24px; color: var(--rose-500);">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01" />
+                        </svg>
+                        <h4 style="color: var(--rose-400); margin: 0; font-size: 1.1rem;" data-i18n="breach_found_header">DİKKAT: SIZINTI TESPİT EDİLDİ!</h4>
+                    </div>
+                    <p style="color: #ccc; margin-bottom: 0.5rem;" data-i18n="breach_found_body">Bu e-posta adresi aşağıdaki veri sızıntılarında tespit edilmiştir:</p>
+                    <ul id="breach-list" style="color: var(--rose-300); list-style-type: '⚠ '; padding-left: 1.5rem; margin: 0; font-family: 'JetBrains Mono';"></ul>
+                </div>
+
+                <div id="breach-safe" style="display: none; padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--emerald-500); background: rgba(16, 185, 129, 0.05);">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:24px; height:24px; color: var(--emerald-500);">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <h4 style="color: var(--emerald-400); margin: 0; font-size: 1.1rem;" data-i18n="breach_not_found">GÜVENLİ: SIZINTI BULUNAMADI</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ VUE: NETSNIFFER (LIVE TRAFFIC) ═══ -->
+        <div class="terminal" id="vue-sniffer" style="display:none; padding: 1.5rem; background:#08080b; min-height:500px; position: relative; overflow: hidden;">
+            <div class="sniffer-overlay" id="sniffer-overlay" style="position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+                <div class="matrix-bg" style="position: absolute; top:0; left:0; width:100%; height:100%; opacity: 0.1; pointer-events: none; background: linear-gradient(180deg, transparent 0%, var(--emerald-500) 50%, transparent 100%); background-size: 100% 4px; animation: matrix-scroll 20s linear infinite;"></div>
+                <h2 style="color: var(--emerald-400); margin-bottom: 2rem; z-index: 11;" data-i18n="sniffer_ready_title">NETSNIFFER: TRAFİK İZLEME HAZIR</h2>
+                <button class="scan-btn" onclick="toggleSniffer()" style="padding: 1.5rem 3rem; font-size: 1.2rem; z-index: 11;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px; height:24px;">
+                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                    </svg>
+                    <span id="sniffer-btn-text" data-i18n="btn_start_sniff">İZLEMEYİ BAŞLAT</span>
+                </button>
+            </div>
+
+            <div class="sniffer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span class="pulse-dot emerald"></span>
+                    <h3 style="color: var(--emerald-400); font-family: 'JetBrains Mono';" data-i18n="sniffer_live_title">LIVE NETWORK TRAFFIC</h3>
+                </div>
+                <button class="report-btn" onclick="toggleSniffer()" style="background: rgba(225, 29, 72, 0.1); border-color: var(--rose-500); color: var(--rose-400); padding: 0.4rem 1rem;">
+                    <span data-i18n="btn_stop">DURDUR</span>
+                </button>
+            </div>
+
+            <div id="sniffer-container" style="height: 400px; overflow-y: auto; background: #050505; border: 1px solid var(--border); border-radius: 4px; padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; line-height: 1.4;">
+                <div id="sniffer-log" style="color: var(--emerald-500);">
+                    <!-- Live packet rows injected here -->
+                </div>
+            </div>
+
+            <style>
+                @keyframes matrix-scroll {
+                    from { background-position: 0 0; }
+                    to { background-position: 0 1000px; }
+                }
+                .packet-row {
+                    display: grid;
+                    grid-template-columns: 80px 140px 10px 140px 100px 1fr;
+                    gap: 1rem;
+                    padding: 0.2rem 0.5rem;
+                    border-bottom: 1px solid rgba(16, 185, 129, 0.05);
+                    animation: fadeIn 0.3s ease;
+                }
+                .packet-row:hover { background: rgba(16, 185, 129, 0.05); }
+                .p-proto { color: var(--cyan-400); font-weight: bold; }
+                .p-src { color: var(--emerald-400); }
+                .p-arrow { color: #666; }
+                .p-dest { color: var(--violet-400); }
+                .p-len { color: #888; }
+            </style>
+        </div>
+
         <!-- ═══ FOOTER ═══ -->
         <footer class="footer">
             <p class="footer-text">
@@ -2520,9 +2717,9 @@
         const translations = {
             tr: {
                 header_subtitle: "Gelişmiş Ağ Güvenliği Tarama & Analiz Paneli",
-                nav_dashboard: "🏠 Kontrol Paneli",
-                nav_scanner: "🔍 Ağ Tarayıcı",
-                nav_wifi: "🛰️ Wi-Fi Radarı",
+                nav_dashboard: "Kontrol Paneli",
+                nav_scanner: "Ağ Tarayıcı",
+                nav_wifi: "Wi-Fi Radarı",
                 sys_health: "Sistem Sağlığı (Kali Node)",
                 cpu: "CPU Kullanımı",
                 ram: "RAM Kullanımı",
@@ -2546,6 +2743,8 @@
                 btn_stop: "Durdur",
                 btn_report: "Rapor İndir",
                 btn_export: "📄 GENEL RAPORU DIŞA AKTAR",
+                opt_priv_esc: "Yetki Yükseltme Analizi (#L10)",
+                intel_tab: "İstihbarat Paneli",
                 status_init: "Sistem kontrol ediliyor...",
                 opt_ports: "Port Tarama",
                 opt_vuln: "Zafiyet Analizi",
@@ -2568,19 +2767,40 @@
                 wifi_waiting: "Veri bekleniyor... Taramayı başlatmak için yenileyin.",
                 wifi_wlan_warn_body: "Kablolu ağ bağlantısı algılandı. Radar modülü için harici bir Wi-Fi adaptörü gereklidir.",
                 geo_title: "Hedef Coğrafi Konumu (IP Geolocation)",
-                footer_text: "NetVanguard v1.0 · Rust + Axum ile güçlendirilmiştir · 2026"
+                footer_text: "NetVanguard v1.0 · Rust + Axum ile güçlendirilmiştir · 2026",
+                nav_intel: "İstihbarat",
+                nav_sniffer: "Canlı Trafik",
+                sniffer_ready_title: "NETSNIFFER: TRAFİK İZLEME HAZIR",
+                sniffer_live_title: "ANLIK AĞ TRAFİĞİ",
+                btn_start_sniff: "İZLEMEYİ BAŞLAT",
+                intel_panel_title: "METADATA AVCISI (Exif Analizi)",
+                intel_panel_desc: "Yerel sistemdeki medya dosyalarının (JPG/PNG) derinlemesine EXIF ve Metadata analizini gerçekleştirin.",
+                placeholder_intel_path: "Dosya yolu: C:\\Users\\Admin\\Documents\\target.jpg",
+                btn_analyze: "Analiz Et",
+                intel_results_header: "EKSTRE EDİLEN VERİLER",
+                th_tag: "Etiket (Tag)",
+                th_val: "Değer (Value)",
+                breach_panel_title: "🔐 VERİ SIZINTISI KONTROLÜ (Data Breach)",
+                breach_panel_desc: "E-posta adresinizin bilinen büyük veri sızıntılarında yer alıp almadığını simüle edilmiş istihbarat ağımızda sorgulayın.",
+                placeholder_breach_email: "E-posta: target@example.com",
+                btn_check_breach: "Sorgula",
+                breach_found_header: "DİKKAT: SIZINTI TESPİT EDİLDİ!",
+                breach_found_body: "Bu e-posta adresi aşağıdaki veri sızıntılarında tespit edilmiştir:",
+                breach_not_found: "GÜVENLİ: SIZINTI BULUNAMADI"
             },
             en: {
                 header_subtitle: "Advanced Network Security Scan & Analysis Dashboard",
-                nav_dashboard: "🏠 Dashboard",
-                nav_scanner: "🔍 Network Scanner",
-                nav_wifi: "🛰️ Wi-Fi Radar",
+                nav_dashboard: "Dashboard",
+                nav_scanner: "Network Scanner",
+                nav_wifi: "Wi-Fi Radar",
                 sys_health: "System Health (Kali Node)",
                 cpu: "CPU Usage",
                 ram: "RAM Usage",
                 scan_summary: "Last Scan Summary",
                 label_status: "Status:",
-                val_waiting: "AWAITING ANALYSIS",
+                val_waiting: "WAITING FOR ANALYSIS",
+                opt_priv_esc: "Privilege Escalation (#L10)",
+                intel_tab: "Intelligence Panel",
                 label_assets: "Asset Count:",
                 label_threat: "Threat Level:",
                 val_clean: "CLEAN",
@@ -2620,7 +2840,26 @@
                 wifi_waiting: "Awaiting data... Refresh to start scanning.",
                 wifi_wlan_warn_body: "Wired network connection detected. External Wi-Fi adapter required for Radar.",
                 geo_title: "Target Geolocation (IP Geolocation)",
-                footer_text: "NetVanguard v1.0 · Powered by Rust + Axum · 2026"
+                footer_text: "NetVanguard v1.0 · Powered by Rust + Axum · 2026",
+                nav_intel: "🕵️ Intel",
+                nav_sniffer: "📡 Live Traffic",
+                sniffer_ready_title: "NETSNIFFER: TRAFFIC MONITOR READY",
+                sniffer_live_title: "LIVE NETWORK TRAFFIC",
+                btn_start_sniff: "START MONITORING",
+                intel_panel_title: "🕵️ METADATA HUNTER (Exif Analysis)",
+                intel_panel_desc: "Perform deep EXIF and Metadata analysis on local media files (JPG/PNG).",
+                placeholder_intel_path: "File path: C:\\Users\\Admin\\Documents\\target.jpg",
+                btn_analyze: "Analyze",
+                intel_results_header: "📊 EXTRACTED DATA",
+                th_tag: "Tag",
+                th_val: "Value",
+                breach_panel_title: "🔐 DATA BREACH CHECKER",
+                breach_panel_desc: "Query our simulated intelligence network to see if your email address has been included in major data leaks.",
+                placeholder_breach_email: "Email: target@example.com",
+                btn_check_breach: "Query",
+                breach_found_header: "WARNING: BREACH DETECTED!",
+                breach_found_body: "This email address was found in the following data leaks:",
+                breach_not_found: "SECURE: NO BREACH FOUND"
             }
         };
 
@@ -2659,9 +2898,180 @@
         let activeTab = 'dashboard';
         let scanHistory = [];
         let lastGeoData = null;
+        let snifferActive = false;
+        let snifferInterval = null;
 
         // [FIX] Initialize default language translation correctly on page load
         setLanguage('tr');
+
+        function switchVue(vueName) {
+            activeTab = vueName;
+            const vues = ['dashboard', 'scanner', 'wifi', 'intel', 'sniffer'];
+            
+            // Clear Wi-Fi interval if switching away
+            if (vueName !== 'wifi' && typeof wifiInterval !== 'undefined' && wifiInterval) {
+                clearInterval(wifiInterval);
+                wifiInterval = null;
+            }
+
+            vues.forEach(v => {
+                const el = document.getElementById('vue-' + v);
+                if (el) el.style.display = (v === vueName) ? 'block' : 'none';
+                
+                const nav = document.getElementById('nav-' + v);
+                if (nav) nav.classList.toggle('active', v === vueName);
+            });
+            
+            console.log(`[NetVanguard] Transition to: ${vueName}`);
+
+            // Side Effects
+            if (typeof updateTickerContext === 'function') updateTickerContext(vueName);
+            if (vueName === 'dashboard' && typeof updateDashboard === 'function') updateDashboard();
+            if (vueName === 'scanner' && typeof leafletMap !== 'undefined' && leafletMap) {
+                setTimeout(() => { leafletMap.invalidateSize(); }, 150);
+            }
+            if (vueName === 'wifi' && typeof fetchWifi === 'function') {
+                if (typeof fetchWifiStatus === 'function') fetchWifiStatus();
+                fetchWifi();
+                // Start polling if not already started
+                if (typeof wifiInterval !== 'undefined' && !wifiInterval) {
+                    wifiInterval = setInterval(fetchWifi, 5000);
+                }
+            }
+            if (vueName !== 'sniffer' && typeof snifferActive !== 'undefined' && snifferActive) {
+                if (typeof toggleSniffer === 'function') toggleSniffer(); 
+            }
+        }
+
+        async function extractMetadata() {
+            const path = document.getElementById('intel-path').value.trim();
+            const resultsDiv = document.getElementById('intel-results');
+            const errorDiv = document.getElementById('intel-error');
+            const tableBody = document.getElementById('intel-table-body');
+            
+            if (!path) return;
+            
+            resultsDiv.style.display = 'none';
+            errorDiv.style.display = 'none';
+            tableBody.innerHTML = '';
+            
+            try {
+                const response = await fetch('/api/metadata', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultsDiv.style.display = 'block';
+                    for (const [tag, val] of Object.entries(data.data)) {
+                        const row = `<tr>
+                            <td style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--emerald-400);">${tag}</td>
+                            <td style="padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); color: #fff;">${val}</td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    }
+                } else {
+                    errorDiv.style.display = 'block';
+                    errorDiv.textContent = data.error || "Bilinmeyen bir hata oluştu.";
+                }
+            } catch (err) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = "Bağlantı hatası: " + err.message;
+            }
+        }
+
+        async function checkBreach() {
+            const email = document.getElementById('breach-email').value.trim();
+            const resultsDiv = document.getElementById('breach-results');
+            const safeDiv = document.getElementById('breach-safe');
+            const list = document.getElementById('breach-list');
+            
+            if (!email) return;
+            
+            resultsDiv.style.display = 'none';
+            safeDiv.style.display = 'none';
+            list.innerHTML = '';
+            
+            try {
+                const response = await fetch('/api/breach', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.found) {
+                        resultsDiv.style.display = 'block';
+                        data.sources.forEach(src => {
+                            const li = document.createElement('li');
+                            li.textContent = src;
+                            list.appendChild(li);
+                        });
+                    } else {
+                        safeDiv.style.display = 'block';
+                    }
+                } else {
+                    alert(data.error);
+                }
+            } catch (err) {
+                console.error("Breach check error:", err);
+            }
+        }
+
+        async function toggleSniffer() {
+            snifferActive = !snifferActive;
+            const overlay = document.getElementById('sniffer-overlay');
+            const log = document.getElementById('sniffer-log');
+            
+            if (snifferActive) {
+                overlay.style.display = 'none';
+                log.innerHTML = `<div style="color: #666; margin-bottom: 0.5rem;">[${new Date().toLocaleTimeString()}] Sniffer initialized. Capturing packets...</div>`;
+                snifferInterval = setInterval(pollSniffer, 2000);
+            } else {
+                overlay.style.display = 'flex';
+                clearInterval(snifferInterval);
+            }
+        }
+
+        async function pollSniffer() {
+            if (!snifferActive) return;
+            
+            try {
+                const res = await fetch('/api/sniffer');
+                const data = await res.json();
+                
+                if (data.success) {
+                    const log = document.getElementById('sniffer-log');
+                    const container = document.getElementById('sniffer-container');
+                    
+                    data.packets.forEach(p => {
+                        const row = document.createElement('div');
+                        row.className = 'packet-row';
+                        row.innerHTML = `
+                            <span class="p-proto">[${p.proto}]</span>
+                            <span class="p-src">${p.src}</span>
+                            <span class="p-arrow">→</span>
+                            <span class="p-dest">${p.dest}</span>
+                            <span class="p-len">${p.len}B</span>
+                            <span style="color: #444; overflow: hidden; white-space: nowrap;">Payload segment detected...</span>
+                        `;
+                        log.prepend(row);
+                    });
+                    
+                    // Keep log clean
+                    while (log.children.length > 50) {
+                        log.removeChild(log.lastChild);
+                    }
+                }
+            } catch (err) {
+                console.error("Sniffer poll error:", err);
+            }
+        }
 
         /** [FINAL] EMERGENCY GOOGLE MAPS EMBED ENGINE **/
         async function updateNetworkMap(ip) {
@@ -3039,8 +3449,8 @@
         }
 
         function exportBatchReport() {
-            if (scanHistory.length === 0) {
-                alert("Dışa aktarılacak tarama geçmişi bulunamadı!");
+            if (scanHistory.length === 0 && !document.getElementById('intel-results').style.display === 'block' && !document.getElementById('breach-results').style.display === 'block') {
+                alert("Dışa aktarılacak tarama veya istihbarat verisi bulunamadı!");
                 return;
             }
 
@@ -3050,24 +3460,54 @@
             let report = doubleSep + '\n';
             report += '  [NETVANGUARD FULL AUDIT LOG - BATCH EXPORT]\n';
             report += `  EXPORT DATE : ${new Date().toLocaleString('tr-TR')}\n`;
-            report += `  TOTAL SCANS : ${scanHistory.length}\n`;
             report += doubleSep + '\n\n';
 
-            scanHistory.forEach((scan, index) => {
-                report += `SCAN #${index + 1} | TARGET: ${scan.target} | TIME: ${scan.timestamp}\n`;
+            // ── INTELLIGENCE DATA ──
+            const intelRes = document.getElementById('intel-results');
+            if (intelRes.style.display === 'block') {
+                report += '>> SECTION: METADATA HUNTER RESULTS\n';
                 report += sep + '\n';
-                report += `Type: ${scan.type}\n`;
-                report += `Risk Score: ${scan.score}/10.0\n`;
-                report += `Results: ${scan.ports || scan.devices} entries found\n`;
-                report += `Duration: ${scan.duration}s\n\n`;
-                report += '--- Raw Logs start ---\n';
-                report += scan.output + '\n';
-                report += '--- Raw Logs end ---\n\n';
+                const rows = document.querySelectorAll('#intel-table-body tr');
+                rows.forEach(r => {
+                    const tag = r.cells[0].textContent;
+                    const val = r.cells[1].textContent;
+                    report += `[+] ${tag}: ${val}\n`;
+                });
                 report += sep + '\n\n';
-            });
+            }
+
+            const breachRes = document.getElementById('breach-results');
+            if (breachRes.style.display === 'block') {
+                const email = document.getElementById('breach-email').value;
+                report += `>> SECTION: DATA BREACH AUDIT (Target: ${email})\n`;
+                report += sep + '\n';
+                report += 'STATUS: VULNERABLE / LEAKED\n';
+                const leaks = document.querySelectorAll('#breach-list li');
+                leaks.forEach(l => {
+                    report += `[!] LEAK SOURCE: ${l.textContent}\n`;
+                });
+                report += sep + '\n\n';
+            }
+
+            // ── SCAN HISTORY ──
+            if (scanHistory.length > 0) {
+                report += `>> SECTION: NETWORK SCAN HISTORY (${scanHistory.length} Scans)\n\n`;
+                scanHistory.forEach((scan, index) => {
+                    report += `SCAN #${index + 1} | TARGET: ${scan.target} | TIME: ${scan.timestamp}\n`;
+                    report += sep + '\n';
+                    report += `Type: ${scan.type}\n`;
+                    report += `Risk Score: ${scan.score}/10.0\n`;
+                    report += `Results: ${scan.ports || scan.devices} entries found\n`;
+                    report += `Duration: ${scan.duration}s\n\n`;
+                    report += '--- Raw Logs start ---\n';
+                    report += scan.output + '\n';
+                    report += '--- Raw Logs end ---\n\n';
+                    report += sep + '\n\n';
+                });
+            }
 
             report += doubleSep + '\n';
-            report += '  END OF AUDIT LOG\n';
+            report += '  END OF AUDIT LOG - GENERATED BY NETVANGUARD\n';
             report += doubleSep + '\n';
 
             const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
@@ -3100,46 +3540,6 @@
         let wifiNodes = {};
 
         // Tab UI
-        function switchVue(mode) {
-            activeTab = mode;
-            document.getElementById('nav-dashboard').classList.remove('active');
-            document.getElementById('nav-scanner').classList.remove('active');
-            document.getElementById('nav-wifi').classList.remove('active');
-
-            document.getElementById('nav-dashboard').style.background = 'var(--bg-secondary)';
-            document.getElementById('nav-scanner').style.background = 'var(--bg-secondary)';
-            document.getElementById('nav-wifi').style.background = 'var(--bg-secondary)';
-
-            document.getElementById('vue-dashboard').style.display = 'none';
-            document.getElementById('vue-scanner').style.display = 'none';
-            document.getElementById('vue-wifi').style.display = 'none';
-
-            if (wifiInterval) { clearInterval(wifiInterval); wifiInterval = null; }
-
-            // Update Ticker Context
-            updateTickerContext(mode);
-
-            if (mode === 'dashboard') {
-                document.getElementById('nav-dashboard').classList.add('active');
-                document.getElementById('nav-dashboard').style.background = '';
-                document.getElementById('vue-dashboard').style.display = 'block';
-            } else if (mode === 'scanner') {
-                document.getElementById('nav-scanner').classList.add('active');
-                document.getElementById('nav-scanner').style.background = '';
-                document.getElementById('vue-scanner').style.display = 'block';
-                // Tab geçişinde Leaflet render güvenliği
-                setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 150);
-            } else if (mode === 'wifi') {
-                // Hardware warnings are handled by fetchWifi based on SSID discovery
-
-                document.getElementById('nav-wifi').classList.add('active');
-                document.getElementById('nav-wifi').style.background = '';
-                document.getElementById('vue-wifi').style.display = 'block';
-                fetchWifiStatus();
-                fetchWifi();
-                wifiInterval = setInterval(fetchWifi, 5000);
-            }
-        }
 
         function updateTickerContext(mode) {
             const ticker = document.getElementById('ticker-content');
@@ -3606,6 +4006,7 @@
                 version_detect: document.getElementById('opt-sv').checked,
                 aggressive_scan: document.getElementById('opt-a').checked,
                 net_discover: isNetDiscover,
+                priv_esc: document.getElementById('opt-priv-esc').checked,
             };
 
             const anyChecked = opts.port_scan || opts.vuln_scan || opts.os_detect || opts.dns_query || opts.version_detect || opts.aggressive_scan || opts.net_discover;

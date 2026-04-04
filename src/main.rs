@@ -5,20 +5,23 @@ use axum::{
     Json, Router,
 };
 use colored::Colorize;
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use std::fs;
+use std::io::Write;
 use std::net::SocketAddr;
 use std::process::Command;
+use std::sync::{Arc, Mutex as StdMutex};
 use std::time::Duration;
+use tokio::process::Child;
+use tokio::sync::Mutex;
+use tokio_util::sync::CancellationToken;
 use tower_http::services::ServeDir;
 use trust_dns_resolver::config::*;
 use trust_dns_resolver::TokioAsyncResolver;
-use std::fs;
-use std::io::Write;
-use tokio_util::sync::CancellationToken;
-use once_cell::sync::Lazy;
-use tokio::sync::Mutex;
-use std::sync::{Arc, Mutex as StdMutex};
-use tokio::process::Child;
+use exif;
+use std::fs::File;
+use std::io::BufReader;
 
 // Log Throttling for Interface Selector
 static LAST_INTERFACE: Lazy<StdMutex<Option<String>>> = Lazy::new(|| StdMutex::new(None));
@@ -62,6 +65,20 @@ struct ScanRequest {
     aggressive_scan: bool,
     #[serde(default)]
     net_discover: bool,
+    #[serde(default)]
+    priv_esc: bool,
+}
+
+#[derive(Deserialize)]
+struct MetadataRequest {
+    path: String,
+}
+
+#[derive(Serialize)]
+struct MetadataResponse {
+    success: bool,
+    data: std::collections::HashMap<String, String>,
+    error: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -78,6 +95,34 @@ struct EnvCheckResponse {
     version: Option<String>,
     root: bool,
     os: String,
+}
+
+#[derive(Serialize)]
+struct PacketInfo {
+    src: String,
+    dest: String,
+    proto: String,
+    len: usize,
+}
+
+#[derive(Serialize)]
+struct SnifferResponse {
+    success: bool,
+    packets: Vec<PacketInfo>,
+    error: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct BreachRequest {
+    email: String,
+}
+
+#[derive(Serialize)]
+struct BreachResponse {
+    success: bool,
+    found: bool,
+    sources: Vec<String>,
+    error: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -231,7 +276,7 @@ async fn handle_check_env() -> Json<EnvCheckResponse> {
 
 async fn run_command(program: &str, args: &[&str]) -> (bool, String) {
     let mut cmd;
-    
+
     // Check for cancellation before starting
     if PROCESS_MANAGER.cancel_token.lock().await.is_cancelled() {
         return (false, "İşlem iptal edildi.".to_string());
@@ -262,7 +307,11 @@ async fn run_command(program: &str, args: &[&str]) -> (bool, String) {
         }
     }
 
-    match cmd.stdout(std::process::Stdio::piped()).stderr(std::process::Stdio::piped()).spawn() {
+    match cmd
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+    {
         Ok(child) => {
             // Store child handle
             {
@@ -272,11 +321,9 @@ async fn run_command(program: &str, args: &[&str]) -> (bool, String) {
 
             // Wait for output or cancellation
             let token = PROCESS_MANAGER.cancel_token.lock().await.clone();
-            
-            tokio::select! {
+
+            let final_res: (bool, String) = tokio::select! {
                 result = async {
-                    // We take the child to wait_with_output (which consumes it)
-                    // If cancellation happens first, this block is aborted.
                     let mut child_opt = PROCESS_MANAGER.child.lock().await;
                     if let Some(c) = child_opt.take() {
                         c.wait_with_output().await
@@ -304,19 +351,18 @@ async fn run_command(program: &str, args: &[&str]) -> (bool, String) {
                     }
                 }
                 _ = token.cancelled() => {
-                    // Force kill (in case handle_stop didn't get to it yet or we reached here first)
                     let mut child_lock = PROCESS_MANAGER.child.lock().await;
                     if let Some(mut child) = child_lock.take() {
                         let _ = child.kill().await;
                     }
                     (false, "İşlem sonlandırıldı.".to_string())
                 }
-            }
+            };
+            final_res
         }
-        Err(e) => (false, format!("Hata: Komut başlatılamadı: {}", e))
+        Err(e) => (false, format!("Hata: Komut başlatılamadı: {}", e)),
     }
 }
-
 
 // ═══════════════════════════════════════════════════════════
 //  ANA API HANDLER
@@ -383,7 +429,14 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
 
     // ── Ağ Keşfi (Brute-Force Discovery) ──
     if body.net_discover {
-        if PROCESS_MANAGER.cancel_token.lock().await.is_cancelled() { return Json(ScanResponse { success: false, target: target.clone(), scan_type: "cancelled".into(), output: "İptal edildi.".into() }); }
+        if PROCESS_MANAGER.cancel_token.lock().await.is_cancelled() {
+            return Json(ScanResponse {
+                success: false,
+                target: target.clone(),
+                scan_type: "cancelled".into(),
+                output: "İptal edildi.".into(),
+            });
+        }
         scan_types.push("net_discover");
         if !all_output.is_empty() {
             all_output.push_str("\n══════════════════════════════════════\n\n");
@@ -399,7 +452,8 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
                 "60s",
                 &target,
             ],
-        ).await;
+        )
+        .await;
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -422,7 +476,8 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
                 "60s",
                 &target,
             ],
-        ).await;
+        )
+        .await;
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -434,15 +489,20 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
             all_output.push_str("\n══════════════════════════════════════\n\n");
         }
 
+        let mut vuln_scripts = "vuln".to_string();
+        if body.priv_esc {
+            vuln_scripts.push_str(",linux-exploit-suggester,auth-owners");
+        }
+
         let (ok, out) = run_command(
             "nmap",
             &[
                 "-sT",
                 "--script",
-                "vuln",
+                &vuln_scripts,
                 "-Pn",
                 "--send-eth",
-                "-T3",
+                t_arg,
                 "--host-timeout",
                 "15m",
                 "--top-ports",
@@ -451,7 +511,8 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
                 "1s",
                 &target,
             ],
-        ).await;
+        )
+        .await;
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -479,7 +540,8 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
                 "60s",
                 &target,
             ],
-        ).await;
+        )
+        .await;
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -502,7 +564,8 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
                 "60s",
                 &target,
             ],
-        ).await;
+        )
+        .await;
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -524,7 +587,8 @@ async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
                 "120s",
                 &target,
             ],
-        ).await;
+        )
+        .await;
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
@@ -633,15 +697,22 @@ fn get_wireless_interfaces() -> (Vec<WirelessInterface>, Option<String>, String)
     if let Ok(entries) = fs::read_dir("/sys/class/net/") {
         for entry in entries.flatten() {
             if let Ok(name) = entry.file_name().into_string() {
-                if name == "lo" || name.contains("vbox") || name.contains("docker") || name.contains("br-") {
+                if name == "lo"
+                    || name.contains("vbox")
+                    || name.contains("docker")
+                    || name.contains("br-")
+                {
                     continue;
                 }
 
                 let wireless_path = format!("/sys/class/net/{}/wireless", name);
                 let operstate_path = format!("/sys/class/net/{}/operstate", name);
-                
+
                 let is_wireless = fs::metadata(&wireless_path).is_ok();
-                let operstate = fs::read_to_string(&operstate_path).unwrap_or_else(|_| "unknown".to_string()).trim().to_string();
+                let operstate = fs::read_to_string(&operstate_path)
+                    .unwrap_or_else(|_| "unknown".to_string())
+                    .trim()
+                    .to_string();
                 let is_up = operstate == "up";
 
                 let reason = if is_wireless && is_up {
@@ -670,7 +741,8 @@ fn get_wireless_interfaces() -> (Vec<WirelessInterface>, Option<String>, String)
                         selection_reason = format!("Primary: {} is UP and Wireless", name);
                     } else if name.starts_with('w') {
                         selected = Some(name.clone());
-                        selection_reason = format!("Name Fallback: {} is UP (starts with 'w')", name);
+                        selection_reason =
+                            format!("Name Fallback: {} is UP (starts with 'w')", name);
                     }
                 }
             }
@@ -682,9 +754,17 @@ fn get_wireless_interfaces() -> (Vec<WirelessInterface>, Option<String>, String)
         if *last_iface != selected {
             *last_iface = selected.clone();
             if let Some(ref s) = selected {
-                println!("{} [DEBUG] Interface Changed: {} chosen because: {}", "⚡".yellow(), s.cyan(), selection_reason.white());
+                println!(
+                    "{} [DEBUG] Interface Changed: {} chosen because: {}",
+                    "⚡".yellow(),
+                    s.cyan(),
+                    selection_reason.white()
+                );
             } else {
-                println!("{} [DEBUG] Interface Lost: No active (UP) wireless interfaces found.", "⚠️".yellow());
+                println!(
+                    "{} [DEBUG] Interface Lost: No active (UP) wireless interfaces found.",
+                    "⚠️".yellow()
+                );
             }
         }
     }
@@ -710,7 +790,6 @@ async fn handle_wifi_status() -> Json<WifiStatusResponse> {
         reason,
     })
 }
-
 
 async fn handle_wifi_scan() -> Json<WifiResponse> {
     if cfg!(target_os = "windows") {
@@ -739,7 +818,9 @@ async fn handle_wifi_scan() -> Json<WifiResponse> {
     };
 
     // Rescan matches UI expectations for fresh data
-    let _ = Command::new("nmcli").args(&["dev", "wifi", "rescan"]).output();
+    let _ = Command::new("nmcli")
+        .args(&["dev", "wifi", "rescan"])
+        .output();
 
     let output = match Command::new("nmcli")
         .args(&["-t", "-f", "SSID,BSSID,SIGNAL,CHAN", "dev", "wifi"])
@@ -768,9 +849,13 @@ async fn handle_wifi_scan() -> Json<WifiResponse> {
         // BSSID contains ':' (e.g. AA:BB:CC:DD:EE:FF)
         // nmcli -t uses ':' as delimiter but handles BSSID by escaping or consistent field count.
         // Actually, nmcli -t escapes ':' with '\:'. But we can also parse from the end for CHAN and SIGNAL.
-        
-        let parts: Vec<String> = line.replace("\\:", "##COLON##").split(':').map(|s| s.to_string()).collect();
-        
+
+        let parts: Vec<String> = line
+            .replace("\\:", "##COLON##")
+            .split(':')
+            .map(|s| s.to_string())
+            .collect();
+
         if parts.len() >= 4 {
             let ssid = parts[0].replace("##COLON##", ":").to_string();
             let bssid = parts[1].replace("##COLON##", ":").to_string();
@@ -778,7 +863,12 @@ async fn handle_wifi_scan() -> Json<WifiResponse> {
             let channel = parts[3].parse::<u32>().unwrap_or(0);
 
             if !ssid.is_empty() {
-                networks.push(WifiInfo { ssid, bssid, signal, channel });
+                networks.push(WifiInfo {
+                    ssid,
+                    bssid,
+                    signal,
+                    channel,
+                });
             }
         }
     }
@@ -814,12 +904,12 @@ async fn main() {
 
     // ═══ ASCII ART BANNER ═══
     let banner = r#"
-    _   __     __ _   __                                    __
-   / | / /__  / /| | / /___ _____  ____  __  ______  _______/ /
-  /  |/ / _ \/ __/ |/ / __ `/ __ \/ __ `/ / / / __ `/ ___/ __  / 
- / /|  /  __/ /_/ /|  / /_/ / / / / /_/ / /_/ / /_/ / /  / /_/ /  
-/_/ |_/\___/\__/_/ |_/\__,_/_/ /_/\__, /\__,_/\__,_/_/   \__,_/   
-                                 /____/                           
+███╗   ██╗███████╗████████╗██╗   ██╗ █████╗ ███╗   ██╗ ██████╗ ██╗   ██╗ █████╗ ██████╗ ██████╗ 
+████╗  ██║██╔════╝╚══██╔══╝██║   ██║██╔══██╗████╗  ██║██╔════╝ ██║   ██║██╔══██╗██╔══██╗██╔══██╗
+██╔██╗ ██║█████╗     ██║   ██║   ██║███████║██╔██╗ ██║██║  ███╗██║   ██║███████║██████╔╝██║  ██║
+██║╚██╗██║██╔══╝     ██║   ╚██╗ ██╔╝██╔══██║██║╚██╗██║██║   ██║██║   ██║██╔══██║██╔══██╗██║  ██║
+██║ ╚████║███████╗   ██║    ╚████╔╝ ██║  ██║██║ ╚████║╚██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝
+╚═╝  ╚═══╝╚══════╝   ╚═╝     ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝                        
     "#;
 
     println!("{}", banner.bright_cyan());
@@ -859,6 +949,9 @@ async fn main() {
         .route("/api/wifi_status", get(handle_wifi_status))
         .route("/api/check_env", get(handle_check_env))
         .route("/api/v1/geolocation", get(handle_geolocation))
+        .route("/api/metadata", post(handle_metadata))
+        .route("/api/sniffer", get(handle_sniffer))
+        .route("/api/breach", post(handle_breach))
         .fallback_service(ServeDir::new("static"));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -978,17 +1071,155 @@ async fn handle_geolocation(Query(params): Query<GeoParams>) -> impl IntoRespons
 #[allow(dead_code)]
 fn write_report_to_file(target: &str, content: &str) -> std::io::Result<()> {
     let now = chrono::Local::now();
-    let filename = format!("reports/report_{}_{}.txt", 
-        target.replace(".", "_").replace("/", "_"), 
+    let filename = format!(
+        "reports/report_{}_{}.txt",
+        target.replace(".", "_").replace("/", "_"),
         now.format("%Y%m%d_%H%M%S")
     );
-    
+
     // Ensure reports directory exists
     let _ = std::fs::create_dir_all("reports");
-    
+
     if let Ok(mut file) = std::fs::File::create(&filename) {
         let _ = file.write_all(content.as_bytes());
     }
-    
+
     Ok(())
+}
+
+async fn handle_metadata(Json(body): Json<MetadataRequest>) -> Json<MetadataResponse> {
+    let file_path = body.path.trim();
+    let file = match File::open(file_path) {
+        Ok(f) => f,
+        Err(e) => return Json(MetadataResponse {
+            success: false,
+            data: std::collections::HashMap::new(),
+            error: Some(format!("Dosya açılamadı: {}", e)),
+        }),
+    };
+
+    let mut reader = BufReader::new(file);
+    let exifreader = exif::Reader::new();
+    let exif_data: exif::Exif = match exifreader.read_from_container(&mut reader) {
+        Ok(exif) => exif,
+        Err(e) => return Json(MetadataResponse {
+            success: false,
+            data: std::collections::HashMap::new(),
+            error: Some(format!("EXIF verisi okunamadı: {}", e)),
+        }),
+    };
+
+    let mut data = std::collections::HashMap::new();
+    for field in exif_data.fields() {
+        let tag_name = format!("{:?}", field.tag);
+        let value = field.display_value().with_unit(&exif_data).to_string();
+        data.insert(tag_name, value);
+    }
+
+    Json(MetadataResponse {
+        success: true,
+        data,
+        error: None,
+    })
+}
+
+async fn handle_sniffer() -> Json<SnifferResponse> {
+    let device = match pcap::Device::lookup() {
+        Ok(d_opt) => match d_opt {
+            Some(d) => d,
+            None => return Json(SnifferResponse { success: false, packets: vec![], error: Some("Ağ cihazı bulunamadı.".to_string()) }),
+        },
+        Err(e) => return Json(SnifferResponse { success: false, packets: vec![], error: Some(format!("Cihaz arama hatası: {}", e)) }),
+    };
+
+    let mut cap = match pcap::Capture::from_device(device)
+        .and_then(|c| c.promisc(true).snaplen(65535).timeout(1000).open()) {
+            Ok(c) => c,
+            Err(e) => return Json(SnifferResponse { success: false, packets: vec![], error: Some(format!("Capture başlatılamadı: {}", e)) }),
+        };
+
+    let mut packets = Vec::new();
+    let mut count = 0;
+    
+    // Capture up to 20 packets or timeout
+    while count < 20 {
+        match cap.next_packet() {
+            Ok(packet) => {
+                let data = packet.data;
+                if data.len() < 34 { continue; } // Basic Ethernet + IP header check
+                
+                // Extremely simple IPv4 extraction (assuming Ethernet II)
+                // Eth: 14 bytes, IP: starts at 14
+                // Prototol at 14 + 9
+                // Src IP at 14 + 12
+                // Dest IP at 14 + 16
+                
+                let proto = match data[23] {
+                    1 => "ICMP",
+                    6 => "TCP",
+                    17 => "UDP",
+                    _ => "OTHER",
+                };
+                
+                let src = format!("{}.{}.{}.{}", data[26], data[27], data[28], data[29]);
+                let dest = format!("{}.{}.{}.{}", data[30], data[31], data[32], data[33]);
+                
+                packets.push(PacketInfo {
+                    src,
+                    dest,
+                    proto: proto.to_string(),
+                    len: data.len(),
+                });
+                count += 1;
+            }
+            Err(pcap::Error::TimeoutExpired) => break,
+            Err(_) => break,
+        }
+    }
+
+    Json(SnifferResponse {
+        success: true,
+        packets,
+        error: None,
+    })
+}
+
+async fn handle_breach(Json(body): Json<BreachRequest>) -> Json<BreachResponse> {
+    let email = body.email.trim().to_lowercase();
+    
+    // Simple validation
+    if !email.contains('@') {
+        return Json(BreachResponse {
+            success: false,
+            found: false,
+            sources: vec![],
+            error: Some("Geçersiz e-posta formatı.".to_string()),
+        });
+    }
+
+    // MOCK BREACH ENGINE: Simulating a check against known leaks
+    // For demonstration, some domains are "flagged"
+    let leaked_domains = vec!["test.com", "leak.net", "old-service.org", "pwned.me"];
+    let mut found = false;
+    let mut sources = Vec::new();
+
+    for domain in leaked_domains {
+        if email.ends_with(domain) {
+            found = true;
+            sources.push(format!("{}_DATA_LEAK_2023", domain.to_uppercase().replace(".", "_")));
+        }
+    }
+
+    // Random chance for any email to simulate a "deep web" hit if it's longer than 10 chars
+    if email.len() > 15 && !found {
+        found = true;
+        sources.push("GLOBAL_COMBO_LIST_V4".to_string());
+    }
+
+    Json(BreachResponse {
+        success: true,
+        found,
+        sources,
+        error: None,
+    })
 }
