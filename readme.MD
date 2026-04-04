@@ -1,5 +1,10 @@
 <p align="center">
-  <a href="#-türkçe-versiyon">🇹🇷 Türkçe</a> | <a href="#-english-version">🇺🇸 English</a>
+  <a href="#-türkçe-versiyon">
+    <img src="https://img.shields.io/badge/DİL-TÜRKÇE-red?style=for-the-badge&logo=turkiye&logoColor=white" alt="Türkçe">
+  </a>
+  <a href="#-english-version">
+    <img src="https://img.shields.io/badge/LANGUAGE-ENGLISH-blue?style=for-the-badge&logo=american-express&logoColor=white" alt="English">
+  </a>
 </p>
 
 <p align="center">
@@ -27,7 +32,7 @@
 #### 1. 🔍 Gelişmiş Ağ Tarama (Nmap Engine)
 - **Hız Seçenekleri (Timing):** Gizlilik odaklı `T0` modundan, agresif `T5` moduna kadar tam kontrol.
 - **Servis & Versiyon Tespiti:** Açık portların arkasındaki servislerin gerçek sürümlerini tespit eder.
-- **İşletim Sistemi Analizi:** Hedef cihazın OS parmak izini çıkarır.
+- **İşletim Sistemi Analizi:** Hedef cihazın OS parmak birini çıkarır.
 - **Vulnerability Taraması:** NSE kullanarak bilinen açıkları otomatik tarar.
 
 #### 2. 🌐 Global Intelligence (OSINT & Geo)
