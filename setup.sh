@@ -51,6 +51,22 @@ else
 fi
 
 # ==============================================================================
+# 3. HELPER: Auto-Launch Dashboard
+# ==============================================================================
+launch_dashboard() {
+    echo -e "${BLUE}[*] Dashboard'ın hazır olması bekleniyor (3 sn)...${NC}"
+    sleep 3
+    
+    # Check if graphical interface is available
+    if [ -n "$DISPLAY" ]; then
+        echo -e "${GREEN}[+] Tarayıcı otomatik olarak açılıyor...${NC}"
+        xdg-open "http://localhost:8080" > /dev/null 2>&1 &
+    else
+        echo -e "${YELLOW}[!] Grafik arayüzü bulunamadı. Lütfen manuel bağlanın: http://localhost:8080${NC}"
+    fi
+}
+
+# ==============================================================================
 # PATH A: DOCKER DEPLOYMENT
 # ==============================================================================
 if [ "$DOCKER_READY" = true ]; then
@@ -58,8 +74,8 @@ if [ "$DOCKER_READY" = true ]; then
     docker compose up --build -d
     if [ $? -eq 0 ]; then
         echo -e "\n${GREEN}✅ NetVanguard Konteyner İçinde Başarıyla Başlatıldı!${NC}"
-        echo -e "${BLUE}Panel Adresi:${NC} ${YELLOW}http://localhost:8080${NC}"
-        echo -e "${BLUE}Durdurmak İçin:${NC} docker compose down"
+        echo -e "${BLUE}Dashboard Adresi:${NC} ${YELLOW}http://localhost:8080${NC}"
+        launch_dashboard
         exit 0
     else
         echo -e "${RED}[!] Docker Başlatma Hatası. Yerel Kuruluma Deneniyor...${NC}"
@@ -92,8 +108,18 @@ cargo build --release
 
 if [ $? -eq 0 ]; then
     echo -e "\n${GREEN}✅ NetVanguard Yerel Olarak Derlendi!${NC}"
-    echo -e "${YELLOW}Başlatmak İçin:${NC} sudo ./target/release/netvanguard veya ./run.sh"
-    echo -e "${BLUE}Panel Adresi:${NC} http://localhost:8080"
+    echo -e "${YELLOW}[*] Program Otomatik Olarak Başlatılıyor...${NC}"
+    
+    # Run in the background to keep the script finished and show message
+    nohup ./target/release/netvanguard > netvanguard.log 2>&1 &
+    
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}[+] Uygulama Arka Planda Başlatıldı (PID: $!).${NC}"
+        echo -e "${BLUE}Dashboard Adresi:${NC} ${YELLOW}http://localhost:8080${NC}"
+        launch_dashboard
+    else
+        echo -e "${RED}[!] Başlatma Hatası! Manuel Komut: sudo ./target/release/netvanguard${NC}"
+    fi
 else
     echo -e "${RED}[!] Derleme Hatası. Lütfen logları kontrol edin.${NC}"
 fi
