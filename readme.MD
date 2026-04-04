@@ -68,15 +68,12 @@ graph TD
     end
 ```
 
-### 🛠️ Kurulum
+### 🛠️ Tek Satırda Kurulum ve Çalıştırma
+
+Aşağıdaki komutu terminale yapıştırarak projeyi klonlayabilir, bağımlılıkları kurabilir ve anında başlatabilirsiniz:
 
 ```bash
-# Ortam Hazırlığı
-chmod +x setup.sh
-./setup.sh
-
-# Uygulamayı Çalıştır (Sniffer için Root yetkisi gerekir)
-sudo cargo run
+git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard && chmod +x setup.sh && ./setup.sh && sudo cargo run
 ```
 
 ### ⚖️ Yasal Uyarı
@@ -129,15 +126,12 @@ graph TD
     A --> F[privesc.rs]
 ```
 
-### 🛠️ Installation
+### 🛠️ One-Line Installation & Launch
+
+Copy and paste the command below into your terminal to clone, setup, and launch the application instantly:
 
 ```bash
-# Setup Environment
-chmod +x setup.sh
-./setup.sh
-
-# Run Application (Root required for Sniffer)
-sudo cargo run
+git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard && chmod +x setup.sh && ./setup.sh && sudo cargo run
 ```
 
 ### ⚖️ Legal Disclaimer
