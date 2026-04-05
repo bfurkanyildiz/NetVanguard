@@ -32,6 +32,11 @@ use tower_http::services::ServeDir;
 /// * Automatically launches the operator's browser to the dashboard URL.
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // ═══════════════════════════════════════════════════════════
+    //  STEP 0: Port Protection & Cleanup
+    // ═══════════════════════════════════════════════════════════
+    ensure_port_is_free(8080).await;
+
     let nmap_ver = Command::new("nmap")
         .arg("-V")
         .output()
@@ -124,6 +129,75 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let _ = open::that(&url);
     });
 
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
     Ok(())
+}
+
+/// # Summary
+/// Detects if a specific TCP port is already in use by another process.
+/// If a conflict is found, it automatically identifies the PID and terminates the process.
+/// Supports both Windows (netstat/taskkill) and Linux (fuser) environments.
+async fn ensure_port_is_free(port: u16) {
+    println!(
+        "    {} {}",
+        "🔍".bright_yellow(),
+        format!("Port {} kontrol ediliyor...", port).dimmed()
+    );
+
+    if cfg!(target_os = "windows") {
+        // Windows: netstat -ano | findstr :8080
+        let output = Command::new("cmd")
+            .args([
+                "/C",
+                &format!("netstat -ano | findstr :{} | findstr LISTENING", port),
+            ])
+            .output();
+
+        if let Ok(out) = output {
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            for line in stdout.lines() {
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if let Some(pid_str) = parts.last() {
+                    if let Ok(pid) = pid_str.parse::<u32>() {
+                        println!(
+                            "    {} {}",
+                            "💀".bright_red(),
+                            format!("Eski NetVanguard süreci (PID: {}) temizleniyor...", pid).red()
+                        );
+                        let _ = Command::new("taskkill")
+                            .args(["/F", "/PID", &pid.to_string()])
+                            .output();
+                    }
+                }
+            }
+        }
+    } else {
+        // Linux: fuser -k 8080/tcp
+        let _ = Command::new("sudo")
+            .args(["-n", "fuser", "-k", &format!("{}/tcp", port)])
+            .output();
+    }
+
+    // Give the OS a moment to fully release the socket
+    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+}
+
+/// # Summary
+/// Listens for a termination signal (Ctrl+C).
+/// Triggers a graceful shutdown sequence to ensure all scanning tasks are stopped properly.
+async fn shutdown_signal() {
+    tokio::signal::ctrl_c()
+        .await
+        .expect("Sinyal yakalayıcı başlatılamadı");
+
+    println!(
+        "\n    {} {}",
+        "🛑".bright_red(),
+        "Kapatma sinyali alındı. Süreçler sonlandırılıyor...".bright_red().bold()
+    );
+
+    // Call handle_stop logic indirectly or trigger global cleanup
+    let _ = crate::scanner::handle_stop().await;
 }

@@ -24,9 +24,21 @@ echo -e "${NC}"
 echo -e "${YELLOW}>>> NetVanguard v1.0.1 Akıllı Kurulum Sistemi Başlatılıyor...${NC}\n"
 
 # ==============================================================================
-# PRE-CLEANUP (Eski süreçleri temizle ki port çakışmasın)
+# PRE-CLEANUP (Kurşun Geçirmez Port Temizliği)
 # ==============================================================================
-sudo pkill netvanguard || true
+echo -e "${YELLOW}[*] Eski NetVanguard süreçleri ve port 8080 temizleniyor...${NC}"
+
+# 1. Kill by name
+sudo pkill -9 netvanguard 2>/dev/null || true
+
+# 2. Kill by port (The nuclear option for 8080)
+if command -v fuser &> /dev/null; then
+    sudo fuser -k 8080/tcp 2>/dev/null || true
+elif command -v lsof &> /dev/null; then
+    sudo lsof -t -i:8080 | xargs sudo kill -9 2>/dev/null || true
+fi
+
+sleep 1
 
 # 1. Root Control
 if [[ $EUID -ne 0 ]]; then
