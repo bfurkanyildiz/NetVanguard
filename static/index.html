@@ -4547,6 +4547,8 @@
                     if (opts.net_discover) {
                         liveDeviceCount++;
                         setStat('stat-ports', liveDeviceCount);
+                        // [NEW] Cihaz ayırıcı çizgi
+                        addLog('<span style="color:var(--emerald-500); font-weight:900;">[----------------------------------------]</span>', '');
                     }
                     const ipMatch = raw.match(/Nmap scan report for\s+(?:.*?\s+\()?([0-9a-zA-Z.-]+)\)?/);
                     if (ipMatch) {
@@ -4557,6 +4559,12 @@
                             cyMap.layout({ name: 'cose' }).run();
                         }
                     }
+                }
+
+                // ── [NEW] OS DETECTION HIGHLIGHTER ──
+                const osDetailsRegex = /OS details:|Running:|OS guesses:|Aggressive OS guesses:/i;
+                if (osDetailsRegex.test(raw)) {
+                    safe = `<span class="os-detect-pro">🏁 İŞLETİM SİSTEMİ: ${safe}</span>`;
                 }
 
                 // ── DNS IP yakalama ──
