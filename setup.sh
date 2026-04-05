@@ -51,6 +51,12 @@ else
 fi
 
 # ==============================================================================
+# PATH & ENVIRONMENT FIX (Arda'nın yaşadığı cargo hatasını önlemek için)
+# ==============================================================================
+export PATH="$HOME/.cargo/bin:$PATH"
+source "$HOME/.cargo/env" 2>/dev/null
+
+# ==============================================================================
 # 3. HELPER: Auto-Launch Dashboard
 # ==============================================================================
 launch_dashboard() {
@@ -96,15 +102,17 @@ for pkg in "${DEPENDENCIES[@]}"; do
     fi
 done
 
-# Rust Check
-if ! command -v cargo &> /dev/null; then
+# Rust Check (Absolute Path Check)
+if ! [ -x "$HOME/.cargo/bin/cargo" ] && ! command -v cargo &> /dev/null; then
     echo -e "${YELLOW}[!] Rust bulunamadı, kuruluyor...${NC}"
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-    source "$HOME/.cargo/env"
+    export PATH="$HOME/.cargo/bin:$PATH"
+    source "$HOME/.cargo/env" 2>/dev/null
 fi
 
 echo -e "${BLUE}[*] Proje Derleniyor (Cargo Build)...${NC}"
-cargo build --release
+# Use absolute path for cargo to be safe
+$HOME/.cargo/bin/cargo build --release
 
 if [ $? -eq 0 ]; then
     echo -e "\n${GREEN}✅ NetVanguard Yerel Olarak Derlendi!${NC}"
