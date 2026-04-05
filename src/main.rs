@@ -195,7 +195,9 @@ async fn shutdown_signal() {
     println!(
         "\n    {} {}",
         "🛑".bright_red(),
-        "Kapatma sinyali alındı. Süreçler sonlandırılıyor...".bright_red().bold()
+        "Kapatma sinyali alındı. Süreçler sonlandırılıyor..."
+            .bright_red()
+            .bold()
     );
 
     // Call handle_stop logic indirectly or trigger global cleanup
