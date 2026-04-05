@@ -656,13 +656,25 @@
             color: var(--violet-400);
         }
 
-        .os-highlight {
-            font-size: 1.5rem;
-            color: #f1c40f;
-            text-shadow: 0 0 10px #f1c40f, 0 0 20px #f1c40f;
-            display: inline-block;
-            margin: 0.3rem 0;
-            font-weight: 800;
+        .os-detect-pro {
+            color: var(--emerald-400) !important;
+            font-size: 1.5rem !important;
+            font-weight: 900 !important;
+            text-shadow: 0 0 15px rgba(16, 185, 129, 0.7), 0 0 30px rgba(16, 185, 129, 0.4) !important;
+            background: rgba(16, 185, 129, 0.15) !important;
+            padding: 0.5rem 1rem !important;
+            border-radius: 8px !important;
+            border: 2px solid var(--emerald-500) !important;
+            display: inline-block !important;
+            margin: 1rem 0 !important;
+            animation: osPulse 2s infinite ease-in-out !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1px !important;
+        }
+
+        @keyframes osPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); transform: scale(1); }
+            50% { box-shadow: 0 0 25px rgba(16, 185, 129, 0.6); transform: scale(1.03); }
         }
 
         /* Zafiyet Hiyerarşisi */
@@ -4500,15 +4512,32 @@
                 let raw = lines[i].trimEnd();
                 if (raw === '') continue;
 
-                let safe = raw; // [FIX] Initialize safe variable to prevent ReferenceError
+                let safe = raw; 
+                const trimmed = raw.trim();
 
-                // ── [SUPER PRO] GÜRÜLTÜ FİLTRESİ ──
-                const noiseRegex = /Discovered open port|NSE Timing|Initiating|Completed|Scan\s+Report|Host\s+is\s+up|Scanning\s+\d+|DNS\s+resolution/i;
-                if (noiseRegex.test(raw) && !raw.includes('open')) continue;
+                // ── [SUPER PRO] GÜRÜLTÜ FİLTRESİ (TRIM-AWARE) ──
+                // OS parmak izi çöplerini ve zamanlama loglarını temizle
+                const noiseRegex = /Discovered open port|NSE Timing|Initiating|Completed|Scan\s+Report|Host\s+is\s+up|Scanning\s+\d+|DNS\s+resolution|^\s*OS:|^\s*TCP\/IP fingerprint|^\s*OS CPE|^\s*Uptime guess|^\s*Device type/i;
+                if (noiseRegex.test(raw) && !raw.toLowerCase().includes('open')) continue;
+
+                // ── PORT FİLTRELEME (SADECE 80, 443) ──
+                // Hem "80/tcp open" hem de "Discovered OPEN port 80/tcp" formatlarını yakala
+                const portM = raw.match(/port\s+(\d+)\/|(\d+)\/(tcp|udp)\s+open/i);
+                if (portM) {
+                    const portNum = parseInt(portM[1] || portM[2]);
+                    if (portNum !== 80 && portNum !== 443) {
+                        // İstatistikleri arka planda saymaya devam et
+                        if (raw.toLowerCase().includes('open')) {
+                           livePortCount++;
+                           setStat('stat-ports', livePortCount);
+                        }
+                        continue; 
+                    }
+                }
 
                 // ── [NEW] FOUND IP SYNC LOGIC ──
-                if (raw.includes('Found IP:')) {
-                    const match = raw.match(/Found IP:\s*([\d\.]+)/i);
+                if (trimmed.includes('Found IP:')) {
+                    const match = trimmed.match(/Found IP:\s*([\d\.]+)/i);
                     if (match) {
                         const foundIp = match[1];
                         liveDnsIp = foundIp;
@@ -4527,12 +4556,6 @@
                         setStat('stat-ports', livePortCount);
                     }
                     if (typeof addCyNode === 'function') addCyNode(`port-${portMatch[1]}`, `${portMatch[1]} (${portMatch[3]})`, 'port');
-                } else if (raw.match(/\d+\/(tcp|udp)\s+open\b/i)) {
-                    livePortCount++;
-                    if (!opts.net_discover && !(opts.dns_query && !opts.port_scan)) {
-                        setStat('stat-ports', livePortCount);
-                    }
-                    if (typeof addCyNode === 'function') addCyNode(`port-unk-${livePortCount}`, `Port Açık`, 'port');
                 }
 
                 if (!liveLatency) {
@@ -4543,28 +4566,30 @@
                     }
                 }
 
-                if (raw.startsWith('Nmap scan report for')) {
-                    if (opts.net_discover) {
-                        liveDeviceCount++;
-                        setStat('stat-ports', liveDeviceCount);
-                        // [NEW] Cihaz ayırıcı çizgi
-                        addLog('<span style="color:var(--emerald-500); font-weight:900;">[----------------------------------------]</span>', '');
-                    }
-                    const ipMatch = raw.match(/Nmap scan report for\s+(?:.*?\s+\()?([0-9a-zA-Z.-]+)\)?/);
-                    if (ipMatch) {
-                        const parsedIp = ipMatch[1].trim();
-                        cyRootId = parsedIp;
-                        if (typeof cyMap !== 'undefined' && cyMap && cyMap.getElementById(parsedIp).length === 0) {
-                            cyMap.add({ data: { id: parsedIp, label: parsedIp }, classes: 'root' });
-                            cyMap.layout({ name: 'cose' }).run();
+                // ── ANALİZ AYIRICI ÇİZGİ (STARTING & REPORT) ──
+                if (trimmed.toLowerCase().startsWith('starting nmap') || trimmed.toLowerCase().startsWith('nmap scan report for')) {
+                    addLog('<div style="color:var(--emerald-500); font-weight:900; letter-spacing: 2px; margin: 15px 0; border-top: 1px dashed rgba(16,185,129,0.3); padding-top:10px;">[════════════════════════════════════════]</div>', 'highlight');
+                    if (trimmed.toLowerCase().startsWith('nmap scan report for')) {
+                        if (opts.net_discover) {
+                            liveDeviceCount++;
+                            setStat('stat-ports', liveDeviceCount);
+                        }
+                        const ipMatch = trimmed.match(/Nmap scan report for\s+(?:.*?\s+\()?([0-9a-zA-Z.-]+)\)?/);
+                        if (ipMatch) {
+                            const parsedIp = ipMatch[1].trim();
+                            cyRootId = parsedIp;
+                            if (typeof cyMap !== 'undefined' && cyMap && cyMap.getElementById(parsedIp).length === 0) {
+                                cyMap.add({ data: { id: parsedIp, label: parsedIp }, classes: 'root' });
+                                cyMap.layout({ name: 'cose' }).run();
+                            }
                         }
                     }
                 }
 
-                // ── [NEW] OS DETECTION HIGHLIGHTER ──
+                // ── [SUPER PRO] OS DETECTION HIGHLIGHTER ──
                 const osDetailsRegex = /OS details:|Running:|OS guesses:|Aggressive OS guesses:/i;
-                if (osDetailsRegex.test(raw)) {
-                    safe = `<span class="os-detect-pro">🏁 İŞLETİM SİSTEMİ: ${safe}</span>`;
+                if (osDetailsRegex.test(trimmed)) {
+                    safe = `<span class="os-detect-pro">🏁 İŞLETİM SİSTEMİ TESPİT EDİLDİ: ${trimmed}</span>`;
                 }
 
                 // ── DNS IP yakalama ──
