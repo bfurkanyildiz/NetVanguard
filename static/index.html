@@ -4528,17 +4528,22 @@
                 // [FIX] Kapalı host raporlarını tamamen gizle
                 if (lraw.includes('host down') || lraw.includes('received no-response')) continue;
 
-                // ── PORT FİLTRELEME (SADECE STANDALONE VERSİYON TESPİTİNDE) ──
+                // ── PORT FİLTRELEME (AKILLI KRİTİK PORTLAR LİSTESİ) ──
                 const portM = raw.match(/port\s+(\d+)\/|(\d+)\/(tcp|udp)\s+open/i);
                 if (portM) {
                     const portNum = parseInt(portM[1] || portM[2]);
+                    // Sadece "Servis Versiyon Tespiti" tek başına seçiliyse Akıllı Filtre uygula
                     const isShortVersionMode = opts.version_detect && !opts.port_scan && !opts.vuln_scan;
-                    if (isShortVersionMode && portNum !== 80 && portNum !== 443) {
-                        if (lraw.includes('open')) {
-                           livePortCount++;
-                           setStat('stat-ports', livePortCount);
+                    if (isShortVersionMode) {
+                        // Kritik Güvenlik Portları Listesi (vsftpd, ssh, rpc, smb vb dahil)
+                        const smartCriticalPorts = [21, 22, 23, 25, 53, 80, 110, 111, 135, 139, 143, 443, 445, 993, 995, 1723, 3306, 3389, 5432, 5900, 8080];
+                        if (!smartCriticalPorts.includes(portNum)) {
+                            if (lraw.includes('open')) {
+                               livePortCount++;
+                               setStat('stat-ports', livePortCount);
+                            }
+                            continue; 
                         }
-                        continue; 
                     }
                 }
 
