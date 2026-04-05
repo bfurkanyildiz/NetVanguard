@@ -4535,8 +4535,8 @@
                     // Sadece "Servis Versiyon Tespiti" tek başına seçiliyse Akıllı Filtre uygula
                     const isShortVersionMode = opts.version_detect && !opts.port_scan && !opts.vuln_scan;
                     if (isShortVersionMode) {
-                        // Kritik Güvenlik Portları Listesi (vsftpd, ssh, rpc, smb vb dahil)
-                        const smartCriticalPorts = [21, 22, 23, 25, 53, 80, 110, 111, 135, 139, 143, 443, 445, 993, 995, 1723, 3306, 3389, 5432, 5900, 8080];
+                        // Kritik Güvenlik Portları Listesi (vsftpd, ssh, rpc, smb, redis, oracle vb dahil)
+                        const smartCriticalPorts = [21, 22, 23, 25, 53, 80, 110, 111, 135, 139, 143, 443, 445, 993, 995, 1723, 3306, 3389, 5432, 5900, 8080, 2121, 1521, 6379, 8009, 6000];
                         if (!smartCriticalPorts.includes(portNum)) {
                             if (lraw.includes('open')) {
                                livePortCount++;
