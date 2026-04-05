@@ -24,6 +24,19 @@ echo -e "${NC}"
 echo -e "${YELLOW}>>> NetVanguard v1.0.1 Akıllı Kurulum Sistemi Başlatılıyor...${NC}\n"
 
 # ==============================================================================
+# STOP ARGUMENT CONTROL
+# ==============================================================================
+if [ "$1" == "--stop" ]; then
+    echo -e "${RED}[!] NetVanguard Durduruluyor...${NC}"
+    sudo pkill -9 netvanguard 2>/dev/null || true
+    if command -v fuser &> /dev/null; then
+        sudo fuser -k 8080/tcp 2>/dev/null || true
+    fi
+    echo -e "${GREEN}[+] Tüm süreçler temizlendi.${NC}"
+    exit 0
+fi
+
+# ==============================================================================
 # PRE-CLEANUP (Kurşun Geçirmez Port Temizliği)
 # ==============================================================================
 echo -e "${YELLOW}[*] Eski NetVanguard süreçleri ve port 8080 temizleniyor...${NC}"
@@ -140,8 +153,26 @@ if [ $? -eq 0 ]; then
     nohup ./target/release/netvanguard > netvanguard.log 2>&1 &
     
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}[+] Uygulama Arka Planda Başlatıldı (PID: $!).${NC}"
+        APP_PID=$!
+        echo -e "${GREEN}[+] Uygulama Arka Planda Başlatıldı (PID: $APP_PID).${NC}"
         echo -e "${BLUE}Dashboard Adresi:${NC} ${YELLOW}http://localhost:8080${NC}"
+        
+        echo -e "\n${YELLOW}══════════════════════════════════════════════════════════════${NC}"
+        echo -e "${YELLOW}[!] NetVanguard Arka Planda Çalışıyor.${NC} ${WHITE}Terminali kapatmanız uygulamayı durdurmaz.${NC}"
+        echo -e "${YELLOW}[!] Uygulamayı tamamen kapatmak için:${NC} ${CYAN}./setup.sh --stop${NC} ${YELLOW}veya${NC} ${CYAN}Ctrl+C${NC} ${WHITE}(bu script içindeyken).${NC}"
+        echo -e "${YELLOW}══════════════════════════════════════════════════════════════${NC}\n"
+
+        # Signal Handler for Ctrl+C
+        trap "echo -e '\n${RED}[!] Durduruluyor...${NC}'; kill $APP_PID 2>/dev/null; exit" INT
+        
+        # Keep terminal open
+        echo -e "${CYAN}[*] İzleme başlatılıyor (Logs)... Durdurmak için [Enter] veya Ctrl+C yapın.${NC}"
+        tail -f netvanguard.log & 
+        LOG_TAIL_PID=$!
+        
+        read -p ""
+        kill $APP_PID $LOG_TAIL_PID 2>/dev/null
+        echo -e "${GREEN}[+] Temizlendi ve Kapatıldı.${NC}"
     else
         echo -e "${RED}[!] Başlatma Hatası! Manuel Komut: sudo ./target/release/netvanguard${NC}"
     fi
