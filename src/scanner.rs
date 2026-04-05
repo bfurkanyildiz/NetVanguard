@@ -249,7 +249,6 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
             &[
                 "-sn",
                 "-vv",
-                "-T3", // Hoca sınırı: T3 hızı
                 "-PS22,80,443",
                 t_arg,
                 "--max-retries", "1",
@@ -268,7 +267,6 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
             &[
                 "-sT",
                 "-vv",
-                "-T3",
                 "-F",
                 "-Pn",
                 t_arg,
@@ -290,7 +288,6 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
             &[
                 "-sV",
                 "-vv",
-                "-T3",
                 "--script",
                 scripts,
                 "-Pn",

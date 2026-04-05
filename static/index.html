@@ -3492,20 +3492,12 @@
                 speedSelect.title = "";
             }
 
-            // 2. Handle Specific Timing Restrictions (Nmap-specific)
+            // [REMOVED] Handle Specific Timing Restrictions (T4/T5 used to be disabled for vuln scan)
+            // Academic evaluation now allows high speed even for deep scans.
             const t4 = speedSelect.querySelector('option[value="T4"]');
             const t5 = speedSelect.querySelector('option[value="T5"]');
-
-            if (optVuln && optVuln.checked) {
-                if (t4) t4.disabled = true;
-                if (t5) t5.disabled = true;
-                if (speedSelect.value === 'T4' || speedSelect.value === 'T5') {
-                    speedSelect.value = 'T3';
-                }
-            } else {
-                if (t4) t4.disabled = false;
-                if (t5) t5.disabled = false;
-            }
+            if (t4) t4.disabled = false;
+            if (t5) t5.disabled = false;
         }
 
         // Initialize listeners and run once
@@ -4508,6 +4500,8 @@
                 let raw = lines[i].trimEnd();
                 if (raw === '') continue;
 
+                let safe = raw; // [FIX] Initialize safe variable to prevent ReferenceError
+
                 // ── [SUPER PRO] GÜRÜLTÜ FİLTRESİ ──
                 const noiseRegex = /Discovered open port|NSE Timing|Initiating|Completed|Scan\s+Report|Host\s+is\s+up|Scanning\s+\d+|DNS\s+resolution/i;
                 if (noiseRegex.test(raw) && !raw.includes('open')) continue;
@@ -4518,7 +4512,6 @@
                     if (match) {
                         const foundIp = match[1];
                         liveDnsIp = foundIp;
-                        // Dashboard Sync
                         if (document.getElementById('stat-ports-label').textContent === 'HEDEF IP') {
                             const portEl = document.getElementById('stat-ports');
                             portEl.innerHTML = `<span class="cyber-ip-highlight">${foundIp}</span>`;
@@ -4527,37 +4520,29 @@
                 }
 
                 // ── GERÇEK ZAMANLI SAYAÇLAR ──
-                // Port sayımı: "22/tcp open ssh" deseni
                 const portMatch = raw.match(/(\d+)\/(tcp|udp)\s+open\s+([^\s]+)/i);
                 if (portMatch) {
                     livePortCount++;
                     if (!opts.net_discover && !(opts.dns_query && !opts.port_scan)) {
                         setStat('stat-ports', livePortCount);
                     }
-                    addCyNode(`port-${portMatch[1]}`, `${portMatch[1]} (${portMatch[3]})`, 'port');
+                    if (typeof addCyNode === 'function') addCyNode(`port-${portMatch[1]}`, `${portMatch[1]} (${portMatch[3]})`, 'port');
                 } else if (raw.match(/\d+\/(tcp|udp)\s+open\b/i)) {
-                    // Fallback
                     livePortCount++;
                     if (!opts.net_discover && !(opts.dns_query && !opts.port_scan)) {
                         setStat('stat-ports', livePortCount);
                     }
-                    addCyNode(`port-unk-${livePortCount}`, `Port Açık`, 'port');
+                    if (typeof addCyNode === 'function') addCyNode(`port-unk-${livePortCount}`, `Port Açık`, 'port');
                 }
 
-                // Gecikme tespiti (Üst düzey Regex): "Host is up (0.0023s latency)"
                 if (!liveLatency) {
                     const latM = raw.match(/Host is up \((.*?) latency\)/i);
                     if (latM) {
                         liveLatency = latM[1];
                         setStat('stat-latency', liveLatency);
-                        // Analiz ediliyor yazısını temizle (DNS için agresif)
-                        if (opts.dns_query) {
-                            document.getElementById('stat-latency').style.opacity = '1';
-                        }
                     }
                 }
 
-                // Cihaz sayımı (Ağ Keşfi) ve Dinamik Node Reset (Nmap scan report for)
                 if (raw.startsWith('Nmap scan report for')) {
                     if (opts.net_discover) {
                         liveDeviceCount++;
@@ -4567,93 +4552,44 @@
                     if (ipMatch) {
                         const parsedIp = ipMatch[1].trim();
                         cyRootId = parsedIp;
-                        if (cyMap && cyMap.getElementById(parsedIp).length === 0) {
+                        if (typeof cyMap !== 'undefined' && cyMap && cyMap.getElementById(parsedIp).length === 0) {
                             cyMap.add({ data: { id: parsedIp, label: parsedIp }, classes: 'root' });
                             cyMap.layout({ name: 'cose' }).run();
                         }
                     }
                 }
 
-                // DNS IP yakalama (HEDEF IP Kartı İçin)
+                // ── DNS IP yakalama ──
                 if (opts.dns_query) {
                     if (raw.startsWith('Address:')) {
-                        // Lokal DNS sunucularını veya port numaralarını atla
                         if (!raw.includes('#53')) {
-                            // "Address: ..." satırından salt IPv4'ü çek (IPv6 veya 2a00 atlanır)
                             const ipv4Match = raw.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/);
                             if (ipv4Match) {
                                 const matchedIp = ipv4Match[0];
-                                // Lokal ağı yoksay, sadece asıl dış IP parlasın
                                 if (!matchedIp.startsWith('192.168.')) {
-                                    liveDnsIp = matchedIp; // En son yakalanan gerçek dış IP (IPv4) kalacak
-
-                                    // Dinamik DNS Parent Node
+                                    liveDnsIp = matchedIp;
                                     cyRootId = liveDnsIp;
-                                    if (cyMap && cyMap.getElementById(liveDnsIp).length === 0) {
+                                    if (typeof cyMap !== 'undefined' && cyMap && cyMap.getElementById(liveDnsIp).length === 0) {
                                         cyMap.add({ data: { id: liveDnsIp, label: liveDnsIp }, classes: 'root' });
                                         cyMap.layout({ name: 'cose' }).run();
                                     }
-
                                     if (document.getElementById('stat-ports-label').textContent === 'HEDEF IP') {
                                         const portEl = document.getElementById('stat-ports');
-                                        // Domain yerine bulunan GERÇEK IP'yi bas ve parlat
                                         portEl.innerHTML = `<span class="cyber-ip-highlight">${liveDnsIp}</span>`;
                                     }
                                 }
                             }
                         }
-                    } else if (raw.startsWith('Nmap scan report for')) {
-                        const dnsM = raw.match(/\b(?:\d{1,3}\.){3}\d{1,3}\b/);
-                        if (dnsM) {
-                            const matchedIp = dnsM[0];
-                            if (!matchedIp.startsWith('192.168.')) {
-                                liveDnsIp = matchedIp;
-                                if (document.getElementById('stat-ports-label').textContent === 'HEDEF IP') {
-                                    const portEl = document.getElementById('stat-ports');
-                                    portEl.innerHTML = `<span class="cyber-ip-highlight">${liveDnsIp}</span>`;
-                                }
-                            }
-                        }
                     }
                 }
 
-                // ── URL Gruplama (http-sql-injection vb.) ──
+                // ── URL Gruplama ──
                 const isUrl = raw.match(/^\s+(https?:\/\/)/i);
-                // Eğer URL ama içinde VULNERABLE geçiyorsa gizleme!
                 if (opts.vuln_scan && isUrl && !raw.toUpperCase().includes('VULNERABLE')) {
                     urlBuffer.push(raw.trim());
                     continue;
                 }
-                // URL tamponu doluysa ve artık URL satırı değilse → flush
                 flushUrlBuffer();
-
-                // ── Ağ Keşfi Görsel Ayracı ──
-                if (opts.net_discover && raw.startsWith('Nmap scan report for')) {
-                    addLog('<span style="color:var(--emerald-400); font-weight:bold;">----------------------------------------</span>', '');
-                }
-
-                // ── Akıllı Çıktı Filtreleme (Sadece OS Modülü İçin) ──
-                const shouldFilterPorts = opts.os_detect && !opts.port_scan && !opts.version_detect && !opts.vuln_scan && !opts.aggressive_scan;
-                if (shouldFilterPorts && raw.match(/\d+\/(tcp|udp)/i)) {
-                    if (!raw.includes('22/') && !raw.includes('80/') && !raw.includes('443/')) {
-                        continue;
-                    }
-                }
-
-                // Detect hardware from logs if not wifi
-                const lRaw = raw.toLowerCase();
-                if (lRaw.includes('eth0') || lRaw.includes('ethernet')) {
-                    const warningOverlay = document.getElementById('wlan-warning');
-                    if (warningOverlay) warningOverlay.classList.add('active');
-                }
-
-                // Smart Hardware Detection (Logic Fix)
-                if (lRaw.includes('wlan') || lRaw.includes('interface') || lRaw.includes('scanning') || lRaw.includes('ralink')) {
-                    const alertBox = document.getElementById('wifi-hardware-alert');
-                    const warningOverlay = document.getElementById('wlan-warning');
-                    if (alertBox) alertBox.style.display = 'none';
-                    if (warningOverlay) warningOverlay.style.display = 'none';
-                }
 
                 // ── [SUPER PRO] PORT RENKLENDİRME ──
                 if (raw.toLowerCase().includes('open')) {
@@ -4664,18 +4600,10 @@
                 const criticalKeywords = /VULNERABLE|Vulnerability|CVE|Exploit|backdoor/i;
                 if (opts.vuln_scan && criticalKeywords.test(raw)) {
                     safe = `<span class="vuln-critical-pro">🚨 KRİTİK BULGU: ${safe}</span>`;
-                    updateRisk(raw);
-                    addCyNode(`vuln-${i}`, 'Zafiyet!', 'vuln');
-                    if (cyRootId && cyMap) cyMap.getElementById(cyRootId).addClass('vuln');
-                } else if (opts.vuln_scan && (raw.match(/\bExploitable\b/i) || raw.match(/State: LIKELY VULNERABLE/i))) {
-                    safe = `<span class="vuln-critical-pro">🔴 ${safe}</span>`;
-                    updateRisk(raw);
-                } else if (opts.vuln_scan && (safe.match(/CVE-\d+-\d+/i) || safe.match(/\bzafiyet\b/i))) {
-                    safe = `<span style="color:#ef4444; font-weight:bold; background:rgba(239, 68, 68, 0.1); padding:0 4px; border-radius:4px;">${safe}</span>`;
-                    updateRisk(safe);
+                    if (typeof updateRisk === 'function') updateRisk(raw);
                 }
 
-                addLog(`[SCANNING...] ${safe}`, guessLineType(raw));
+                addLog(`[SCANNING...] ${safe}`, typeof guessLineType === 'function' ? guessLineType(raw) : '');
 
                 batchCount++;
                 if (batchCount >= BATCH) {
