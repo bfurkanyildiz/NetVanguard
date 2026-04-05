@@ -4514,20 +4514,21 @@
 
                 let safe = raw; 
                 const trimmed = raw.trim();
+                const lraw = raw.toLowerCase();
 
-                // ── [SUPER PRO] GÜRÜLTÜ FİLTRESİ (TRIM-AWARE) ──
-                // OS parmak izi çöplerini ve zamanlama loglarını temizle
-                const noiseRegex = /Discovered open port|NSE Timing|Initiating|Completed|Scan\s+Report|Host\s+is\s+up|Scanning\s+\d+|DNS\s+resolution|^\s*OS:|^\s*TCP\/IP fingerprint|^\s*OS CPE|^\s*Uptime guess|^\s*Device type/i;
-                if (noiseRegex.test(raw) && !raw.toLowerCase().includes('open')) continue;
+                // ── [SUPER PRO] GÜRÜLTÜ FİLTRESİ ──
+                // IP satırlarını (Scan report) ASLA gizleme.
+                const noiseRegex = /NSE Timing|Initiating|Completed|Host\s+is\s+up|Scanning\s+\d+|DNS\s+resolution|^\s*OS:|^\s*TCP\/IP fingerprint|^\s*OS CPE|^\s*Uptime guess|^\s*Device type/i;
+                if (noiseRegex.test(raw) && !lraw.includes('open')) continue;
 
-                // ── PORT FİLTRELEME (SADECE 80, 443) ──
-                // Hem "80/tcp open" hem de "Discovered OPEN port 80/tcp" formatlarını yakala
+                // ── PORT FİLTRELEME (SADECE STANDALONE VERSİYON TESPİTİNDE) ──
                 const portM = raw.match(/port\s+(\d+)\/|(\d+)\/(tcp|udp)\s+open/i);
                 if (portM) {
                     const portNum = parseInt(portM[1] || portM[2]);
-                    if (portNum !== 80 && portNum !== 443) {
-                        // İstatistikleri arka planda saymaya devam et
-                        if (raw.toLowerCase().includes('open')) {
+                    // SADECE "Servis Versiyon Tespiti" tek başına seçiliyse 80/443 filtresi uygula
+                    const isShortVersionMode = opts.version_detect && !opts.port_scan && !opts.vuln_scan;
+                    if (isShortVersionMode && portNum !== 80 && portNum !== 443) {
+                        if (lraw.includes('open')) {
                            livePortCount++;
                            setStat('stat-ports', livePortCount);
                         }
@@ -4535,20 +4536,7 @@
                     }
                 }
 
-                // ── [NEW] FOUND IP SYNC LOGIC ──
-                if (trimmed.includes('Found IP:')) {
-                    const match = trimmed.match(/Found IP:\s*([\d\.]+)/i);
-                    if (match) {
-                        const foundIp = match[1];
-                        liveDnsIp = foundIp;
-                        if (document.getElementById('stat-ports-label').textContent === 'HEDEF IP') {
-                            const portEl = document.getElementById('stat-ports');
-                            portEl.innerHTML = `<span class="cyber-ip-highlight">${foundIp}</span>`;
-                        }
-                    }
-                }
-
-                // ── GERÇEK ZAMANLI SAYAÇLAR ──
+                // ── GERÇEK ZAMANLI SAYAÇLAR (Tüm portlar için) ──
                 const portMatch = raw.match(/(\d+)\/(tcp|udp)\s+open\s+([^\s]+)/i);
                 if (portMatch) {
                     livePortCount++;
@@ -4566,24 +4554,22 @@
                     }
                 }
 
-                // ── ANALİZ AYIRICI ÇİZGİ (STARTING & REPORT) ──
-                if (trimmed.toLowerCase().startsWith('starting nmap') || trimmed.toLowerCase().startsWith('nmap scan report for')) {
-                    addLog('<div style="color:var(--emerald-500); font-weight:900; letter-spacing: 2px; margin: 15px 0; border-top: 1px dashed rgba(16,185,129,0.3); padding-top:10px;">[════════════════════════════════════════]</div>', 'highlight');
-                    if (trimmed.toLowerCase().startsWith('nmap scan report for')) {
-                        if (opts.net_discover) {
-                            liveDeviceCount++;
-                            setStat('stat-ports', liveDeviceCount);
-                        }
-                        const ipMatch = trimmed.match(/Nmap scan report for\s+(?:.*?\s+\()?([0-9a-zA-Z.-]+)\)?/);
-                        if (ipMatch) {
-                            const parsedIp = ipMatch[1].trim();
-                            cyRootId = parsedIp;
-                            if (typeof cyMap !== 'undefined' && cyMap && cyMap.getElementById(parsedIp).length === 0) {
-                                cyMap.add({ data: { id: parsedIp, label: parsedIp }, classes: 'root' });
-                                cyMap.layout({ name: 'cose' }).run();
-                            }
-                        }
+                // ── ANALİZ AYIRICI ÇİZGİ & HEDEF TESPİTİ (NETWORK DISCOVERY) ──
+                if (trimmed.toLowerCase().startsWith('nmap scan report for')) {
+                    // Cihazlar arasına net bir çizgi ekle (Kullanıcı Talebi: - işaretiyle)
+                    addLog('<div style="color:rgba(255,255,255,0.15); margin: 12px 0;">------------------------------------------------------------</div>', '');
+                    
+                    if (opts.net_discover) {
+                        liveDeviceCount++;
+                        setStat('stat-ports', liveDeviceCount);
+                        const ipAddr = trimmed.replace(/Nmap scan report for /i, '');
+                        addLog(`📍 <span style="color:var(--emerald-400); font-weight:bold;">HEDEF BULUNDU: ${ipAddr}</span>`, 'info');
                     }
+                }
+
+                // [NEW] MAC adreslerini her zaman göster (Network discovery için önemli)
+                if (lraw.includes('mac address:')) {
+                    safe = `<span style="color:var(--cyan-400); font-weight:600;">📡 ${raw.trim()}</span>`;
                 }
 
                 // ── [SUPER PRO] OS DETECTION HIGHLIGHTER ──
