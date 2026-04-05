@@ -43,22 +43,35 @@ pub async fn perform_priv_esc_analysis(target: &str, os_info: &str, version_info
         report.push_str("> Tespit Edilen Verilere Göre Olası Sızma Yolları:\n\n");
 
         let combined = format!("{} {}", os_info.to_lowercase(), version_info.to_lowercase());
+        let mut suggestions_found = false;
 
         if combined.contains("windows") {
             report.push_str("- [Kritik] MS17-010 (EternalBlue) Kontrol Edilmelidir.\n");
             report.push_str("- [Kritik] CVE-2022-26923 (Active Directory Domain PrivEsc).\n");
+            suggestions_found = true;
         } else if combined.contains("linux") {
             report.push_str(
                 "- [Önemli] Kernel Exploit Suggester üzerinden 2024-LTS verileri incelenmeli.\n",
             );
             report.push_str("- [Önemli] Sudo v1.8.x (CVE-2021-3156 Baron Samedit) olasılığı.\n");
+            suggestions_found = true;
         }
 
         if combined.contains("ssh") {
             report.push_str("- [Servis] SSH Brute-Force veya LibSSH Zafiyeti (CVE-2018-10933).\n");
+            suggestions_found = true;
         }
         if combined.contains("apache") || combined.contains("httpd") {
             report.push_str("- [Web] Apache Path Traversal (CVE-2021-41773).\n");
+            suggestions_found = true;
+        }
+
+        // FALLBACK: Eğer veri çok azsa genel sızma önerilerini bas
+        if !suggestions_found {
+            report.push_str("! UYARI: Hedef OS tam olarak belirlenemedi (Genel Analiz Devrede):\n");
+            report.push_str("- [Genel] Kernel Exploit (PwnKit/DirtyPipe) kontrol edilmeli.\n");
+            report.push_str("- [Genel] Yanlış Yapılandırılmış Sudo/Setuid dosyaları aranmalı.\n");
+            report.push_str("- [Genel] Servis versiyonları için 'searchsploit' kullanılmalı.\n");
         }
 
         report.push_str(

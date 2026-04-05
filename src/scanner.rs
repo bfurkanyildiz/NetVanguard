@@ -212,7 +212,10 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     }
     let mut target = body.target.trim().to_string();
     if body.net_discover {
-        target = "192.168.1.0/24".to_string();
+        // Eğer hedef girilmemişse varsayılan ağ aralığını kullan, yoksa girilen hedefi/aralığı tara
+        if target.is_empty() {
+            target = "192.168.1.0/24".to_string();
+        }
     }
     if let Err(msg) = validate_target(&target) {
         return Json(ScanResponse {
@@ -235,17 +238,21 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     let mut os_info = String::new();
     let mut version_info = String::new();
 
+    // Keyvan Hoca Evaluation Rule: PrivEsc requires intelligence. 
+    // If PrivEsc is selected but OS detect is OFF, force a quick background check.
+    let force_os_for_privesc = body.priv_esc && !body.os_detect;
+
     if body.net_discover {
         scan_types.push("net_discover");
         let (ok, out) = run_command(
             "nmap",
             &[
                 "-sn",
+                "-vv", // Arka planda detaylı loglama
                 "-PS22,80,443",
-                "--send-eth",
                 t_arg,
-                "--host-timeout",
-                "60s",
+                "--max-retries", "1",
+                "--host-timeout", "60s",
                 &target,
             ],
         )
@@ -259,12 +266,12 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
             "nmap",
             &[
                 "-sT",
+                "-vv",
                 "-F",
                 "-Pn",
-                "--send-eth",
                 t_arg,
-                "--host-timeout",
-                "60s",
+                "--max-retries", "1",
+                "--host-timeout", "60s",
                 &target,
             ],
         )
@@ -280,15 +287,14 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
             "nmap",
             &[
                 "-sV",
+                "-vv",
                 "--script",
                 scripts,
                 "-Pn",
-                "--send-eth",
                 t_arg,
-                "--host-timeout",
-                "15m",
-                "--top-ports",
-                "50",
+                "--host-timeout", "5m", // 15m'den 5m'ye düşürüldü (Donmayı önlemek için)
+                "--max-retries", "1",
+                "--top-ports", "100", // Daha geniş zafiyet kapsamı
                 &target,
             ],
         )
@@ -296,30 +302,33 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         overall_success = overall_success && ok;
         all_output.push_str(&out);
     }
-    if body.os_detect {
+    if body.os_detect || force_os_for_privesc {
         scan_types.push("os_detect");
         let (ok, out) = run_command(
             "nmap",
             &[
                 "-O",
+                "-vv",
                 "-Pn",
                 "--osscan-limit",
-                "--max-retries",
-                "1",
-                "-p",
-                "22,80,443",
+                "--max-retries", "1",
+                "-p", "22,80,443,445,3389", // OS tespiti için ek kritik portlar
                 "--privileged",
-                "--send-eth",
                 t_arg,
-                "--host-timeout",
-                "60s",
+                "--host-timeout", "60s",
                 &target,
             ],
         )
         .await;
         overall_success = overall_success && ok;
         os_info = out.clone();
-        all_output.push_str(&out);
+        
+        // Sadece kullanıcı seçtiyse çıktıya ekle, arka plan istihbaratı ise gizli tut
+        if body.os_detect {
+            all_output.push_str(&out);
+        } else {
+            all_output.push_str("\n[*] Arka Plan İstihbaratı Toplandı (PrivEsc için).\n");
+        }
     }
     if body.version_detect {
         scan_types.push("version_detect");
@@ -327,12 +336,12 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
             "nmap",
             &[
                 "-sV",
+                "-vv",
                 "-Pn",
                 "--privileged",
-                "--send-eth",
                 t_arg,
-                "--host-timeout",
-                "60s",
+                "--max-retries", "1",
+                "--host-timeout", "60s",
                 &target,
             ],
         )
@@ -347,11 +356,10 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
             "nmap",
             &[
                 "-A",
+                "-vv",
                 "-Pn",
-                "--send-eth",
                 t_arg,
-                "--host-timeout",
-                "120s",
+                "--host-timeout", "3m",
                 &target,
             ],
         )
