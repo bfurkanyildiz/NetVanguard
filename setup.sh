@@ -71,22 +71,6 @@ source "$HOME/.cargo/env" 2>/dev/null
 source "/home/kali/.cargo/env" 2>/dev/null
 
 # ==============================================================================
-# 3. HELPER: Auto-Launch Dashboard
-# ==============================================================================
-launch_dashboard() {
-    echo -e "${BLUE}[*] Dashboard'ın hazır olması bekleniyor (3 sn)...${NC}"
-    sleep 3
-    
-    # Check if graphical interface is available
-    if [ -n "$DISPLAY" ]; then
-        echo -e "${GREEN}[+] Tarayıcı otomatik olarak açılıyor...${NC}"
-        xdg-open "http://localhost:8080" > /dev/null 2>&1 &
-    else
-        echo -e "${YELLOW}[!] Grafik arayüzü bulunamadı. Lütfen manuel bağlanın: http://localhost:8080${NC}"
-    fi
-}
-
-# ==============================================================================
 # PATH A: DOCKER DEPLOYMENT
 # ==============================================================================
 if [ "$DOCKER_READY" = true ]; then
@@ -95,7 +79,6 @@ if [ "$DOCKER_READY" = true ]; then
     if [ $? -eq 0 ]; then
         echo -e "\n${GREEN}✅ NetVanguard Konteyner İçinde Başarıyla Başlatıldı!${NC}"
         echo -e "${BLUE}Dashboard Adresi:${NC} ${YELLOW}http://localhost:8080${NC}"
-        launch_dashboard
         exit 0
     else
         echo -e "${RED}[!] Docker Başlatma Hatası. Yerel Kuruluma Deneniyor...${NC}"
@@ -144,7 +127,6 @@ if [ $? -eq 0 ]; then
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}[+] Uygulama Arka Planda Başlatıldı (PID: $!).${NC}"
         echo -e "${BLUE}Dashboard Adresi:${NC} ${YELLOW}http://localhost:8080${NC}"
-        launch_dashboard
     else
         echo -e "${RED}[!] Başlatma Hatası! Manuel Komut: sudo ./target/release/netvanguard${NC}"
     fi
