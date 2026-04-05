@@ -4,6 +4,18 @@ use axum::Json;
 use rand::Rng;
 use std::collections::HashMap;
 
+/// # Summary
+/// Real-time Deep Packet Inspection (DPI) engine.
+/// Orchestrates live traffic capture via libpcap/wpcap and performs heuristic threat analysis.
+///
+/// # Logic Flow
+/// 1. Enumerates system network interfaces to identify a suitable capture point.
+/// 2. Initializes a promiscuous mode capture stream (100ms timeout for non-blocking UI).
+/// 3. Parses Layer 3/4 headers to extract IP protocols, ports, and metadata (DNS/SNI).
+/// 4. If no hardware is present, transitions to High-Fidelity Traffic Simulation mode.
+///
+/// # Returns
+/// * `Json<SnifferResponse>` - Vector of analyzed packets with associated risk scores and threat levels.
 pub async fn handle_sniffer() -> Json<SnifferResponse> {
     let devices = pcap::Device::list().unwrap_or_default();
     let device = devices

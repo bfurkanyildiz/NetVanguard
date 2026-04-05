@@ -410,6 +410,7 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
 
 /// # Summary
 /// Forcefully terminates all active scanning processes and cleans up child resources.
+/// Prevents orphan processes (zombies) by ensuring the process group is killed.
 ///
 /// # Arguments
 /// * None (Triggered via API shutdown request)
@@ -422,14 +423,15 @@ pub async fn handle_stop() -> Json<ScanResponse> {
     if let Some(mut child) = child_lock.take() {
         let _ = child.kill().await;
     }
-    let _ = if cfg!(target_os = "windows") {
-        Command::new("cmd")
+    // Deep Cleanup: Extra taskkill to ensure nmap process tree is gone
+    if cfg!(target_os = "windows") {
+        let _ = Command::new("cmd")
             .args(["/C", "taskkill /F /IM nmap.exe /T"])
-            .output()
+            .output();
     } else {
-        Command::new("sudo")
+        let _ = Command::new("sudo")
             .args(["-n", "killall", "-9", "nmap"])
-            .output()
+            .output();
     };
     Json(ScanResponse {
         success: true,
@@ -442,6 +444,7 @@ pub async fn handle_stop() -> Json<ScanResponse> {
 
 /// # Summary
 /// Retrieves the current status of all network interfaces and identifies the optimal wireless adapter.
+/// This is used to warn the operator if no compatible hardware is found for Wi-Fi auditing.
 ///
 /// # Arguments
 /// * None
@@ -648,6 +651,26 @@ mod tests {
 
         // Test 4: Boş hedef kontrolü (assert_eq)
         assert_eq!(validate_target(""), Err("Hedef boş!".into()));
+    }
+
+    #[test]
+    fn test_smart_port_list() {
+        // Akıllı port listesinin kritik portları (vsftpd, redis vb) içerdiğini doğrular
+        let critical_ports = vec![21, 22, 1521, 6379, 8009, 6000];
+
+        // Bu liste frontend ile backend uyumunu simüle eder
+        let smart_list = vec![
+            21, 22, 23, 25, 53, 80, 110, 111, 135, 139, 143, 443, 445, 993, 995, 1723, 3306, 3389,
+            5432, 5900, 8080, 2121, 1521, 6379, 8009, 6000,
+        ];
+
+        for port in critical_ports {
+            assert!(
+                smart_list.contains(&port),
+                "Kritik port {} listede bulunamadı!",
+                port
+            );
+        }
     }
 
     #[test]

@@ -21,6 +21,15 @@ use std::process::Command;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::services::ServeDir;
 
+/// # Summary
+/// Entry point for the NetVanguard backend engine.
+/// Initializes the Axum web server, configures CORS policies, registers API routes,
+/// and orchestrates the lifecycle of background scanning tasks.
+///
+/// # Environment Setup
+/// * Detects Nmap presence and version for the dashboard banner.
+/// * Binds a TCP listener to address 0.0.0.0:8080 for cross-device access within the local mesh.
+/// * Automatically launches the operator's browser to the dashboard URL.
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let nmap_ver = Command::new("nmap")

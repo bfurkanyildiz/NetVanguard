@@ -116,6 +116,8 @@ pub async fn get_shodan_intel(ip: &str) -> Option<ShodanData> {
 /// * `impl IntoResponse` - JSON response containing city, country, coordinates, and ISP details.
 pub async fn handle_geolocation(Query(params): Query<GeoParams>) -> impl IntoResponse {
     let target_ip = params.ip.trim();
+    // RFC 1918 & Localhost Validation Logic
+    // Prevents unauthenticated SSRF-like probes into the internal network infrastructure.
     if target_ip.starts_with("192.168.")
         || target_ip.starts_with("10.")
         || target_ip.starts_with("127.")
@@ -127,12 +129,14 @@ pub async fn handle_geolocation(Query(params): Query<GeoParams>) -> impl IntoRes
             city: Some("Yerel Ağ".to_string()),
             district: Some("Merkez".to_string()),
             country: Some("Yerel Arayüz".to_string()),
-            isp: Some("Private Network".to_string()),
-            org: Some("Local Host".to_string()),
+            isp: Some("RFC 1918 Private Range".to_string()),
+            org: Some("Internal Infrastructure".to_string()),
             lat: Some(0.0),
             lon: Some(0.0),
             as_info: None,
-            message: Some("Yerel/Özel IP sorgulanamaz.".to_string()),
+            message: Some(
+                "Güvenlik Sınırı: Yerel IP adresleri dış istihbarat ile sorgulanamaz.".to_string(),
+            ),
         });
     }
     let url = format!("http://ip-api.com/json/{}?fields=status,message,country,city,regionName,lat,lon,isp,org,as", target_ip);
@@ -300,6 +304,20 @@ pub async fn handle_metadata(mut multipart: Multipart) -> impl IntoResponse {
 ///
 /// # Returns
 /// * `Option<String>` - The reconstructed domain name (e.g., "example.com").
+/// # Summary
+/// High-Efficiency Domain Name Parser for DNS Queries.
+/// Reconstructs the Human-Readable domain string from the DNS Wire Format (Length-Prefixed Labels).
+///
+/// # Logic Detail
+/// * Bypasses the 12-byte DNS Fixed Header.
+/// * Iteratively reads label length octets and extracts corresponding string segments.
+/// * Handles the null-terminator (0x00) logic to stop the parsing loop at the end of the QNAME section.
+///
+/// # Arguments
+/// * `payload` - Raw byte buffer from a captured UDP:53 DNS packet.
+///
+/// # Returns
+/// * `Option<String>` - The reconstructed domain name (e.g., "google.com") or None on corruption.
 pub fn parse_dns_name(payload: &[u8]) -> Option<String> {
     if payload.len() < 13 {
         return None;
@@ -406,6 +424,20 @@ pub fn parse_dns_answer(payload: &[u8]) -> Option<(String, String)> {
 ///
 /// # Returns
 /// * `Option<String>` - The target hostname (SNI) if present in the extensions.
+/// # Summary
+/// Advanced SNI (Server Name Indication) Extension Parser for TLS Handshakes.
+/// Extracts the target hostname from the encrypted TLS 'Client Hello' packet before encryption takes hold.
+///
+/// # Technical Methodology
+/// 1. Verifies the Content-Type (0x16) and Handshake-Type (0x01).
+/// 2. Skips Variable-Length Session IDs, Cipher Suites, and Compression Methods to reach Extensions.
+/// 3. Locates the Extension-Type 0x00 (Server Name) and extracts the UTF-8 hostname string.
+///
+/// # Arguments
+/// * `payload` - Raw byte buffer starting from the TLS Record Header.
+///
+/// # Returns
+/// * `Option<String>` - The target SNI hostname used for intelligent traffic categorization.
 pub fn parse_tls_sni(payload: &[u8]) -> Option<String> {
     if payload.len() < 11 || payload[0] != 0x16 || payload[5] != 0x01 {
         return None;
