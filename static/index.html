@@ -4516,13 +4516,16 @@
                 const trimmed = raw.trim();
                 const lraw = raw.toLowerCase();
 
-                // ── [EXTREME CLEAN] GÜRÜLTÜ FİLTRESİ ──
-                // NSE script loglarını, teknik zamanlama satırlarını ve teknik alt bilgileri tamamen GİZLE.
-                // Sadece açık port veya zafiyet içeren satırlara izin ver.
-                const noiseRegex = /NSE:|Starting runlevel|Loaded\s+\d+|Scanned\s+at|Read\s+data\s+files|Nmap\s+done|Raw\s+packets\s+sent|Host\s+is\s+up|Scanning\s+\d+|DNS\s+resolution|^\s*OS:|^\s*TCP\/IP fingerprint|^\s*OS CPE|^\s*Uptime guess|^\s*Device type|^\s*Network Distance/i;
-                if (noiseRegex.test(raw) && !lraw.includes('open')) continue;
+                // ── [ULTIMATE SILENCE] GÜRÜLTÜ FİLTRESİ ──
+                // Tüm teknik aşama loglarını (Initiating, Completed), NSE, dipnot ve teknik uyarıları GİZLE.
+                const noiseRegex = /Initiating|Completed|NSE:|Starting runlevel|Loaded\s+\d+|Service\s+detection\s+performed|Please\s+report|Host\s+discovery\s+disabled|All\s+addresses\s+will\s+be|Scanned\s+at|Read\s+data\s+files|Nmap\s+done|Raw\s+packets\s+sent|Host\s+is\s+up|Scanning\s+\d+|DNS\s+resolution|^\s*OS:|^\s*TCP\/IP fingerprint|^\s*OS CPE|^\s*Uptime guess|^\s*Device type|^\s*Network Distance/i;
+                
+                // Eğer gürültü ise ve içinde kritik 'Apache', 'Service Info', 'CPE' gibi anahtar kelimeler yoksa GİZLE.
+                if (noiseRegex.test(raw) && !lraw.includes('apache') && !lraw.includes('service info') && !lraw.includes('cpe:')) {
+                    continue;
+                }
 
-                // [FIX] Kapalı host raporlarını tamamen gizle (Ağ Taraması kalabalığını önler)
+                // [FIX] Kapalı host raporlarını tamamen gizle
                 if (lraw.includes('host down') || lraw.includes('received no-response')) continue;
 
                 // ── PORT FİLTRELEME (SADECE STANDALONE VERSİYON TESPİTİNDE) ──
@@ -4539,7 +4542,7 @@
                     }
                 }
 
-                // ── GERÇEK ZAMANLI SAYAÇLAR (Tüm portlar için) ──
+                // ── GERÇEK ZAMANLI SAYAÇLAR ──
                 const portMatch = raw.match(/(\d+)\/(tcp|udp)\s+open\s+([^\s]+)/i);
                 if (portMatch) {
                     livePortCount++;
@@ -4559,20 +4562,19 @@
 
                 // ── ANALİZ AYIRICI ÇİZGİ & HEDEF TESPİTİ (NETWORK DISCOVERY) ──
                 if (trimmed.toLowerCase().startsWith('nmap scan report for')) {
-                    // Sadece aktif cihazlar için bu bloğu çalıştır
                     if (opts.net_discover) {
                         liveDeviceCount++;
                         setStat('stat-ports', liveDeviceCount);
                         const ipAddr = trimmed.replace(/Nmap scan report for /i, '');
-                        
-                        // [SUPER CLEAN] Cihaz ayırıcı ve hedef bildirimi sadece aktif hostlar için
                         addLog('<div style="color:rgba(255,255,255,0.08); margin: 15px 0;">------------------------------------------------------------</div>', '');
                         addLog(`📍 <span style="color:var(--emerald-400); font-weight:bold;">HEDEF BULUNDU: ${ipAddr}</span>`, 'info');
                     }
                 }
 
-                if (lraw.includes('mac address:')) {
-                    safe = `<span style="color:var(--cyan-400); font-weight:600;">📡 ${raw.trim()}</span>`;
+                // Service Info veya MAC satırlarını parlat
+                if (lraw.includes('mac address:') || lraw.includes('service info:')) {
+                    const color = lraw.includes('mac') ? 'var(--cyan-400)' : 'var(--emerald-400)';
+                    safe = `<span style="color:${color}; font-weight:600;">📡 ${raw.trim()}</span>`;
                 }
 
                 // ── [SUPER PRO] OS DETECTION HIGHLIGHTER ──
