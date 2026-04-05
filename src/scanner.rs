@@ -336,12 +336,12 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
             "nmap",
             &[
                 "-sV",
-                "-vv",
+                "--version-intensity", "5",
+                "--host-timeout", "15m",
+                "--max-retries", "2",
                 "-Pn",
-                "--privileged",
+                "-vv",
                 t_arg,
-                "--max-retries", "1",
-                "--host-timeout", "60s",
                 &target,
             ],
         )

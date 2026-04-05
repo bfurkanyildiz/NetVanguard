@@ -4518,10 +4518,10 @@
 
                 // ── [ULTIMATE SILENCE] GÜRÜLTÜ FİLTRESİ ──
                 // Tüm teknik aşama loglarını (Initiating, Completed), NSE, dipnot ve teknik uyarıları GİZLE.
-                const noiseRegex = /Initiating|Completed|NSE:|Starting runlevel|Loaded\s+\d+|Service\s+detection\s+performed|Please\s+report|Host\s+discovery\s+disabled|All\s+addresses\s+will\s+be|Scanned\s+at|Read\s+data\s+files|Nmap\s+done|Raw\s+packets\s+sent|Host\s+is\s+up|Scanning\s+\d+|DNS\s+resolution|^\s*OS:|^\s*TCP\/IP fingerprint|^\s*OS CPE|^\s*Uptime guess|^\s*Device type|^\s*Network Distance/i;
+                const noiseRegex = /Initiating|Completed|NSE:|Starting runlevel|Loaded\s+\d+|Service\s+detection\s+performed|Please\s+report|Host\s+discovery\s+disabled|All\s+addresses\s+will\s+be|Scanned\s+at|Read\s+data\s+files|Nmap\s+done|Raw\s+packets\s+sent|Host\s+is\s+up|Scanning\s+\d+|DNS\s+resolution|^\s*OS:|^\s*TCP\/IP fingerprint|^\s*OS CPE|^\s*Uptime guess|^\s*Device type|^\s*Network Distance|Increasing\s+send\s+delay|Discovered\s+OPEN\s+port/i;
                 
-                // Eğer gürültü ise ve içinde kritik 'Apache', 'Service Info', 'CPE' gibi anahtar kelimeler yoksa GİZLE.
-                if (noiseRegex.test(raw) && !lraw.includes('apache') && !lraw.includes('service info') && !lraw.includes('cpe:')) {
+                // Eğer gürültü ise ve içinde kritik 'Apache', 'Service Info', 'CPE', 'PORT' gibi anahtar kelimeler yoksa GİZLE.
+                if (noiseRegex.test(raw) && !lraw.includes('apache') && !lraw.includes('service info') && !lraw.includes('cpe:') && !lraw.includes('port')) {
                     continue;
                 }
 
