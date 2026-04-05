@@ -4521,8 +4521,15 @@
                 const noiseRegex = /Initiating|Completed|NSE:|Starting runlevel|Loaded\s+\d+|Service\s+detection\s+performed|Please\s+report|Host\s+discovery\s+disabled|All\s+addresses\s+will\s+be|Scanned\s+at|Read\s+data\s+files|Nmap\s+done|Raw\s+packets\s+sent|Host\s+is\s+up|Scanning\s+\d+|DNS\s+resolution|^\s*OS:|^\s*TCP\/IP fingerprint|^\s*OS CPE|^\s*Uptime guess|^\s*Device type|^\s*Network Distance|Increasing\s+send\s+delay|Discovered\s+OPEN\s+port/i;
                 
                 // Eğer gürültü ise ve içinde kritik 'Apache', 'Service Info', 'CPE', 'PORT' gibi anahtar kelimeler yoksa GİZLE.
-                if (noiseRegex.test(raw) && !lraw.includes('apache') && !lraw.includes('service info') && !lraw.includes('cpe:') && !lraw.includes('port')) {
-                    continue;
+                // İSTİSNA: 'Discovered' kelimesi geçiyorsa her halükarda gürültüdür, gizle.
+                if (noiseRegex.test(raw)) {
+                    const isDiscovered = lraw.includes('discovered');
+                    const isResultTable = lraw.includes('port state service') || (lraw.includes('open') && !isDiscovered);
+                    const isCritical = lraw.includes('apache') || lraw.includes('service info') || lraw.includes('cpe:');
+                    
+                    if (!isResultTable && !isCritical) {
+                        continue;
+                    }
                 }
 
                 // [FIX] Kapalı host raporlarını tamamen gizle
@@ -4548,13 +4555,19 @@
                 }
 
                 // ── GERÇEK ZAMANLI SAYAÇLAR ──
-                const portMatch = raw.match(/(\d+)\/(tcp|udp)\s+open\s+([^\s]+)/i);
+                const portMatch = raw.match(/(\d+)\/(tcp|udp)\s+open\s+([^\s]+)\s*(.*)/i);
                 if (portMatch) {
                     livePortCount++;
                     if (!opts.net_discover && !(opts.dns_query && !opts.port_scan)) {
                         setStat('stat-ports', livePortCount);
                     }
                     if (typeof addCyNode === 'function') addCyNode(`port-${portMatch[1]}`, `${portMatch[1]} (${portMatch[3]})`, 'port');
+
+                    // [NEW] VERSİYONLARI PARLAK YAP (Apache, vsftpd vb.)
+                    if (portMatch[4] && portMatch[4].trim().length > 0) {
+                        const versionInfo = portMatch[4].trim();
+                        safe = raw.replace(versionInfo, `<span style="color:var(--emerald-400); font-weight:bold; text-shadow: 0 0 8px var(--emerald-500); font-size:1.1rem;">${versionInfo}</span>`);
+                    }
                 }
 
                 if (!liveLatency) {
