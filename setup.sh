@@ -51,10 +51,28 @@ else
 fi
 
 # ==============================================================================
-# PATH & ENVIRONMENT FIX (Arda'nın yaşadığı cargo hatasını önlemek için)
+# 0. HELPER: Detect Cargo Path
 # ==============================================================================
-export PATH="$HOME/.cargo/bin:$PATH"
+get_cargo_bin() {
+    if command -v cargo &> /dev/null; then
+        echo "cargo"
+    elif [ -x "$HOME/.cargo/bin/cargo" ]; then
+        echo "$HOME/.cargo/bin/cargo"
+    elif [ -x "/home/kali/.cargo/bin/cargo" ]; then
+        echo "/home/kali/.cargo/bin/cargo"
+    elif [ -x "/root/.cargo/bin/cargo" ]; then
+        echo "/root/.cargo/bin/cargo"
+    else
+        echo ""
+    fi
+}
+
+# ==============================================================================
+# PATH & ENVIRONMENT FIX
+# ==============================================================================
+export PATH="$HOME/.cargo/bin:/home/kali/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 source "$HOME/.cargo/env" 2>/dev/null
+source "/home/kali/.cargo/env" 2>/dev/null
 
 # ==============================================================================
 # 3. HELPER: Auto-Launch Dashboard
@@ -77,7 +95,7 @@ launch_dashboard() {
 # ==============================================================================
 if [ "$DOCKER_READY" = true ]; then
     echo -e "${CYAN}>>> Docker Üzerinden Yayına Geçiliyor (Host Mode)...${NC}"
-    docker compose up --build -d
+    docker-compose up --build -d || docker compose up --build -d
     if [ $? -eq 0 ]; then
         echo -e "\n${GREEN}✅ NetVanguard Konteyner İçinde Başarıyla Başlatıldı!${NC}"
         echo -e "${BLUE}Dashboard Adresi:${NC} ${YELLOW}http://localhost:8080${NC}"
@@ -94,7 +112,7 @@ fi
 echo -e "${CYAN}>>> Yerel (Native) Kurulum Hazırlanıyor...${NC}"
 
 # Dependencies
-DEPENDENCIES=("build-essential" "pkg-config" "libssl-dev" "libpcap-dev" "nmap" "curl")
+DEPENDENCIES=("build-essential" "pkg-config" "libssl-dev" "libpcap-dev" "nmap" "curl" "docker.io" "docker-compose")
 for pkg in "${DEPENDENCIES[@]}"; do
     if ! dpkg -s "$pkg" >/dev/null 2>&1; then
         echo -e "${YELLOW}[*] $pkg kuruluyor...${NC}"
@@ -102,17 +120,23 @@ for pkg in "${DEPENDENCIES[@]}"; do
     fi
 done
 
-# Rust Check (Absolute Path Check)
-if ! [ -x "$HOME/.cargo/bin/cargo" ] && ! command -v cargo &> /dev/null; then
+# Rust Check
+CARGO_PATH=$(get_cargo_bin)
+if [ -z "$CARGO_PATH" ]; then
     echo -e "${YELLOW}[!] Rust bulunamadı, kuruluyor...${NC}"
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     export PATH="$HOME/.cargo/bin:$PATH"
     source "$HOME/.cargo/env" 2>/dev/null
+    CARGO_PATH=$(get_cargo_bin)
 fi
 
 echo -e "${BLUE}[*] Proje Derleniyor (Cargo Build)...${NC}"
-# Use absolute path for cargo to be safe
-$HOME/.cargo/bin/cargo build --release
+# Use detected cargo path
+if [ -n "$CARGO_PATH" ]; then
+    $CARGO_PATH build --release
+else
+    cargo build --release
+fi
 
 if [ $? -eq 0 ]; then
     echo -e "\n${GREEN}✅ NetVanguard Yerel Olarak Derlendi!${NC}"
