@@ -34,20 +34,11 @@ echo -e "${BLUE}[*] Sistem Analizi Yapılıyor...${NC}"
 
 # Check for Docker
 DOCKER_READY=false
-if command -v docker &> /dev/null && command -v docker-compose &> /dev/null || docker compose version &> /dev/null; then
+if command -v docker &> /dev/null && (command -v docker-compose &> /dev/null || docker compose version &> /dev/null); then
     echo -e "${GREEN}[+] Docker Tespit Edildi.${NC}"
     DOCKER_READY=true
 else
-    echo -e "${YELLOW}[!] Docker Bulunamadı. Otomatik Kurulum Deneniyor...${NC}"
-    apt-get update -y
-    apt-get install -y docker.io docker-compose-v2
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}[+] Docker Başarıyla Kuruldu.${NC}"
-        systemctl start docker
-        DOCKER_READY=true
-    else
-        echo -e "${RED}[!] Docker Kurulumu Başarısız. Yerel Kuruluma (Native) Dönülüyor...${NC}"
-    fi
+    echo -e "${YELLOW}[!] Docker Bulunamadı. Yerel Kuruluma (Native) Geçiliyor...${NC}"
 fi
 
 # ==============================================================================
@@ -112,7 +103,7 @@ fi
 echo -e "${CYAN}>>> Yerel (Native) Kurulum Hazırlanıyor...${NC}"
 
 # Dependencies
-DEPENDENCIES=("build-essential" "pkg-config" "libssl-dev" "libpcap-dev" "nmap" "curl" "docker.io" "docker-compose")
+DEPENDENCIES=("build-essential" "pkg-config" "libssl-dev" "libpcap-dev" "nmap" "curl")
 for pkg in "${DEPENDENCIES[@]}"; do
     if ! dpkg -s "$pkg" >/dev/null 2>&1; then
         echo -e "${YELLOW}[*] $pkg kuruluyor...${NC}"
