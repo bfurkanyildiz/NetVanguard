@@ -248,7 +248,8 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
             "nmap",
             &[
                 "-sn",
-                "-vv", // Arka planda detaylı loglama
+                "-vv",
+                "-T3", // Hoca sınırı: T3 hızı
                 "-PS22,80,443",
                 t_arg,
                 "--max-retries", "1",
@@ -267,11 +268,12 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
             &[
                 "-sT",
                 "-vv",
+                "-T3",
                 "-F",
                 "-Pn",
                 t_arg,
                 "--max-retries", "1",
-                "--host-timeout", "60s",
+                "--host-timeout", "120s",
                 &target,
             ],
         )
@@ -288,13 +290,14 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
             &[
                 "-sV",
                 "-vv",
+                "-T3",
                 "--script",
                 scripts,
                 "-Pn",
                 t_arg,
-                "--host-timeout", "5m", // 15m'den 5m'ye düşürüldü (Donmayı önlemek için)
+                "--host-timeout", "30m", // 15m'den 30m'ye çıkarıldı (Derin tarama için)
                 "--max-retries", "1",
-                "--top-ports", "100", // Daha geniş zafiyet kapsamı
+                "--top-ports", "1000", // 50 veya 100'den 1000'e çıkarıldı
                 &target,
             ],
         )

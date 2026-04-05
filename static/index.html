@@ -681,15 +681,31 @@
         }
 
         @keyframes vulnPulse {
+            0%, 100% { text-shadow: 0 0 8px rgba(255, 23, 68, 0.6), 0 0 20px rgba(255, 23, 68, 0.3); transform: scale(1); }
+            50% { text-shadow: 0 0 20px rgba(255, 23, 68, 1), 0 0 50px rgba(255, 23, 68, 0.6); transform: scale(1.02); }
+        }
 
-            0%,
-            100% {
-                text-shadow: 0 0 8px rgba(255, 23, 68, 0.6), 0 0 20px rgba(255, 23, 68, 0.3);
-            }
+        .vuln-critical-pro {
+            font-size: 1.6rem !important;
+            color: #fff !important;
+            background: linear-gradient(90deg, #ff1744, #991b1b) !important;
+            font-weight: 900 !important;
+            padding: 1rem 1.5rem !important;
+            border-radius: 12px !important;
+            border: 2px solid #fff !important;
+            box-shadow: 0 0 30px rgba(255, 23, 68, 0.5) !important;
+            display: block !important;
+            margin: 1.5rem 0 !important;
+            text-align: center !important;
+            text-transform: uppercase !important;
+            letter-spacing: 2px !important;
+            animation: vulnPulse 1s infinite alternate !important;
+        }
 
-            50% {
-                text-shadow: 0 0 16px rgba(255, 23, 68, 0.9), 0 0 40px rgba(255, 23, 68, 0.5);
-            }
+        .port-open-highlight {
+            color: #10b981 !important;
+            font-weight: 800 !important;
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.4) !important;
         }
 
         .vuln-url-toggle {
@@ -4492,6 +4508,10 @@
                 let raw = lines[i].trimEnd();
                 if (raw === '') continue;
 
+                // ── [SUPER PRO] GÜRÜLTÜ FİLTRESİ ──
+                const noiseRegex = /Discovered open port|NSE Timing|Initiating|Completed|Scan\s+Report|Host\s+is\s+up|Scanning\s+\d+|DNS\s+resolution/i;
+                if (noiseRegex.test(raw) && !raw.includes('open')) continue;
+
                 // ── [NEW] FOUND IP SYNC LOGIC ──
                 if (raw.includes('Found IP:')) {
                     const match = raw.match(/Found IP:\s*([\d\.]+)/i);
@@ -4635,27 +4655,20 @@
                     if (warningOverlay) warningOverlay.style.display = 'none';
                 }
 
-                // HTML escape
-                let safe = raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-                // ── OS Bilgisini Vurgula ──
-                if (opts.os_detect && (raw.startsWith('Running:') || raw.startsWith('OS details:') || raw.startsWith('OS CPE:'))) {
-                    safe = `<span class="os-highlight">${safe}</span>`;
-                }
-
-                // ── DNS IP Vurgulama ──
-                if (opts.dns_query && raw.match(/Address:\s*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/)) {
-                    safe = `<span style="text-shadow: 0 0 10px #00f2fe; font-size: 1.2rem; font-weight: bold; color: #00f2fe;">${safe}</span>`;
+                // ── [SUPER PRO] PORT RENKLENDİRME ──
+                if (raw.toLowerCase().includes('open')) {
+                    safe = safe.replace(/open/gi, '<span class="port-open-highlight">OPEN</span>');
                 }
 
                 // ── KRİTİK Zafiyet Hiyerarşisi ──
-                if (opts.vuln_scan && raw.match(/\bVULNERABLE\b/i)) {
-                    safe = `<span class="vuln-critical" style="display:inline-block; width:100%; box-sizing:border-box; background: rgba(255, 23, 68, 0.15); border-left: 4px solid #ff1744; margin-top: 4px; padding: 4px 10px; color:#ff1744; font-weight:900; text-shadow: 0 0 10px rgba(255, 23, 68, 0.7); animation: vulnPulse 2s ease-in-out infinite;">🚨 ${safe}</span>`;
+                const criticalKeywords = /VULNERABLE|Vulnerability|CVE|Exploit|backdoor/i;
+                if (opts.vuln_scan && criticalKeywords.test(raw)) {
+                    safe = `<span class="vuln-critical-pro">🚨 KRİTİK BULGU: ${safe}</span>`;
                     updateRisk(raw);
                     addCyNode(`vuln-${i}`, 'Zafiyet!', 'vuln');
                     if (cyRootId && cyMap) cyMap.getElementById(cyRootId).addClass('vuln');
                 } else if (opts.vuln_scan && (raw.match(/\bExploitable\b/i) || raw.match(/State: LIKELY VULNERABLE/i))) {
-                    safe = `<span class="vuln-critical">🔴 ${safe}</span>`;
+                    safe = `<span class="vuln-critical-pro">🔴 ${safe}</span>`;
                     updateRisk(raw);
                 } else if (opts.vuln_scan && (safe.match(/CVE-\d+-\d+/i) || safe.match(/\bzafiyet\b/i))) {
                     safe = `<span style="color:#ef4444; font-weight:bold; background:rgba(239, 68, 68, 0.1); padding:0 4px; border-radius:4px;">${safe}</span>`;
