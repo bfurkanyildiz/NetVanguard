@@ -99,6 +99,9 @@ for pkg in "${DEPENDENCIES[@]}"; do
     fi
 done
 
+echo -e "${BLUE}[*] Nmap script veritabanı senkronize ediliyor...${NC}"
+sudo nmap --script-updatedb > /dev/null 2>&1
+
 # Rust Check
 CARGO_PATH=$(get_cargo_bin)
 if [ -z "$CARGO_PATH" ]; then

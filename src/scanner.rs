@@ -232,6 +232,9 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     };
     let t_arg = timing_arg.as_str();
 
+    let mut os_info = String::new();
+    let mut version_info = String::new();
+
     if body.net_discover {
         scan_types.push("net_discover");
         let (ok, out) = run_command(
@@ -240,7 +243,7 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
                 "-sn",
                 "-PS22,80,443",
                 "--send-eth",
-                "-T4",
+                t_arg,
                 "--host-timeout",
                 "60s",
                 &target,
@@ -271,16 +274,14 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     }
     if body.vuln_scan {
         scan_types.push("vuln_scan");
-        let mut scripts = "vuln".to_string();
-        if body.priv_esc {
-            scripts.push_str(",linux-exploit-suggester,auth-owners");
-        }
+        // Optimizasyon: vulners scripti çok daha detaylı ve profesyonel sonuç verir.
+        let scripts = "vuln,vulners";
         let (ok, out) = run_command(
             "nmap",
             &[
-                "-sT",
+                "-sV",
                 "--script",
-                &scripts,
+                scripts,
                 "-Pn",
                 "--send-eth",
                 t_arg,
@@ -288,8 +289,6 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
                 "15m",
                 "--top-ports",
                 "50",
-                "--scan-delay",
-                "1s",
                 &target,
             ],
         )
@@ -319,6 +318,7 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         )
         .await;
         overall_success = overall_success && ok;
+        os_info = out.clone();
         all_output.push_str(&out);
     }
     if body.version_detect {
@@ -338,6 +338,7 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         )
         .await;
         overall_success = overall_success && ok;
+        version_info = out.clone();
         all_output.push_str(&out);
     }
     if body.aggressive_scan {
@@ -378,7 +379,7 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
         all_output.push_str(&dns_out);
     }
     if body.priv_esc {
-        all_output.push_str(&perform_priv_esc_analysis(&target).await);
+        all_output.push_str(&perform_priv_esc_analysis(&target, &os_info, &version_info).await);
     }
     let mut shodan_data = None;
     if body.shodan_enabled {

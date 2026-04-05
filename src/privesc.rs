@@ -1,62 +1,89 @@
 use crate::scanner::run_command;
 
-pub async fn perform_priv_esc_analysis(target: &str) -> String {
-    let mut report = String::from("\n[#L10] YETKİ YÜKSELTME ANALİZ RAPORU\n");
-    report.push_str("══════════════════════════════════════\n\n");
+/// # Summary
+/// Keyvan Hoca Evaluation Requirement: Dynamic Privilege Escalation Analysis.
+/// Performs local system analysis (SUID/Kernel) or remote "Exploit Suggestions" based on target info.
+pub async fn perform_priv_esc_analysis(target: &str, os_info: &str, version_info: &str) -> String {
+    let mut report = String::from("\n[#PR01] YETKİ YÜKSELTME VE EXPLOIT ANALİZİ\n");
+    report.push_str("══════════════════════════════════════════════\n\n");
 
     let is_local = target == "127.0.0.1" || target == "localhost";
 
     if is_local {
-        report.push_str("> Yerel Sistem Analizi (SUID/GUID & Kernel)...\n");
+        report.push_str("> [YEREL] Sistem Yetki Matrisi Analiz Ediliyor...\n");
 
-        // 1. SUID Check
-        let (_, suid_out) =
-            run_command("find", &["/", "-perm", "-4000", "-type", "f", "-ls"]).await;
+        // 1. SUID Check (Kritik Yetkilendirme Hataları)
+        let (_, suid_out) = run_command(
+            "find",
+            &["/", "-perm", "-4000", "-type", "f", "-ls", "2>/dev/null"],
+        )
+        .await;
         let suid_count = suid_out.lines().count();
-        report.push_str(&format!("- Tespit Edilen SUID Dosyası: {}\n", suid_count));
+        report.push_str(&format!(
+            "- Tespit Edilen SUID Dosyası: {} (Potansiyel vektörler)\n",
+            suid_count
+        ));
 
-        // 2. Capabilities Check
-        let (_, cap_out) = run_command("getcap", &["-r", "/"]).await;
-        if !cap_out.trim().is_empty() {
-            report.push_str("- Kritik Sistem Yetenekleri (Capabilities) Bulundu!\n");
-        }
-
-        // 3. Kernel Version Check
+        // 2. Kernel Version & Exploit Mapping
         let (_, kernel) = run_command("uname", &["-rv"]).await;
-        report.push_str(&format!("- Kernel Sürümü: {}\n", kernel.trim()));
+        let k_str = kernel.trim().to_lowercase();
+        report.push_str(&format!("- Mevcut Kernel: {}\n", k_str));
 
-        if kernel.contains("4.4.0") || kernel.contains("3.13.0") {
-            report.push_str("! KRİTİK: Bilinen DirtyCow (CVE-2016-5195) zafiyeti olasılığı!\n");
+        if k_str.contains("dirty") || k_str.contains("4.4.0") {
+            report.push_str("! UYARI: Olası DirtyCow (CVE-2016-5195) Tespiti!\n");
+        }
+        if k_str.contains("5.8") {
+            report.push_str("! UYARI: Olası DirtyPipe (CVE-2022-0847) Tespiti!\n");
         }
     } else {
-        report.push_str(&format!("> Uzak Hedef Analizi: {}\n", target));
-        report.push_str("- SUID/GUID taraması için SSH veya ajan gereklidir.\n");
-        report.push_str("- Nmap 'vuln' taraması üzerinden kernel exploit sorgulanıyor...\n");
+        report.push_str(&format!(
+            "> [UZAK] Hedef Üzerinde Akıllı Analiz: {}\n",
+            target
+        ));
+        report.push_str("> Tespit Edilen Verilere Göre Olası Sızma Yolları:\n\n");
+
+        let combined = format!("{} {}", os_info.to_lowercase(), version_info.to_lowercase());
+
+        if combined.contains("windows") {
+            report.push_str("- [Kritik] MS17-010 (EternalBlue) Kontrol Edilmelidir.\n");
+            report.push_str("- [Kritik] CVE-2022-26923 (Active Directory Domain PrivEsc).\n");
+        } else if combined.contains("linux") {
+            report.push_str(
+                "- [Önemli] Kernel Exploit Suggester üzerinden 2024-LTS verileri incelenmeli.\n",
+            );
+            report.push_str("- [Önemli] Sudo v1.8.x (CVE-2021-3156 Baron Samedit) olasılığı.\n");
+        }
+
+        if combined.contains("ssh") {
+            report.push_str("- [Servis] SSH Brute-Force veya LibSSH Zafiyeti (CVE-2018-10933).\n");
+        }
+        if combined.contains("apache") || combined.contains("httpd") {
+            report.push_str("- [Web] Apache Path Traversal (CVE-2021-41773).\n");
+        }
+
+        report.push_str(
+            "\n! NOT: Tam analiz için hedef üzerinde 'NetVanguard Agent' çalıştırılmalıdır.\n",
+        );
     }
 
-    report.push_str("\nAnaliz tamamlandı.\n");
+    report.push_str("\nAnaliz Matrisi Tamamlandı.\n");
     report
 }
-
-// ═══════════════════════════════════════════════════════════
-//  UNIT TESTS (Keyvan Hoca Vize Puanlama Kriterleri)
-// ═══════════════════════════════════════════════════════════
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_kernel_exploit_logic() {
-        // Kernal sürümüne göre zafiyet tespiti mantığını doğrular
-        let target = "127.0.0.1";
-        let report = perform_priv_esc_analysis(target).await;
+    async fn test_priv_esc_logic_branching() {
+        // Yerel analiz başlığı kontrolü
+        let report = perform_priv_esc_analysis("127.0.0.1", "", "").await;
+        assert!(report.contains("[YEREL]"));
 
-        // Raporun başlığını kontrol et
-        assert!(report.contains("YETKİ YÜKSELTME"));
-
-        // Simüle edilmiş kernel kontrolü (Normal şartlarda uname çıktısına göre değişir)
-        // Burada sadece fonksiyonun panic ethmeden çalıştığını ve temel yapıyı kurduğunu test ediyoruz
-        assert!(report.contains("Analiz tamamlandı."));
+        // Uzak analiz öneri mantığı kontrolü
+        let remote_report =
+            perform_priv_esc_analysis("8.8.8.8", "Windows Server 2016", "IIS 10.0").await;
+        assert!(remote_report.contains("[UZAK]"));
+        assert!(remote_report.contains("EternalBlue"));
     }
 }
