@@ -1,7 +1,7 @@
 use crate::scanner::run_command;
 
 /// # Summary
-/// Keyvan Hoca Evaluation Requirement: Dynamic Privilege Escalation Analysis.
+/// Evaluation Requirement: Dynamic Privilege Escalation Analysis.
 /// Performs local system analysis (SUID/Kernel) or remote "Exploit Suggestions" based on target info.
 pub async fn perform_priv_esc_analysis(target: &str, os_info: &str, version_info: &str) -> String {
     let mut report = String::from("\n[#PR01] YETKİ YÜKSELTME VE EXPLOIT ANALİZİ\n");

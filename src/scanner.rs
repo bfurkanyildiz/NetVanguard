@@ -238,7 +238,7 @@ pub async fn handle_scan(Json(body): Json<ScanRequest>) -> Json<ScanResponse> {
     let mut os_info = String::new();
     let mut version_info = String::new();
 
-    // Keyvan Hoca Evaluation Rule: PrivEsc requires intelligence.
+    // Evaluation Rule: PrivEsc requires intelligence.
     // If PrivEsc is selected but OS detect is OFF, force a quick background check.
     let force_os_for_privesc = body.priv_esc && !body.os_detect;
 
@@ -621,7 +621,7 @@ pub fn validate_target(target: &str) -> Result<(), String> {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  UNIT TESTS (Keyvan Hoca Vize Puanlama Kriterleri)
+//  UNIT TESTS (Project Evaluation Criteria)
 // ═══════════════════════════════════════════════════════════
 
 #[cfg(test)]

@@ -480,7 +480,7 @@ pub fn parse_tls_sni(payload: &[u8]) -> Option<String> {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  UNIT TESTS (Keyvan Hoca Vize Puanlama Kriterleri)
+//  UNIT TESTS
 // ═══════════════════════════════════════════════════════════
 
 #[cfg(test)]
