@@ -55,6 +55,12 @@ git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard
 chmod +x setup.sh && sudo ./setup.sh
 ```
 
+### 📦 Bağımlılıklar (Dependencies)
+NetVanguard'ın kararlı çalışması için aşağıdaki bileşenler gereklidir:
+- **Sistem:** [Rust (2021 Edition)](https://www.rust-lang.org/), [Nmap Engine](https://nmap.org/) (v7.90+), `libpcap-dev` (Linux paket yakalama).
+- **Backend (Rust):** `axum` (Web & API), `tokio` (Async runtime), `pcap` (Sniffer logic), `reqwest` & `trust-dns-resolver` (Intelligence).
+- **Frontend:** `Cytoscape.js` (Ağ Topolojisi), `Gauge.js` (Risk Göstergesi), `FontAwesome`.
+
 ### ⛵ Hızlı Başlatma (Quick Start)
 Eğer sistemi daha önce kurduysanız:
 1. **En Kolay Yol:** `./setup.sh` komutunu tekrar çalıştırın. Script sistemde her şeyin kurulu olduğunu anlayıp uygulamayı otomatik başlatacaktır.
@@ -115,6 +121,12 @@ Run the following command on a Kali Linux machine to clone, setup, and launch (A
 git clone https://github.com/bfurkanyildiz/NetVanguard.git && cd NetVanguard
 chmod +x setup.sh && sudo ./setup.sh
 ```
+
+### 📦 Dependencies
+The following components are required for a stable NetVanguard installation:
+- **System:** [Rust (2021 Edition)](https://www.rust-lang.org/), [Nmap Engine](https://nmap.org/) (v7.90+), `libpcap-dev` (Linux packet capture).
+- **Backend (Rust):** `axum` (Web & API), `tokio` (Async runtime), `pcap` (Sniffer logic), `reqwest` & `trust-dns-resolver` (Intelligence).
+- **Frontend:** `Cytoscape.js` (Network Topology), `Gauge.js` (Risk Metrics), `FontAwesome`.
 
 ### ⛵ Quick Start
 If you have already installed the system:
