@@ -66,10 +66,7 @@ Eğer sistemi daha önce kurduysanız:
 
 Projenin derlenme, çalışma ve test süreçlerini gösteren demo videosu:
 
-<div align="center">
-  <video src="demo/project-demo.webm" width="100%" controls autoplay loop muted></video>
-  <p><i>NetVanguard Ağ Tarama ve Analiz Süreci (Otomatik Oynatılıyor)</i></p>
-</div>
+https://github.com/user-attachments/assets/8cc89b28-4b3a-4d99-8d4e-0604e9b125ea
 
 ### 🏛️ Mimari Yapı
 ```mermaid
