@@ -1,0 +1,3 @@
+# NetVanguard Kod Kalite Standartları
+cognitive-complexity-threshold = 30
+avoid-breaking-exported-api = false
