@@ -67,7 +67,7 @@ Eğer sistemi daha önce kurduysanız:
 Projenin derlenme, çalışma ve test süreçlerini gösteren demo videosu:
 
 <div align="center">
-  <video src="https://github.com/bfurkanyildiz/NetVanguard/raw/main/demo/project-demo.webm" width="100%" autoplay loop muted playsinline></video>
+  <video src="demo/project-demo.webm" width="100%" controls autoplay loop muted></video>
   <p><i>NetVanguard Ağ Tarama ve Analiz Süreci (Otomatik Oynatılıyor)</i></p>
 </div>
 
