@@ -66,11 +66,10 @@ Eğer sistemi daha önce kurduysanız:
 
 Projenin derlenme, çalışma ve test süreçlerini gösteren demo videosu:
 
-[Videonun GitHub Linki İçin Buraya Tıkla](./demo/project-demo.webm)
-
-<video src="https://raw.githubusercontent.com/bfurkanyildiz/NetVanguard/main/demo/project-demo.webm" controls="controls" style="max-width: 100%;">
-  Tarayıcınız video etiketini desteklemiyor.
-</video>
+<div align="center">
+  <video src="https://github.com/bfurkanyildiz/NetVanguard/raw/main/demo/project-demo.webm" width="100%" autoplay loop muted playsinline></video>
+  <p><i>NetVanguard Ağ Tarama ve Analiz Süreci (Otomatik Oynatılıyor)</i></p>
+</div>
 
 ### 🏛️ Mimari Yapı
 ```mermaid
