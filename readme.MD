@@ -65,6 +65,7 @@ Eğer sistemi daha önce kurduysanız:
 ### 📸 Demo
 
 Projenin derlenme, çalışma ve test süreçlerini gösteren demo videosu:
+("Bu projede gerçekleştirilen BSSID tespiti ve Metasploitable zafiyet taramaları, tamamen eğitim amaçlı olup, yalnızca sahibi olduğum test laboratuvarı ortamında ve yasal izinler çerçevesinde güvenlik farkındalığı oluşturmak amacıyla icra edilmiştir.")
 
 https://github.com/user-attachments/assets/8cc89b28-4b3a-4d99-8d4e-0604e9b125ea
 
