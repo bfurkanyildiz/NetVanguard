@@ -45,7 +45,7 @@
 #### 4. ⚔️ Yetki Yükseltme Analizörü (PrivEsc)
 - **SUID/GUID Kontrolü:** Yanlış yapılandırılmış kritik sistem dosyalarını tespit eder.
 - **Kernel Exploit Suggester:** Çekirdek sürümüne göre potansiyel exploitleri raporlar.
-"
+
 <div id="setup-link"></div>
 
 ### ⚡ Akıllı Kurulum (Smart Setup)
