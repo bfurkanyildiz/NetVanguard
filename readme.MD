@@ -66,7 +66,11 @@ Eğer sistemi daha önce kurduysanız:
 
 Projenin derlenme, çalışma ve test süreçlerini gösteren demo videosu:
 
-<video controls src="./demo/project-demo.webm" title="NetVanguard Demo" width="100%"></video>
+[Videonun GitHub Linki İçin Buraya Tıkla](./demo/project-demo.webm)
+
+<video src="https://raw.githubusercontent.com/bfurkanyildiz/NetVanguard/main/demo/project-demo.webm" controls="controls" style="max-width: 100%;">
+  Tarayıcınız video etiketini desteklemiyor.
+</video>
 
 ### 🏛️ Mimari Yapı
 ```mermaid
