@@ -1,0 +1,8 @@
+# Satır sonlarını otomatik düzelt
+* text=auto
+
+# Rust dosyalarını vurgula
+*.rs text diff=rust
+
+# Video dosyalarını binary olarak işaretle
+*.webm binary
