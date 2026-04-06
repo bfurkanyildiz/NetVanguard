@@ -63,7 +63,10 @@ Eğer sistemi daha önce kurduysanız:
 4. **DASHBOARD ERİŞİMİ:** **http://localhost:8080**
 
 ### 📸 Demo
-![NetVanguard Demo](demo.gif)
+
+Projenin derlenme, çalışma ve test süreçlerini gösteren demo videosu:
+
+<video controls src="./demo/project-demo.webm" title="NetVanguard Demo" width="100%"></video>
 
 ### 🏛️ Mimari Yapı
 ```mermaid
