@@ -48,6 +48,28 @@
   <img src="https://img.shields.io/badge/Platform-Kali%20Linux-green?style=for-the-badge&logo=kali-linux" alt="Platform">
 </p>
 
+
+---
+
+| ![ISU Logo](https://www.istinye.edu.tr/sites/default/files/2025-07/isu_logo_tr-1.svg) | Sızma Testi Proje Ödevi |
+|---|---|
+| *Öğrenci Adı* | BAHA FURKAN YILDIZ |
+| *Öğrenci No.* | 2520191009 |
+| *Öğretim Görevlisi* | Keyvan Arasteh Abbasabad |
+| *Ders Kodu & Adı* | BGT006 Sızma Testi |
+
+---
+
+## Table of Contents
+- [🛡️ NetVanguard v1.0.1](#️-netvanguard-v101)
+- [🇹🇷 Türkçe Versiyon](#-türkçe-versiyon)
+  - [🚀 Ana Modüller](#-ana-modüller-ve-kabiliyetler)
+  - [⚡ Akıllı Kurulum](#-akıllı-kurulum-smart-setup)
+- [🇺🇸 English Version](#-english-version)
+- [⚖️ Legal Disclaimer](#-legal-disclaimer)
+> [!TIP]
+> For more detailed technical documentation, architecture diagrams, and research notes, please visit the [**Project Documentation Folder**](./docs).
+
 ---
 
 <div id="turkish-version"></div>
@@ -182,3 +204,4 @@ graph TD
 <p align="center">
   Developed with ❤️ by <b>Baha Furkan Yıldız</b> | v1.0.1
 </p>
+<!-- İstinye Logo , İSU logo  -->
