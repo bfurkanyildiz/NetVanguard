@@ -7,9 +7,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpcap-dev
+      
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        
       - name: Run Tests
         run: cargo test --verbose
+        
       - name: Build Project
         run: cargo build --release
