@@ -10,6 +10,34 @@
   </a>
 </p>
 
+<table border="1" width="100%">
+  <tr>
+    <td align="center" width="50%">
+      <img src="https://upload.wikimedia.org/wikipedia/tr/6/69/%C4%B0stinye_%C3%9Cniversitesi_logo.png" width="250" alt="ISU Logo">
+    </td>
+    <td align="center" width="50%">
+      <h2>Sızma Testi Proje Ödevi</h2>
+    </td>
+  </tr>
+  <tr>
+    <td><b>Öğrenci Adı</b></td>
+    <td>Baha Furkan Yıldız</td>
+  </tr>
+  <tr>
+    <td><b>Öğrenci No.</b></td>
+    <td>2520191009</td>
+  </tr>
+  <tr>
+    <td><b>Öğretim Gör. (Danışman)</b></td>
+    <td>Keyvan Arasteh</td>
+  </tr>
+  <tr>
+    <td><b>Ders Kodu & Adı</b></td>
+    <td>BGT006 Sızma Testi</td>
+  </tr>
+</table>
+
+
 # 🛡️ NetVanguard v1.0.1
 ### *Hybrid Intelligence & Attack Surface Analyzer*
 
