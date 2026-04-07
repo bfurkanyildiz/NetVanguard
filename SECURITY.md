@@ -1,4 +1,4 @@
-Security Policy
+Security Policy.
 
 Bu proje eğitim amaçlı geliştirilmiştir.
 
